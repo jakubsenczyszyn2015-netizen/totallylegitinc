@@ -448,7 +448,7 @@ class AvFace {
     else if (mouth === 'frown') { g.beginPath(); g.moveTo(110, MY + 8); g.quadraticCurveTo(128, MY - 8, 146, MY + 8); g.stroke(); }
     else if (mouth === 'grumpy') { g.beginPath(); g.moveTo(108, MY + 7); g.quadraticCurveTo(114, MY, 128, MY); g.quadraticCurveTo(142, MY, 148, MY + 7); g.stroke(); }
     else if (mouth === 'angry') fillMouth(() => { g.beginPath(); g.moveTo(106, MY + 9); g.quadraticCurveTo(128, MY - 16, 150, MY + 9); g.quadraticCurveTo(128, MY + 3, 106, MY + 9); g.closePath(); }, 0, 0);
-    else if (mouth === 'teeth') { rrect(g, 106, MY - 9, 44, 18, 7); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 3.4; g.stroke(); g.lineWidth = 2; g.beginPath(); g.moveTo(108, MY); g.lineTo(148, MY); [117, 128, 139].forEach(x => { g.moveTo(x, MY - 8); g.lineTo(x, MY + 8); }); g.stroke(); }
+    else if (mouth === 'teeth') { g.beginPath(); g.moveTo(113, MY - 9); g.arcTo(150, MY - 9, 150, MY + 9, 7); g.arcTo(150, MY + 9, 106, MY + 9, 7); g.arcTo(106, MY + 9, 106, MY - 9, 7); g.arcTo(106, MY - 9, 150, MY - 9, 7); g.closePath(); g.fillStyle = '#fff'; g.fill(); g.lineWidth = 3.4; g.stroke(); g.lineWidth = 2; g.beginPath(); g.moveTo(108, MY); g.lineTo(148, MY); [117, 128, 139].forEach(x => { g.moveTo(x, MY - 8); g.lineTo(x, MY + 8); }); g.stroke(); }
     else if (mouth === 'o') fillMouth(() => { g.beginPath(); g.ellipse(128, MY + 3, 10, 13, 0, 0, 7); }, 0, MY + 14);
     else if (mouth === 'talk1') fillMouth(() => { g.beginPath(); g.ellipse(128, MY + 1, 13, 7, 0, 0, 7); }, 0, MY + 7);
     else if (mouth === 'talk2') fillMouth(() => { g.beginPath(); g.moveTo(110, MY - 6); g.quadraticCurveTo(128, MY - 10, 146, MY - 6); g.quadraticCurveTo(144, MY + 16, 128, MY + 16); g.quadraticCurveTo(112, MY + 16, 110, MY - 6); g.closePath(); }, 7, MY + 15);
@@ -857,7 +857,7 @@ Loop.add((dt, t) => {
   else { g.position.set(P.pos.x, P.pos.y, P.pos.z); g.rotation.y = P.yaw; }
   const L = avMyLook(); if (settings.color && L.shirt !== settings.color) { L.shirt = settings.color; saveSettings(); }
   if (a.look.shirt !== L.shirt) a.setLook(L);
-  a.talking = !!(Voice && Voice.talking);
+  a.talking = !!(typeof Voice !== 'undefined' && Voice.talking);
   poseAvatar(a, sit, t, P.speed || 0);
 });
 /* the avatar for a player id: yourself (W.me) or a remote player's avatar; null if unknown */

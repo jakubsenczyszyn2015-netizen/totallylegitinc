@@ -61,12 +61,14 @@ const Customize = {
     const rim = new THREE.DirectionalLight(0x9cc4ff, 0.45); rim.position.set(-3, 2.5, -3); S.add(rim);
     S.add(new THREE.AmbientLight(0xffffff, 0.06));
     // a round patch of checkered office carpet that fades out
-    const tex = canvasTex(256, 256, (g, w) => {
-      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { g.fillStyle = (x + y) % 2 ? '#3b4462' : '#323a55'; g.fillRect(x * w / 8, y * w / 8, w / 8, w / 8); }
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    ((g, w) => {
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) { g.fillStyle = (x + y) % 2 ? '#4a5576' : '#353e5c'; g.fillRect(x * w / 8, y * w / 8, w / 8, w / 8); }
       for (let i = 0; i < 1800; i++) { g.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '255,255,255,' : '0,0,0,') + (Math.random() * 0.08) + ')'; g.fillRect(Math.random() * w, Math.random() * w, 2, 2); }
       const gr = g.createRadialGradient(w / 2, w / 2, w * 0.18, w / 2, w / 2, w / 2); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
       g.globalCompositeOperation = 'destination-out'; g.fillStyle = gr; g.fillRect(0, 0, w, w);
-    });
+    })(c.getContext('2d'), 256);
+    const tex = new THREE.CanvasTexture(c);
     const floor = new THREE.Mesh(new THREE.CircleGeometry(1.6, 40), new THREE.MeshLambertMaterial({ map: tex, transparent: true, depthWrite: false })); floor.rotation.x = -Math.PI / 2; S.add(floor);
   },
   resize() {
@@ -78,7 +80,7 @@ const Customize = {
   show() {
     this.build(); this.initGL();
     this.look = normLook(Avatars.myLook()); this.nameInp.value = settings.name || '';
-    this.el.classList.remove('hidden'); this.isOpen = true; releaseLock && releaseLock();
+    this.el.classList.remove('hidden'); this.isOpen = true; if (typeof releaseLock === 'function') releaseLock();
     if (this.renderer) {
       if (!this.preview) { this.preview = buildAvatar({ look: this.look, name: settings.name }); this.preview.lookCam = this.camera; this.scene.add(this.preview.group); }
       else { this.preview.setLook(this.look); this.preview.setName(settings.name); }
