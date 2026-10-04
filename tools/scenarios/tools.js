@@ -139,7 +139,7 @@ module.exports = async page => {
   if (want('av')) {
     const r0 = await page.eval(() => { const T = window.__tli; return { shop: !!T.Shop.get('app_antivirus'), avail: T.OS.apps.antivirus.available() }; });
     ok(r0.shop && !r0.avail, 'BugBuster is a locked shop item: ' + JSON.stringify(r0));
-    await page.eval(() => { const T = window.__tli; T.Shop.get('app_antivirus').buy(); T.OS.virus(6); return true; });
+    await page.eval(() => { const T = window.__tli; T.Shop.get('app_antivirus').buy(); T.OS.virus(3); return true; });
     await page.wait(1300);
     await page.eval(() => { window.__tli.OS.launch('antivirus', true); return true; });
     await page.wait(400);

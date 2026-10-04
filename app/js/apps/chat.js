@@ -240,7 +240,7 @@ const Chat = (() => {
       h('span', { class: 'cbx-lock', html: OS.glyph('lock') + '<span>End-to-end encrypted*</span>', title: '*encrypted with a Caesar cipher of 0' }));
     const list = thread(cid), tp = typing.get(cid) > now();
     u.msgs.replaceChildren(...(list.length ? [] : [h('div', { class: 'cbx-empty' }, h('i', { html: faceOf(cid) }), h('b', {}, 'Say hi to ' + nameOf(cid) + '!'), h('span', {}, b ? 'Messages are definitely private.' : 'Or send them a free gift. Totally safe.'))]),
-      ...list.map(m => msgEl(cid, m)), tp ? h('div', { class: 'cbx-m typing' }, h('i', { class: 'cbx-mav', html: faceOf(cid) }), h('div', { class: 'cbx-bub' }, h('i'), h('i'), h('i'))) : null);
+      ...list.map(m => msgEl(cid, m)), ...(tp ? [h('div', { class: 'cbx-m typing' }, h('i', { class: 'cbx-mav', html: faceOf(cid) }), h('div', { class: 'cbx-bub' }, h('i'), h('i'), h('i')))] : []));
     u.msgs.scrollTop = u.msgs.scrollHeight;
     u.inp.placeholder = 'Message ' + nameOf(cid);
   }

@@ -7,11 +7,12 @@
    ===================================================================== */
 const Browser = (() => {
   const NEWTAB = 'bonk://newtab', SEARCH = 'bonksearch.legit', NEWS = 'dailybonk.news', INTRA = 'intranet.totallylegit.inc', VID = 'vidbonk.tv', HOW = 'howtobonk.legit/look-busy';
+  const sq = q => SEARCH + '/search?q=' + encodeURIComponent(String(q).trim()).replace(/%20/g, '+');
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const PLAY = '<svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z" fill="#fff"/></svg>';
   const FAV = {
     newtab: { g: 'globe', c: '#5f6b7d' }, search: { g: 'search', c: '#ff6b2c' }, news: { t: 'B', c: '#7a1f2b' }, intra: { g: 'briefcase', c: '#1e3a8a' },
-    vid: { svg: PLAY, c: '#e8442e' }, how: { g: 'bolt', c: '#0c8599' }, err: { g: 'warning', c: '#868e96' }
+    vid: { svg: '<svg viewBox="0 0 24 24"><path d="M8.5 3.2 12 6.4l3.5-3.2" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="7" width="18" height="13" rx="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M10.3 10.4v6l4.8-3z" fill="#fff"/></svg>', c: '#f76707' }, how: { g: 'bolt', c: '#0c8599' }, err: { g: 'warning', c: '#868e96' }
   };
   const favEl = f => h('i', { class: 'bw-fav', style: { background: f.c }, html: f.svg || (f.g ? OS.glyph(f.g) : '<b>' + f.t + '</b>') });
 
@@ -20,7 +21,7 @@ const Browser = (() => {
     let s = String(raw || '').trim(); if (!s) return NEWTAB;
     if (/^bonk:\/\//i.test(s)) return s.toLowerCase();
     s = s.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
-    if (/\s/.test(s) || !/^[^/]+\.[a-z]{2,}/i.test(s)) return SEARCH + '/search?q=' + encodeURIComponent(String(raw).trim());
+    if (/\s/.test(s) || !/^[^/]+\.[a-z]{2,}/i.test(s)) return sq(raw);
     return s.replace(/\/$/, '');
   }
   function parse(url) {
@@ -63,7 +64,7 @@ const Browser = (() => {
   const LOGO_COLS = ['#ff6b2c', '#ffb703', '#2fb36a', '#3b82f6', '#a855f7', '#ff6b2c', '#2fb36a', '#ffb703', '#3b82f6', '#e64980'];
   const bonkLogo = big => h('div', { class: 'bs-logo' + (big ? ' big' : '') }, ...'BonkSearch'.split('').map((c, i) => h('span', { style: { color: LOGO_COLS[i] } }, c)));
   const searchBox = (val, big) => {
-    const inp = h('input', { value: val || '', spellcheck: false, placeholder: 'Search the legit web', onkeydown: e => { if (e.key === 'Enter' && inp.value.trim()) go(SEARCH + '/search?q=' + encodeURIComponent(inp.value.trim())); } });
+    const inp = h('input', { value: val || '', spellcheck: false, placeholder: 'Search the legit web', onkeydown: e => { if (e.key === 'Enter' && inp.value.trim()) go(sq(inp.value)); } });
     return h('div', { class: 'bs-box' + (big ? ' big' : '') }, h('i', { html: OS.glyph('search') }), inp);
   };
   const lucky = () => go(pick([NEWS + '/quota', INTRA, VID + '/watch?v=cat', HOW, VID + '/watch?v=stapler', 'geocities.legit/free-money']));
@@ -71,8 +72,8 @@ const Browser = (() => {
     render: () => {
       const box = searchBox('', true);
       return h('div', { class: 'bs-home' }, bonkLogo(true), box,
-        h('div', { class: 'bs-btns' }, h('button', { onclick: () => { const v = $('input', box).value.trim(); if (v) go(SEARCH + '/search?q=' + encodeURIComponent(v)); } }, 'Bonk Search'), h('button', { onclick: lucky }, 'I\'m Feeling Legit')),
-        h('div', { class: 'bs-trend' }, 'Trending: ', A(SEARCH + '/search?q=how to look busy', 'how to look busy'), ' · ', A(SEARCH + '/search?q=call center quota', 'call center quota news'), ' · ', A(SEARCH + '/search?q=cat vs mug', 'cat vs mug')),
+        h('div', { class: 'bs-btns' }, h('button', { onclick: () => { const v = $('input', box).value.trim(); if (v) go(sq(v)); } }, 'Bonk Search'), h('button', { onclick: lucky }, 'I\'m Feeling Legit')),
+        h('div', { class: 'bs-trend' }, 'Trending: ', A(sq('how to look busy'), 'how to look busy'), ' · ', A(sq('call center quota'), 'call center quota news'), ' · ', A(sq('cat vs mug'), 'cat vs mug')),
         h('div', { class: 'bs-foot' }, 'BonkSearch offered in: ', h('b', {}, 'English'), ' · Corporate · Pirate · Whisper'));
     } };
   const RES = [
@@ -114,7 +115,7 @@ const Browser = (() => {
     } };
 
   // The Daily Bonk
-  const NEWS_ART = '<svg viewBox="0 0 320 170" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="170" fill="#ffd8a8"/><circle cx="262" cy="40" r="22" fill="#ffec99"/>'
+  const NEWS_ART = '<svg viewBox="0 0 320 170" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><rect width="320" height="170" fill="#ffd8a8"/><circle cx="262" cy="40" r="22" fill="#ffec99"/>'
     + '<path d="M0 120h40V70h30v50h18V50h40v70h12V84h28v36h14V60h34v60h20V78h26v42h58v50H0z" fill="#e8a87c" opacity=".7"/>'
     + '<rect x="96" y="44" width="128" height="96" fill="#2c3e66" stroke="#1d2433" stroke-width="3"/><rect x="88" y="36" width="144" height="14" fill="#1d2433"/>'
     + '<text x="160" y="47" text-anchor="middle" font-family="Alfa Slab One,serif" font-size="10" fill="#ffd43b">TOTALLY LEGIT INC.</text>'
@@ -123,7 +124,7 @@ const Browser = (() => {
     + '<text x="56" y="92" font-family="Lilita One,sans-serif" font-size="30" fill="#d6342c" stroke="#fff" stroke-width="1.5">?</text><text x="250" y="110" font-family="Lilita One,sans-serif" font-size="34" fill="#d6342c" stroke="#fff" stroke-width="1.5">?</text>'
     + '<rect y="150" width="320" height="20" fill="#495057"/><path d="M0 160h320" stroke="#fff" stroke-width="2" stroke-dasharray="14 10"/></svg>';
   const thumb = (bg, g) => h('i', { class: 'dn-th', style: { background: bg }, html: OS.glyph(g) });
-  const masthead = () => h('div', { class: 'dn-mast' },
+  const masthead = small => h('div', { class: 'dn-mast' + (small ? ' small' : '') },
     h('div', { class: 'dn-mtop' }, h('span', {}, OS.clock()[1]), h('span', {}, 'Weather: 22° and suspicious'), h('span', {}, 'Subscribe for $0.99 (forever)')),
     A(NEWS, h('h1', {}, 'The Daily Bonk')), h('div', { class: 'dn-tag' }, 'All the news that fits. Some that doesn\'t.'),
     h('nav', {}, ['News', 'Business', 'Local', 'Sport', 'Weather', 'Opinions nobody asked for'].map((n, i) => i === 2 ? A(NEWS + '/quota', n) : h('span', {}, n))));
@@ -131,9 +132,9 @@ const Browser = (() => {
     render: () => h('div', { class: 'dn' }, masthead(),
       h('div', { class: 'dn-grid' },
         h('div', { class: 'dn-main' },
-          h('div', { class: 'dn-lead' }, A(NEWS + '/quota', h('div', { class: 'dn-hero', html: NEWS_ART }), h('h2', {}, 'Local call center hits quota, nobody knows how')),
+          h('div', { class: 'dn-lead' }, A(NEWS + '/quota', h('h2', {}, 'Local call center hits quota, nobody knows how')),
             h('p', { class: 'dn-std' }, 'Staff at Totally Legit Inc. reportedly "just kept talking" until the numbers went up. Experts baffled; The Boss "almost smiling".'),
-            h('div', { class: 'dn-by' }, 'By Pat Inkwell · ' + OS.clock()[0])),
+            h('div', { class: 'dn-by' }, 'By Pat Inkwell · ' + OS.clock()[0]), A(NEWS + '/quota', h('div', { class: 'dn-hero', html: NEWS_ART }))),
           h('div', { class: 'dn-sec' },
             [['#4dabf7', 'monitor', 'Man who clicked "yes" to every pop-up now owns 14 toolbars', 'bugbuster.legit'], ['#ff8787', 'clip', 'Stapler shortage enters third week; morale "stapled to the floor"', 'staplers.legit'],
               ['#ffd43b', 'megaphone', 'Area boss describes himself as "fun"; area employees describe nothing, out of fear', NEWS + '/boss'], ['#69db7c', 'phone', 'Study: 9 out of 10 cold calls now answered by a dog', NEWS + '/dogs']]
@@ -145,7 +146,7 @@ const Browser = (() => {
   SITES.newsStory = { host: NEWS, match: u => u.path === '/quota', title: () => 'Local call center hits quota, nobody knows how - The Daily Bonk', fav: FAV.news,
     render: () => {
       const week = G.mode === 'week', team = money(G.team), quota = money(G.quota), top = Game.roster()[0];
-      return h('div', { class: 'dn' }, masthead(),
+      return h('div', { class: 'dn' }, masthead(true),
         h('article', { class: 'dn-art' }, h('div', { class: 'dn-kick' }, 'LOCAL · BUSINESS'),
           h('h2', {}, 'Local call center hits quota, nobody knows how'),
           h('div', { class: 'dn-by' }, 'By Pat Inkwell, Senior Quota Correspondent · Updated ' + OS.clock()[0]),
@@ -306,7 +307,7 @@ const Browser = (() => {
       };
       requestAnimationFrame(frame);
       return h('div', { class: 'vb' },
-        h('div', { class: 'vb-top' }, A(VID, h('span', { class: 'vb-logo' }, h('i', { html: PLAY }), 'VidBonk')), searchBox(''), h('i', { class: 'vb-me' }, (settings.name || 'A').charAt(0).toUpperCase())),
+        h('div', { class: 'vb-top' }, A(VID, h('span', { class: 'vb-logo' }, h('i', { html: TV }), 'Vid', h('b', {}, 'Bonk'))), searchBox(''), h('i', { class: 'vb-me' }, (settings.name || 'A').charAt(0).toUpperCase())),
         h('div', { class: 'vb-grid' },
           h('div', { class: 'vb-main' }, player,
             h('h2', {}, v.t),
@@ -321,6 +322,7 @@ const Browser = (() => {
           h('div', { class: 'vb-side' }, VIDS.filter(x => x !== v).map(x => A(VID + '/watch?v=' + x.v, h('div', { class: 'vb-rec' }, h('span', { class: 'vb-thw' }, vidThumb(x), h('em', {}, x.len >= 3600 ? '10:00:00' : x.len ? '0:0' + Math.ceil(x.len) : '?:??')),
             h('div', {}, h('b', {}, x.t), h('small', {}, x.ch), h('small', {}, x.views + ' views'))))))));
     } };
+  const TV = '<svg viewBox="0 0 32 28"><path d="M11 2.5l5 4.5 5-4.5" fill="none" stroke="#1d2433" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="2" y="7" width="28" height="19" rx="5" fill="#f76707" stroke="#1d2433" stroke-width="2.4"/><rect x="6" y="11" width="20" height="11" rx="2.5" fill="#ffe8cc"/><path d="M14 13.4v6.4l5.4-3.2z" fill="#1d2433"/></svg>';
   const OS_PAUSE = '<svg viewBox="0 0 24 24"><path d="M7 5h3.6v14H7zM13.4 5H17v14h-3.6z" fill="#fff"/></svg>';
 
   // HowToBonk

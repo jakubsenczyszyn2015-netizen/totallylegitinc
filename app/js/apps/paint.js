@@ -10,8 +10,8 @@ const Paintings = (() => {
   let R = null;   // shared geometries / materials, made on first use
   function res() {
     if (R) return R;
-    const wood = new THREE.MeshLambertMaterial({ color: '#5a3820' }), leg = new THREE.MeshLambertMaterial({ color: '#a8743f' });
-    R = { wood, leg, frame: new THREE.BoxGeometry(0.5, 0.385, 0.03), pic: new THREE.PlaneGeometry(0.46, 0.345), lip: new THREE.BoxGeometry(0.46, 0.022, 0.05),
+    const wood = new THREE.MeshLambertMaterial({ color: '#5a3820' }), pine = new THREE.MeshLambertMaterial({ color: '#b07a42' });
+    R = { wood, pine, frame: new THREE.BoxGeometry(0.5, 0.385, 0.03), pic: new THREE.PlaneGeometry(0.46, 0.345), lip: new THREE.BoxGeometry(0.46, 0.022, 0.05),
       leg: new THREE.BoxGeometry(0.035, 1.5, 0.035), tray: new THREE.BoxGeometry(0.5, 0.03, 0.08) };
     return R;
   }
@@ -34,12 +34,12 @@ const Paintings = (() => {
     pic.position.z = 0.0155; art.add(fr, pic);
     if (d.desk >= 0 && W.desks[d.desk]) {
       const k = W.desks[d.desk]; grp.position.set(k.x, 0, k.z); grp.rotation.y = k.rot;
-      art.position.set(-0.63, 1.17, -0.428); art.rotation.z = ((hashStr(d.id) % 100) / 100 - 0.5) * 0.07;
+      art.position.set(-0.63, 1.22, -0.428); art.rotation.z = ((hashStr(d.id) % 100) / 100 - 0.5) * 0.07;
     } else {   // a little easel on the floor
       grp.position.set(d.pos[0], 0, d.pos[1]); grp.rotation.y = d.ry || 0;
       art.position.set(0, 1.22, 0.02); art.rotation.x = -0.16;
-      const tray = new THREE.Mesh(r.tray, r.leg); tray.position.set(0, 1.035, 0.07); tray.rotation.x = -0.16;
-      const l1 = new THREE.Mesh(r.leg, r.leg), l2 = new THREE.Mesh(r.leg, r.leg), l3 = new THREE.Mesh(r.leg, r.leg);
+      const tray = new THREE.Mesh(r.tray, r.pine); tray.position.set(0, 1.035, 0.07); tray.rotation.x = -0.16;
+      const l1 = new THREE.Mesh(r.leg, r.pine), l2 = new THREE.Mesh(r.leg, r.pine), l3 = new THREE.Mesh(r.leg, r.pine);
       l1.position.set(-0.2, 0.74, 0.06); l1.rotation.set(-0.12, 0, -0.1); l2.position.set(0.2, 0.74, 0.06); l2.rotation.set(-0.12, 0, 0.1);
       l3.position.set(0, 0.7, -0.22); l3.rotation.x = 0.32; grp.add(tray, l1, l2, l3);
     }
@@ -75,7 +75,7 @@ const Paintings = (() => {
     const desk = opts.desk != null ? opts.desk : P.seated && P.seat >= 0 ? P.seat : -1;
     const d = { id: (Net.myId || 'me') + ':' + Date.now().toString(36), img, name: opts.name || settings.name, desk, by: Net.myId };
     if (desk < 0) {   // an easel up to 1.3 m in front of you, clear of walls and desks
-      const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw), free = typeof Space !== 'undefined' ? Space.ray(P.pos.x, 0.9, P.pos.z, -sy, 0, -cy, 2, 0.1) : 2, k = clamp(free - 0.45, 0.6, 1.3);
+      const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw), free = typeof Space !== 'undefined' ? Space.ray(P.pos.x, 0.9, P.pos.z, -sy, 0, -cy, 2, 0.1) : 2, k = clamp(free - 0.6, 0.5, 1.3);
       d.pos = [+(P.pos.x - sy * k).toFixed(2), +(P.pos.z - cy * k).toFixed(2)]; d.ry = +P.yaw.toFixed(3);
     }
     add(d); Net.emit('paint:hang', d); return d;
@@ -183,7 +183,7 @@ const DoodlePro = (() => {
           h('input', { type: 'range', min: 1, max: 48, value: S.size, title: 'Brush size', oninput: e => { S.size = +e.target.value; status(); } }), u.sz = h('small')),
         h('div', { class: 'dp-grp dp-fillt' }, h('button', { class: 'dp-tg' + (S.filled ? '' : ' on'), onclick: e => { S.filled = false; e.currentTarget.classList.add('on'); e.currentTarget.nextSibling.classList.remove('on'); } }, 'Outline'),
           h('button', { class: 'dp-tg' + (S.filled ? ' on' : ''), onclick: e => { S.filled = true; e.currentTarget.classList.add('on'); e.currentTarget.previousSibling.classList.remove('on'); } }, 'Filled')),
-        h('div', { class: 'dp-grp dp-hint' }, 'Ctrl+Z undo · Ctrl+Y redo')),
+        ),
       h('div', { class: 'dp-mid' },
         h('div', { class: 'dp-tools' }, TOOLS.map(toolBtn)),
         u.stage = h('div', { class: 'dp-stage' }, h('div', { class: 'dp-paper' }, cv, ov))),

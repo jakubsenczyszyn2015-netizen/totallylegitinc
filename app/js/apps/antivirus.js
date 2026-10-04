@@ -125,7 +125,7 @@ const BugBuster = (() => {
   }
   function clean(w, b) {
     const c = w.cleared || { n: 0, pops: 0 }, splats = [];
-    for (let i = 0; i < 7; i++) splats.push(h('i', { class: 'bb-splat', style: { left: (8 + i * 13 + rand(-3, 3)) + '%', top: rand(8, 70) + '%', animationDelay: (0.1 + i * 0.07).toFixed(2) + 's', transform: 'rotate(' + randi(-40, 40) + 'deg)' }, html: OS.glyph('bug') }));
+    for (let i = 0; i < 7; i++) splats.push(h('i', { class: 'bb-splat', style: { left: (8 + i * 13 + rand(-3, 3)) + '%', top: (i % 2 ? rand(4, 22) : rand(74, 88)) + '%', animationDelay: (0.1 + i * 0.07).toFixed(2) + 's', transform: 'rotate(' + randi(-40, 40) + 'deg)' }, html: OS.glyph('bug') }));
     const tm = h('b', {}, fmtLeft());
     b.replaceChildren(h('div', { class: 'bb-done' }, ...splats,
       h('div', { class: 'bb-check', html: '<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="29" fill="#1fbf73"/><path d="M18 33l9 9 19-20" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>' }),
