@@ -1,0 +1,26 @@
+{
+  "name": "totally-legit-inc",
+  "productName": "Totally Legit Inc",
+  "version": "1.0.0",
+  "description": "Totally Legit Inc - desktop build",
+  "main": "main.js",
+  "scripts": {
+    "vendor": "node scripts/vendor.js",
+    "start": "npm run vendor && electron .",
+    "dist:win": "npm run vendor && electron-builder --win portable nsis",
+    "pack:win": "npm run vendor && electron-packager . \"Totally Legit Inc\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/dist"
+  },
+  "build": {
+    "appId": "inc.totallylegit.game",
+    "productName": "Totally Legit Inc",
+    "files": ["main.js", "app/**/*"],
+    "win": { "target": ["portable", "nsis"] }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "@electron/packager": "^18.3.6",
+    "three": "0.128.0",
+    "peerjs": "1.5.4"
+  }
+}
