@@ -50,7 +50,7 @@ OS.apps.memo = {
     ];
     b.replaceChildren(
       h('div', { class: 'memo-head' }, h('div', { class: 'memo-av', html: OS_BOSS_FACE }),
-        h('div', { class: 'memo-meta' }, h('div', {}, h('b', {}, 'The Boss'), ' <boss@totallylegit.inc>'), h('div', {}, 'To: All agents, floor 3'),
+        h('div', { class: 'memo-meta' }, h('div', {}, h('b', {}, 'The Boss'), h('span', { class: 'memo-to' }, '  to All agents')),
           h('div', { class: 'memo-subj' }, week ? day + ': today\'s quota is ' + money(G.quota) : 'Overtime: no quota, no mercy')),
         h('div', { class: 'memo-date' }, OS.clock()[1])),
       h('div', { class: 'memo-body' }, h('div', { class: 'memo-stamp' }, 'URGENT'), body, h('div', { class: 'memo-sign' }, '— The Boss'), h('div', { class: 'memo-role' }, 'Regional Overlord, Totally Legit Inc.')),

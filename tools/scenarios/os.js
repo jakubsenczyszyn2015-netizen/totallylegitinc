@@ -24,6 +24,24 @@ module.exports = async page => {
     await page.wait(250);
     await page.shot('os-04-power');
     await page.eval(() => { const T = window.__tli; T.OS.power(false); return true; });
+    // drag the payroll window by its title bar, then maximise / restore it
+    const drag = await page.eval(() => {
+      const T = window.__tli, w = T.OS.wins.get('payroll'), tb = w.tb, r = tb.getBoundingClientRect(), x0 = w.el.offsetLeft, y0 = w.el.offsetTop;
+      const ev = (type, x, y) => tb.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, button: 0 }));
+      ev('pointerdown', r.left + 60, r.top + 10); ev('pointermove', r.left + 160, r.top + 60); ev('pointerup', r.left + 160, r.top + 60);
+      const moved = [w.el.offsetLeft - x0, w.el.offsetTop - y0]; T.OS.maximise('payroll'); const max = w.el.classList.contains('max'); T.OS.maximise('payroll');
+      return { moved, max, restored: !w.el.classList.contains('max') };
+    });
+    console.log('drag/maximise: ' + JSON.stringify(drag));
+    const endless = await page.eval(() => { const T = window.__tli, m = T.G.mode; T.G.mode = 'endless'; T.OS.stats(); const t = document.getElementById('tb-stats').innerText.replace(/\s+/g, ' '); T.G.mode = m; T.OS.stats(); return t; });
+    console.log('endless stats: ' + endless);
+    // stand up and sit down again: the quick (0.3 s) boot
+    await page.stand();
+    await page.eval(() => { const T = window.__tli; const d = T.W.desks.filter(x => !x.npc)[0]; sitAt(d.i); return true; });
+    for (let i = 0; i < 40 && !(await page.eval(() => window.__tli.OS.open)); i++) await page.wait(50);
+    const quick = await page.eval(() => document.getElementById('os-boot').classList.contains('quick'));
+    console.log('second boot quick: ' + quick);
+    await page.wait(800);
   }
   if (want('ring')) {
     await page.ring(false);

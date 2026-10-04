@@ -172,7 +172,7 @@ const OS = {
       if (e.target.id === 'os-wall' || e.target.closest('#os-wall') || e.target.id === 'os-icons') this.select(null);
     });
     el.addEventListener('contextmenu', e => { if (e.target.closest('#os-wall') || e.target.id === 'os-icons') { e.preventDefault(); this.ctx(true, e.clientX, e.clientY); } });
-    window.addEventListener('resize', () => this.fit());
+    this.rescale(); window.addEventListener('resize', () => { this.rescale(); this.fit(); });
     Bus.on('call:ring', () => this.ringSync());
     Bus.on('call:answer', () => this.ringSync());
   },
@@ -338,7 +338,10 @@ const OS = {
       this.taskbar();
     }
   },
-  area() { const a = $('#os-wins'); return a ? a.getBoundingClientRect() : { width: innerWidth, height: innerHeight }; },
+  /* windows, pop-ups and the call card are laid out at 720p and scaled to the screen (OS.ws), so every resolution looks the same */
+  ws: 1,
+  rescale() { this.ws = clamp(innerHeight / 720, 0.75, 2.5); const o = $('#os'); if (o) o.style.setProperty('--ws', this.ws); },
+  area() { const a = $('#os-wins'); return a ? { width: a.offsetWidth, height: a.offsetHeight } : { width: innerWidth, height: innerHeight }; },
   clampWin(w) {
     const a = this.area(), el = w.el, ww = el.offsetWidth, wh = el.offsetHeight;
     el.style.left = clamp(el.offsetLeft, 4, Math.max(4, a.width - ww - 4)) + 'px';
@@ -353,8 +356,8 @@ const OS = {
     tb.addEventListener('pointerdown', e => { if (e.target.closest('button') || w.el.classList.contains('max') || e.button !== 0) return; on = true; sx = e.clientX; sy = e.clientY; ox = w.el.offsetLeft; oy = w.el.offsetTop; w.el.classList.add('drag'); try { tb.setPointerCapture(e.pointerId); } catch (_) {} });
     tb.addEventListener('pointermove', e => {
       if (!on) return; const a = this.area();
-      w.el.style.left = clamp(ox + e.clientX - sx, -w.el.offsetWidth + 90, a.width - 90) + 'px';
-      w.el.style.top = clamp(oy + e.clientY - sy, 0, Math.max(0, a.height - 40)) + 'px';
+      w.el.style.left = clamp(ox + (e.clientX - sx) / this.ws, -w.el.offsetWidth + 90, a.width - 90) + 'px';
+      w.el.style.top = clamp(oy + (e.clientY - sy) / this.ws, 0, Math.max(0, a.height - 40)) + 'px';
     });
     const end = () => { on = false; w.el.classList.remove('drag'); }; tb.addEventListener('pointerup', end); tb.addEventListener('pointercancel', end);
   },
