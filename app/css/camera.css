@@ -1,1 +1,91 @@
-/* camera */
+/* camera — Camera (webcam) app, CCTV console, polaroid photo HUD */
+
+/* ---------- Camera app ---------- */
+.win.camwin .wb.cam-body{padding:0;gap:0;background:#000;overflow:hidden}
+.cam-view{position:relative;flex:none;aspect-ratio:16/9;background:#0b0c10;overflow:hidden}
+.win.max.camwin .cam-view{flex:1;aspect-ratio:auto}
+.cam-cv{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.win.camwin[data-fx=night] .cam-cv{filter:grayscale(1) sepia(1) hue-rotate(58deg) saturate(4.5) brightness(1.2) contrast(1.35)}
+.win.camwin[data-fx=beauty] .cam-cv{filter:saturate(1.3) brightness(1.08) contrast(.9) blur(.5px)}
+.win.camwin[data-fx=potato] .cam-cv{filter:saturate(1.7) contrast(1.35);image-rendering:pixelated}
+.win.camwin[data-fx=boss] .cam-cv{filter:saturate(1.15) contrast(1.06)}
+.cam-live{position:absolute;left:.55rem;top:.5rem;display:flex;align-items:center;gap:.3rem;padding:.12rem .45rem .12rem .38rem;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:700 .62rem/1 Roboto,sans-serif;letter-spacing:.08em;pointer-events:none}
+.cam-live i{width:.45rem;height:.45rem;border-radius:50%;background:#ff3b3b;box-shadow:0 0 6px #ff3b3b;animation:camblink 1.6s steps(2) infinite}
+@keyframes camblink{50%{opacity:.25}}
+.cam-badge{position:absolute;right:.55rem;top:.5rem;padding:.18rem .55rem;border-radius:999px;background:rgba(0,0,0,.5);color:#fff;font:600 .68rem/1.2 Roboto,sans-serif;opacity:0;transform:translateY(-4px);transition:opacity .25s,transform .25s;pointer-events:none}
+.cam-badge.show{opacity:1;transform:none}
+.cam-bar{flex:none;position:relative;height:1.55rem;background:#050506;display:flex;justify-content:center;align-items:flex-end}
+.cam-tab{height:1.4rem;padding:0 1.6rem;border:0;border-radius:.3rem .3rem 0 0;background:#24262b;color:#fff;font:700 .82rem/1 Roboto,sans-serif;cursor:pointer;letter-spacing:.02em}
+.cam-tab:hover{background:#34373e}
+.cam-fx{flex:none;display:none;gap:.45rem;padding:.55rem .6rem .65rem;background:#16171b;border-top:1px solid #2c2e34;overflow-x:auto}
+.win.camwin.fxopen .cam-fx{display:flex}
+.cam-chip{flex:1;min-width:4.6rem;display:flex;flex-direction:column;align-items:center;gap:.3rem;padding:.45rem .25rem .4rem;border:2px solid #2e3138;border-radius:.45rem;background:#202227;color:#d7dbe4;cursor:pointer;transition:transform .1s,border-color .1s,background .1s}
+.cam-chip:hover{background:#2a2d34;transform:translateY(-1px)}
+.cam-chip.on{border-color:#ffb02e;background:#2f2a20;color:#fff}
+.cam-chip i{width:2.3rem;height:2.3rem;border-radius:.4rem;background:#30333b;display:grid;place-items:center}
+.cam-chip.on i{background:#4a3a1c}
+.cam-chip svg{width:2rem;height:2rem}
+.cam-chip span{font:600 .66rem/1.15 Roboto,sans-serif;text-align:center}
+
+/* ---------- CCTV console ---------- */
+.win.cctvwin .wb.cc-body{padding:.5rem;gap:.45rem;background:#101318;color:#cfd6e2;overflow:hidden}
+.cc-head{flex:none;display:flex;align-items:center;gap:.6rem;padding:.1rem .15rem}
+.cc-logo{width:1.9rem;height:1.9rem;border-radius:.35rem;background:#334155;display:grid;place-items:center}
+.cc-logo svg{width:1.3rem;height:1.3rem;fill:#fff;stroke:#fff}
+.cc-title{flex:1;display:flex;flex-direction:column;line-height:1.15}
+.cc-title b{font:900 .92rem/1.1 Roboto,sans-serif;letter-spacing:.12em;color:#fff}
+.cc-title small{font-size:.68rem;color:#7f8a9c;letter-spacing:.03em}
+.cc-recall{display:flex;align-items:center;gap:.3rem;font:700 .72rem 'Roboto Mono',Consolas,monospace;color:#ff5252;letter-spacing:.1em}
+.cc-recall i,.cc-rec i{width:.5rem;height:.5rem;border-radius:50%;background:#ff3030;box-shadow:0 0 6px #ff3030;animation:camblink 1.2s steps(2) infinite}
+.cc-clock{font:700 .74rem 'Roboto Mono',Consolas,monospace;color:#9fb0c6;padding:.2rem .45rem;border:1px solid #2a3240;border-radius:.25rem;background:#0b0d11;white-space:nowrap}
+.cc-grid{flex:none;display:grid;grid-template-columns:1fr 1fr;gap:.35rem}
+.cc-one{flex:none;display:none}
+.win.cctvwin.one .cc-grid{display:none}
+.win.cctvwin.one .cc-one{display:block}
+.win.max.cctvwin .cc-one,.win.max.cctvwin .cc-grid{flex:1;min-height:0}
+.win.max.cctvwin .cc-grid{grid-template-rows:1fr 1fr}
+.win.max.cctvwin .cc-feed{aspect-ratio:auto;height:100%}
+.cc-feed{position:relative;aspect-ratio:16/9;background:#05070a;border:1px solid #232a35;border-radius:.2rem;overflow:hidden;cursor:pointer}
+.cc-feed:hover{border-color:#6c7a90}
+.cc-feed.alarm{border-color:#ff3030;box-shadow:0 0 0 2px rgba(255,48,48,.5);animation:ccalarm .6s steps(2) infinite}
+@keyframes ccalarm{50%{box-shadow:0 0 0 2px rgba(255,48,48,0)}}
+.cc-cv{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;filter:grayscale(.88) sepia(.18) contrast(1.28) brightness(1.08)}
+.cc-fx{position:absolute;inset:0;pointer-events:none;background-size:128px 128px;animation:ccnoise .45s steps(5) infinite;mix-blend-mode:overlay;opacity:.9}
+.cc-fx::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
+.cc-fx::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.6) 100%)}
+@keyframes ccnoise{0%{background-position:0 0}20%{background-position:-37px 21px}40%{background-position:52px -13px}60%{background-position:-11px -48px}80%{background-position:29px 40px}100%{background-position:0 0}}
+.cc-name,.cc-ts,.cc-rec,.cc-alert{position:absolute;font:700 .62rem/1 'Roboto Mono',Consolas,monospace;color:#f4f6f8;text-shadow:0 1px 2px #000,0 0 3px #000;pointer-events:none;letter-spacing:.04em;white-space:nowrap}
+.cc-name{left:.4rem;top:.38rem}
+.cc-ts{right:.4rem;top:.38rem;color:#e8edf3}
+.cc-rec{left:.4rem;bottom:.38rem;display:flex;align-items:center;gap:.25rem;color:#ff6b6b}
+.cc-alert{right:.4rem;bottom:.3rem;padding:.14rem .3rem;border-radius:.15rem;opacity:0}
+.cc-alert.on{opacity:1;background:rgba(40,160,80,.75);text-shadow:none}
+.cc-alert.amber{background:rgba(230,150,20,.85)}
+.cc-alert.red{background:#e02424;animation:camblink .7s steps(2) infinite}
+.cc-feed.big .cc-name,.cc-feed.big .cc-ts,.cc-feed.big .cc-rec,.cc-feed.big .cc-alert{font-size:.8rem}
+.cc-cams{flex:none;display:flex;gap:.3rem;flex-wrap:wrap}
+.cc-btn{display:flex;align-items:center;gap:.3rem;padding:.3rem .55rem;border:1px solid #2c3442;border-radius:.25rem;background:#181d25;color:#aeb9ca;font:700 .66rem/1 'Roboto Mono',Consolas,monospace;letter-spacing:.04em;cursor:pointer}
+.cc-btn:hover{background:#222a35;color:#fff}
+.cc-btn.on{background:#2c3a52;border-color:#5b7fb8;color:#fff}
+.cc-btn.auto{margin-left:auto}
+.cc-btn.auto.on{background:#1f4d33;border-color:#35b36a}
+.cc-btn i{width:.85rem;height:.85rem;display:grid;place-items:center}
+.cc-btn svg{width:.85rem;height:.85rem;fill:currentColor;stroke:currentColor}
+.cc-whos{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:.3rem .7rem;padding:.35rem .5rem;border-radius:.25rem;background:#0b0d11;border:1px solid #1f2630;font:.7rem Roboto,sans-serif;color:#cfd6e2}
+.cc-whos b{font:700 .62rem 'Roboto Mono',Consolas,monospace;letter-spacing:.12em;color:#7f8a9c}
+.cc-who{display:flex;align-items:center;gap:.3rem;font-weight:700}
+.cc-who i{width:.55rem;height:.55rem;border-radius:50%}
+.cc-who em{font-style:normal;font-weight:400;color:#8794a8}
+
+/* ---------- polaroid photo HUD (bottom right while holding / just after taking a photo) ---------- */
+#cam-photo{position:absolute;right:1.4rem;bottom:7.6rem;width:11.5rem;display:flex;flex-direction:column;align-items:center;gap:.45rem;pointer-events:none;transform:rotate(3.5deg);animation:cpin .35s cubic-bezier(.2,1.4,.4,1)}
+#cam-photo.hidden{display:none}
+#cam-photo.out{animation:cpout .25s ease-in forwards}
+#cam-photo .cp-card{width:100%;box-shadow:0 10px 24px rgba(0,0,0,.45),0 2px 4px rgba(0,0,0,.3);border-radius:2px;overflow:hidden;background:#f6f3ea}
+#cam-photo canvas{display:block;width:100%;height:auto}
+#cam-photo .cp-lab{display:flex;flex-direction:column;align-items:center;gap:.15rem;padding:.3rem .6rem;border-radius:.4rem;background:rgba(14,16,22,.72);color:#fff;font:700 .78rem/1.2 Karla,sans-serif;text-align:center;transform:rotate(-3.5deg)}
+#cam-photo .cp-lab span{font-weight:500;color:#cfd5e0;font-size:.72rem}
+#cam-photo kbd{display:inline-block;min-width:1.1rem;padding:0 .25rem;border-radius:.2rem;background:#fff;color:#141824;font:800 .66rem/1.3 Karla,sans-serif;text-align:center}
+@keyframes cpin{from{transform:translateX(130%) rotate(18deg)}to{transform:rotate(3.5deg)}}
+@keyframes cpout{to{transform:translateX(130%) rotate(18deg);opacity:0}}
+@media (max-height:560px){#cam-photo{width:8rem;bottom:6rem}}
