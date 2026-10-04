@@ -222,7 +222,7 @@ const OS = {
   hide() {
     this.open = false; $('#os').classList.add('hidden'); if (G.phase !== 'menu') $('#hud').classList.remove('hidden');
     this.power(false); this.ctx(false); this.ringFor = null; $('#os-modal').replaceChildren();
-    clearTimeout(this.bootT); $('#os-boot').classList.add('hidden');
+    clearTimeout(this.bootT); this.bootTok = null; $('#os-boot').classList.add('hidden');
   },
   reset() {
     for (const id of [...this.wins.keys()]) this.close(id, true);
@@ -234,6 +234,7 @@ const OS = {
   boot() {
     const key = G.mode + '|' + G.slot + '|' + G.day, quick = this.bootKey === key, b = $('#os-boot'), dur = quick ? 300 : 1200;
     this.bootKey = key; clearTimeout(this.bootT);
+    const token = this.bootTok = {};
     if (this.fastBoot) { b.classList.add('hidden'); this.setWallpaper(settings.wallpaper); return; }
     b.classList.remove('hidden', 'out', 'quick'); if (quick) b.classList.add('quick');
     b.style.setProperty('--bt', dur + 'ms');
@@ -241,16 +242,19 @@ const OS = {
     const i = $('.bar i', b); i.style.animation = 'none'; void i.offsetWidth; i.style.animation = '';
     const lg = $('.bootin', b); lg.style.animation = 'none'; void lg.offsetWidth; lg.style.animation = '';
     if (!quick && typeof AudioSys !== 'undefined') { [523, 659, 784, 1047].forEach((f, k) => AudioSys.tone(f, 0.35, 'sine', 0.07, 0.25 + k * 0.11)); }
-    // paint the wallpaper while the boot screen covers the desktop (the bar animates on the compositor)
-    requestAnimationFrame(() => setTimeout(() => { if (this.open) this.setWallpaper(settings.wallpaper); }, 30));
-    this.bootT = setTimeout(() => { b.classList.add('out'); this.bootT = setTimeout(() => b.classList.add('hidden'), 400); }, dur);
+    // paint the wallpaper (time-sliced) while the boot screen is up; leave when both it and the minimum time are done (max 4 s)
+    const wall = new Promise(res => requestAnimationFrame(() => res(this.open ? this.setWallpaper(settings.wallpaper) : null)));
+    const done = () => { if (this.bootTok !== token || !this.open) return; this.bootTok = null; b.classList.add('out'); this.bootT = setTimeout(() => b.classList.add('hidden'), 400); };
+    Promise.all([wall, new Promise(r => setTimeout(r, dur))]).then(done, done); setTimeout(done, 4000);
   },
   /* wallpaper: drawn by apps/wallpapers.js (Wallpapers.render returns a canvas or svg element) */
   setWallpaper(id) {
-    const wall = $('#os-wall'); if (!wall || typeof Wallpapers === 'undefined') return;
+    const wall = $('#os-wall'); if (!wall || typeof Wallpapers === 'undefined') return Promise.resolve();
     const key = Wallpapers.has(id) ? id : Wallpapers.def;
-    if (this.wallId === key && wall.firstChild) return;
-    try { wall.replaceChildren(Wallpapers.render(key)); this.wallId = key; } catch (e) { console.error('wallpaper failed', e); }
+    if (this.wallId === key && wall.firstChild) return Promise.resolve();
+    this.wallId = key;
+    return Wallpapers.renderAsync(key).then(el => { if (this.wallId === key && el.parentNode !== wall) wall.replaceChildren(el); })
+      .catch(e => { console.error('wallpaper failed', e); this.wallId = null; });
   },
 
   /* ----- icons ----- */

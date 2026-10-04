@@ -43,7 +43,7 @@ const Wallpapers = (() => {
   const canyonPal = hgt => { const b = hgt / 9.5, bi = Math.floor(b), t = sstep(0.72, 1, b - bi), c0 = CANYON[bi & 7], c1 = CANYON[(bi + 1) & 7]; _cp[0] = mix(c0[0], c1[0], t); _cp[1] = mix(c0[1], c1[1], t); _cp[2] = mix(c0[2], c1[2], t); return _cp; };
 
   /* ---------- sky ---------- */
-  function paintSky(g, c) {
+  function* paintSky(g, c) {
     const { W, H, hz, sc } = c, S = sc.sky;
     const gr = g.createLinearGradient(0, 0, 0, hz);
     S.stops.forEach(([o, col]) => gr.addColorStop(o, col));
@@ -55,7 +55,7 @@ const Wallpapers = (() => {
       for (const [r, col] of S.sun.glows) { const rg = g.createRadialGradient(sx, sy, 0, sx, sy, r * W); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = rg; g.fillRect(0, 0, W, hz + 1); }
       g.globalCompositeOperation = 'source-over';
     }
-    (S.clouds || []).forEach(cl => clouds(g, c, cl));
+    for (const cl of S.clouds || []) yield* clouds(g, c, cl);
     if (S.sun && S.sun.r) {   // the disc goes in front of thin cloud
       const sx = S.sun.x * W, sy = S.sun.y * H, r = S.sun.r * W, rg = g.createRadialGradient(sx, sy, 0, sx, sy, r * 2.2);
       rg.addColorStop(0, '#fffef6'); rg.addColorStop(0.42, S.sun.disc || '#fff2c8'); rg.addColorStop(0.5, 'rgba(255,220,160,.55)'); rg.addColorStop(1, 'rgba(255,200,140,0)');
@@ -63,7 +63,7 @@ const Wallpapers = (() => {
     }
   }
   /* a cloud layer on a plane above the camera, lit from the sun's screen position */
-  function clouds(g, c, C) {
+  function* clouds(g, c, C) {
     const { W, hz, f } = c, s = C.res || 0.5, w = Math.ceil(W * s), hh = Math.ceil(hz * s), fs = f * s, hzs = hz * s;
     if (hh < 2) return;
     const cv = mkCanvas(w, hh), cg = cv.getContext('2d'), im = cg.createImageData(w, hh), d = im.data, N = Noise(C.seed);
@@ -76,6 +76,7 @@ const Wallpapers = (() => {
       return N.fbm(X + q, Z - q, o) + (clump ? N(X * 0.18 + 11, Z * 0.18) * clump : 0);
     };
     for (let y = 0; y < hh; y++) {
+      if (!(y & 3)) yield;
       const dy = hzs - y; if (dy < 1) continue;
       const dist = alt * fs / dy, fade = sstep(0, (C.fade || 0.1) * hzs, dy) * (top ? sstep(0, top * hzs, y) : 1), hk = (1 - sstep(0, (C.hazeH || 0.5) * hzs, dy)) * (C.hazeK || 0.7);
       for (let x = 0; x < w; x++) {
@@ -97,14 +98,14 @@ const Wallpapers = (() => {
   }
 
   /* ---------- terrain: heightfield sampled on a perspective grid (column angle x log depth) ---------- */
-  function terrain(img, c) {
+  function* terrain(img, c) {
     const { W, H, hz, f, sc } = c, T = sc.terrain, N = Noise(T.seed), camH = T.camH;
     const NU = Math.ceil(W / 2) + 2, NZ = Math.max(90, Math.round((T.steps || 440) * Math.min(1, W / 1200) ** 0.5)), z0 = T.near || 5, z1 = T.far || 8000;
     const zs = new Float32Array(NZ), lz = Math.log(z1 / z0), us = new Float32Array(NU), du = 2 / f;
     for (let j = 0; j < NZ; j++) zs[j] = z0 * Math.exp(lz * j / (NZ - 1));
     for (let i = 0; i < NU; i++) us[i] = (i * 2 - 1 - W / 2) / f;
     const hm = new Float32Array(NU * NZ);
-    for (let j = 0; j < NZ; j++) { const z = zs[j], fp = z * du; for (let i = 0; i < NU; i++) hm[j * NU + i] = T.height(N, us[i] * z, z, fp); }
+    for (let j = 0; j < NZ; j++) { if (!(j & 3)) yield; const z = zs[j], fp = z * du; for (let i = 0; i < NU; i++) hm[j * NU + i] = T.height(N, us[i] * z, z, fp); }
     // cast shadows by sweeping each depth row from the sun's side
     let sh = null;
     if (T.shadows) {
@@ -120,6 +121,7 @@ const Wallpapers = (() => {
     if (T.fogTint) { const t = T.fogTint; for (let i = 0; i < NU; i++) for (let q = 0; q < 3; q++) fogC[i * 3 + q] = mix(fogC[i * 3 + q], t[q], t[3]); }
     const col = new Float32Array(NU * NZ * 3), aux = new Float32Array(NU * NZ * 3), o = [0, 0, 0, 0], L = sc.water ? sc.water.level : -1e9, sun = T.sun, sunC = T.sunCol, amb = T.amb, gr = T.grain == null ? 0.07 : T.grain;
     for (let j = 0; j < NZ; j++) {
+      if (!(j & 7)) yield;
       const z = zs[j], ja = Math.max(0, j - 1), jb = Math.min(NZ - 1, j + 1), dz = zs[jb] - zs[ja];
       for (let i = 0; i < NU; i++) {
         const k = j * NU + i, h = hm[k]; if (h < L) continue;
@@ -151,6 +153,7 @@ const Wallpapers = (() => {
     // march every screen column front to back (y-buffer), shading spans between consecutive samples
     const u32 = new Uint32Array(d8.buffer), mask = c.mask = c.mask || new Uint8Array(W * H), TX = texTile(), face = T.face, fm = [1, 1, 1], fz = face ? new Float32Array(W * H) : null, fh = face ? new Float32Array(W * H) : null;
     for (let x = 0; x < W; x++) {
+      if (!(x & 31)) yield;
       const fi = (x + 1) / 2, i0 = Math.min(NU - 2, fi | 0), t = fi - i0, ux = (x - W / 2) / f;
       let ybuf = H, lastJ = -9, pr = 0, pg = 0, pb = 0, pw = false;
       for (let j = 0; j < NZ; j++) {
@@ -184,13 +187,14 @@ const Wallpapers = (() => {
         else { const i = Math.min(NU - 1, i0); u32[p] = 0xff000000 | (fogC[i * 3 + 2] << 16) | (fogC[i * 3 + 1] << 8) | fogC[i * 3]; }
       }
     }
-    if (face) faces(u32, fz, fh, c, N, T, camH);
+    if (face) yield* faces(u32, fz, fh, c, N, T, camH);
     c.grid = { hm, zs, NU, NZ, camH, L };
   }
   /* cliff faces: blur sideways (kills per-column lighting flicker, keeps horizontal strata), then paint strata per pixel */
-  function faces(u32, fz, fh, c, N, T, camH) {
+  function* faces(u32, fz, fh, c, N, T, camH) {
     const { W, H, hz, f } = c, r = Math.max(2, Math.round(4 * W / 1280)), row = new Uint32Array(W), fm = [1, 1, 1];
     for (let y = 0; y < H; y++) {
+      if (!(y & 15)) yield;
       const o = y * W; row.set(u32.subarray(o, o + W));
       for (let x = 0; x < W; x++) {
         const z = fz[o + x]; if (!z) continue;
@@ -222,7 +226,7 @@ const Wallpapers = (() => {
   }
 
   /* ---------- water: per-column mirror about the far shore, rippled, fresnel-mixed with the deep colour ---------- */
-  function water(img, c) {
+  function* water(img, c) {
     const { W, H, hz, f, sc, mask } = c, Wt = sc.water, N = Noise(Wt.seed || 7), u32 = new Uint32Array(img.data.buffer), src = u32.slice();
     const camH = sc.terrain ? sc.terrain.camH - Wt.level : Wt.camH, deep = hex(Wt.deep), amp = Wt.amp * H / 900, k = Wt.k, rf = Wt.refl || 0.9, shd = Wt.shade || 0.1, f0 = Wt.f0 == null ? 0.3 : Wt.f0;
     const rowZ = new Float32Array(H), rowF = new Float32Array(H);
@@ -230,6 +234,7 @@ const Wallpapers = (() => {
     const GL = Wt.glit, TX = texTile(), gc = GL ? hex(GL.col) : null, gx0 = GL ? GL.x * W : 0;
     const G = c.grid, mir = new Float32Array(H);   // per pixel of a column: the row to mirror about
     for (let x = 0; x < W; x++) {
+      if (!(x & 15)) yield;
       let top = -1; for (let y = hz; y < H; y++) if (mask[y * W + x]) { top = y; break; }
       if (top < 0) continue;
       if (G) {
@@ -275,15 +280,15 @@ const Wallpapers = (() => {
     g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
   }
 
-  function paintScene(sc, W, H) {
+  function* paintScene(sc, W, H) {
     const cv = mkCanvas(W, H), g = cv.getContext('2d', { willReadFrequently: true });
     const hz = Math.round(H * sc.horizon), f = (W / 2) / Math.tan((sc.fov || 60) * Math.PI / 360), c = { W, H, hz, f, sc, mask: null };
-    paintSky(g, c);
+    yield* paintSky(g, c);
     if (sc.paint2d) sc.paint2d(g, c);
     if (sc.terrain || sc.water) {
       const img = g.getImageData(0, 0, W, H);
-      if (sc.terrain) terrain(img, c);
-      if (sc.water) { if (!c.mask) { c.mask = new Uint8Array(W * H); c.mask.fill(1, (hz + 1) * W); } water(img, c); }
+      if (sc.terrain) yield* terrain(img, c);
+      if (sc.water) { if (!c.mask) { c.mask = new Uint8Array(W * H); c.mask.fill(1, (hz + 1) * W); } yield* water(img, c); }
       g.putImageData(img, 0, 0);
     }
     if (sc.post) sc.post(g, c);
@@ -511,7 +516,14 @@ const Wallpapers = (() => {
     return el.firstElementChild;
   }
 
-  const cache = new Map();
+  /* run a painter generator to the end now, or in ~10 ms slices so the game keeps running */
+  const runSync = gen => { let r; do { r = gen.next(); } while (!r.done); return r.value; };
+  const runAsync = gen => new Promise((res, rej) => {
+    const step = () => { try { const t = performance.now(); let r; do { r = gen.next(); if (r.done) return res(r.value); } while (performance.now() - t < 10); setTimeout(step, 0); } catch (e) { rej(e); } };
+    step();
+  });
+  const cache = new Map(), pending = new Map();
+  function keep(key, cv) { cache.set(key, cv); if (cache.size > 3) cache.delete(cache.keys().next().value); }
   function sizeFor() { const w = clamp(Math.round(innerWidth), 1280, 1920), ar = clamp(innerWidth / Math.max(1, innerHeight), 1.25, 2.4); return [w, Math.round(w / ar)]; }
   const API = {
     list: SCENES, def: 'canyon',
@@ -522,14 +534,26 @@ const Wallpapers = (() => {
       const sc = SCENES.find(s => s.id === id) || SCENES[0];
       if (sc.svg) return logoSVG();
       if (sc.font && document.fonts && !document.fonts.check(sc.font)) document.fonts.load(sc.font).then(() => { for (const k of [...cache.keys()]) if (k.startsWith(sc.id + '|')) cache.delete(k); if (OS.wallId === sc.id) { OS.wallId = null; OS.setWallpaper(sc.id); } }).catch(() => {});
-      if (w) return paintScene(sc, w, h);
+      if (w) return runSync(paintScene(sc, w, h));
       const [W, H] = sizeFor(), key = sc.id + '|' + W + 'x' + H;
       let cv = cache.get(key);
-      if (!cv) { const t0 = performance.now(); cv = paintScene(sc, W, H); API.lastMs = Math.round(performance.now() - t0); cache.set(key, cv); if (cache.size > 3) cache.delete(cache.keys().next().value); }
+      if (!cv) { const t0 = performance.now(); cv = runSync(paintScene(sc, W, H)); API.lastMs = Math.round(performance.now() - t0); keep(key, cv); }
       else { cache.delete(key); cache.set(key, cv); }
       return cv;
     },
-    set(id) { if (!API.has(id)) return; settings.wallpaper = id; saveSettings(); OS.wallId = null; OS.setWallpaper(id); Bus.emit('wallpaper', id); }
+    /* full-screen render without freezing the game: resolves with the element (cached ones resolve at once) */
+    renderAsync(id) {
+      const sc = SCENES.find(s => s.id === id) || SCENES[0];
+      if (sc.svg) return Promise.resolve(logoSVG());
+      const [W, H] = sizeFor(), key = sc.id + '|' + W + 'x' + H;
+      if (cache.has(key)) return Promise.resolve(API.render(sc.id));
+      if (!pending.has(key)) {
+        const t0 = performance.now();
+        pending.set(key, runAsync(paintScene(sc, W, H)).then(cv => { API.lastMs = Math.round(performance.now() - t0); keep(key, cv); pending.delete(key); return cv; }, e => { pending.delete(key); throw e; }));
+      }
+      return pending.get(key);
+    },
+    set(id) { if (!API.has(id)) return Promise.resolve(); settings.wallpaper = id; saveSettings(); OS.wallId = null; Bus.emit('wallpaper', id); return OS.setWallpaper(id); }
   };
   return API;
 })();
@@ -542,7 +566,7 @@ OS.apps.wallpapers = {
       const card = h('button', { class: 'wp-card' + (sc.id === Wallpapers.current() ? ' on' : ''), title: sc.name, onclick: () => {
         if (card.classList.contains('on')) return;
         SFX.click(); cards.forEach(x => x.classList.toggle('on', x === card)); card.classList.add('busy');
-        setTimeout(() => { Wallpapers.set(sc.id); card.classList.remove('busy'); }, 40);
+        Wallpapers.set(sc.id).then(() => card.classList.remove('busy'), () => card.classList.remove('busy'));
       } }, th, h('span', { class: 'wp-nm' }, sc.name), h('i', { class: 'wp-ok', html: OS.glyph('check') }));
       card.th = th; card.sc = sc; return card;
     });

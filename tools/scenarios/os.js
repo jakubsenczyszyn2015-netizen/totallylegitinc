@@ -11,8 +11,8 @@ module.exports = async page => {
   await page.wait(350);
   if (want('boot')) await page.shot('os-01-boot');
   await page.wait(1800);
-  const ms = await page.eval(() => Wallpapers.lastMs);
-  console.log('wallpaper render ms: ' + ms);
+  const ms = await page.eval(() => ({ ms: Wallpapers.lastMs, boot: !document.getElementById('os-boot').classList.contains('hidden') }));
+  console.log('boot wallpaper: ' + JSON.stringify(ms));
   if (want('desk')) {
     await page.eval(() => { const T = window.__tli; T.Call.state = 'off'; T.Call.wait = 999; return true; });
     await page.shot('os-02-desktop');
@@ -77,11 +77,11 @@ module.exports = async page => {
   }
   if (want('walls')) {
     const ids = await page.eval(() => Wallpapers.list.map(s => s.id));
-    await page.eval(() => { const T = window.__tli; [...T.OS.wins.keys()].forEach(id => T.OS.minimise(id)); document.getElementById('os-icons').style.visibility = 'hidden'; return true; });
+    await page.eval(() => { const T = window.__tli; T.Call.decline(); T.Call.state = 'idle'; T.Call.wait = 1e9; [...T.OS.wins.keys()].forEach(id => T.OS.minimise(id)); document.getElementById('os-icons').style.visibility = 'hidden'; return true; });
     for (const id of ids) {
-      const t = await page.eval(i => { const t0 = performance.now(); Wallpapers.set(i); return Math.round(performance.now() - t0); }, id);
-      console.log('wallpaper ' + id + ': ' + t + ' ms');
-      await page.wait(700);
+      const t = await page.eval(i => { const t0 = performance.now(); return Wallpapers.set(i).then(() => Math.round(performance.now() - t0) + ' ms total, ' + Wallpapers.lastMs + ' ms painting'); }, id);
+      console.log('wallpaper ' + id + ': ' + t);
+      await page.wait(650);
       await page.shot('os-10-wall-' + id);
     }
     await page.eval(() => { document.getElementById('os-icons').style.visibility = ''; Wallpapers.set('canyon'); window.__tli.OS.launch('wallpapers'); return true; });
