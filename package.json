@@ -7,7 +7,7 @@
   "scripts": {
     "vendor": "node scripts/vendor.js",
     "start": "npm run vendor && electron .",
-    "dist:win": "npm run vendor && electron-builder --win portable nsis",
+    "dist:win": "npm run vendor && electron-builder --win portable nsis --publish never",
     "pack:win": "npm run vendor && electron-packager . \"Totally Legit Inc\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/dist"
   },
   "build": {
