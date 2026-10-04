@@ -777,7 +777,7 @@ function updateAvatars(dt, t) {
   for (const a of W.avatars.values()) {
     const g = a.av.group; let sit = false, tx = a.tx, tz = a.tz, tr = a.tr, ty = a.ty;
     if (a.seat >= 0 && W.desks[a.seat]) { const d = W.desks[a.seat]; tx = d.seat.x; tz = d.seat.z; tr = d.rot; ty = 0; sit = 'desk'; }
-    else if (a.seat <= -10) { const s = REVIEW_SEATS[(-a.seat - 10) % REVIEW_SEATS.length]; tx = s[0]; tz = s[1]; tr = -Math.PI / 2; ty = 0; sit = 'review'; }
+    else if (a.seat <= -10) { const s = REVIEW_SEATS[(-a.seat - 10) % REVIEW_SEATS.length]; tx = s[0]; tz = s[1]; tr = s[2] != null ? s[2] : -Math.PI / 2; ty = 0; sit = 'review'; }
     const k = 1 - Math.exp(-dt * 12), ox = g.position.x, oz = g.position.z;
     if (Math.hypot(tx - ox, tz - oz) > 6) { g.position.x = tx; g.position.z = tz; } else { g.position.x = lerp(ox, tx, k); g.position.z = lerp(oz, tz, k); }
     g.position.y = lerp(g.position.y, ty, Math.min(1, k * 1.5));
@@ -853,7 +853,7 @@ Loop.add((dt, t) => {
   if (Avatars.moodT > 0) { Avatars.moodT -= dt; if (Avatars.moodT <= 0) Avatars.tmood = null; }
   const g = a.group; let sit = false;
   if (P.seated && W.desks[P.seat]) { const d = W.desks[P.seat]; g.position.set(d.seat.x, 0, d.seat.z); g.rotation.y = d.rot; sit = 'desk'; }
-  else if (P.review >= 0) { const s = REVIEW_SEATS[P.review % REVIEW_SEATS.length]; g.position.set(s[0], 0, s[1]); g.rotation.y = -Math.PI / 2; sit = 'review'; }
+  else if (P.review >= 0) { const s = REVIEW_SEATS[P.review % REVIEW_SEATS.length]; g.position.set(s[0], 0, s[1]); g.rotation.y = s[2] != null ? s[2] : -Math.PI / 2; sit = 'review'; }
   else { g.position.set(P.pos.x, P.pos.y, P.pos.z); g.rotation.y = P.yaw; }
   const L = avMyLook(); if (settings.color && L.shirt !== settings.color) { L.shirt = settings.color; saveSettings(); }
   if (a.look.shirt !== L.shirt) a.setLook(L);

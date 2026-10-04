@@ -39,8 +39,8 @@ poseAvatar(av, sit, t, speed);                            // call every frame
   and falling come from `av.group.position.y`), `true` or `'desk'` (typing at a desk, with
   occasional head turns and leaning back with hands behind the head), or `'review'` (seated, hands
   on the table). Transitions blend smoothly. Hidden avatars are skipped (except `W.me`).
-* Seated avatars are placed at the chair (`desk.seat`, rotation `desk.rot`; review seats rotation
-  `-PI/2`) and the pose itself moves the body down onto the seat and forward to the keyboard.
+* Seated avatars are placed at the chair (`desk.seat`, rotation `desk.rot`; review seats
+  `REVIEW_SEATS[i] = [x, z, ry?]`, rotation `ry` when given, else `-PI/2` = facing +X) and the pose itself moves the body down onto the seat and forward to the keyboard.
 
 ### Avatar object
 | field / method | |
@@ -58,6 +58,7 @@ poseAvatar(av, sit, t, speed);                            // call every frame
 | `stun(sec)` | dizzy wobble + yellow stars spinning round the head + spiral eyes |
 | `setMood(m, sec)` | face: `neutral`, `happy`, `angry`, `sad`, `surprised` (also `grumpy`, `joy`, `dizzy`). With `sec` it reverts afterwards |
 | `act` | the running action `{name, t, d}` or null |
+| `lookCam` | standing avatars glance at a camera that comes within ~4 m (default `W.camera`; set another camera, or `false` to turn it off) |
 | `dispose()` | remove and free the per-avatar textures |
 
 ### Actions
