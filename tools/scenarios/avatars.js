@@ -13,6 +13,9 @@ module.exports = async page => {
     await page.eval(() => { const L = Object.assign({}, settings.look, { hair: 'afro', hairColor: '#1c1714', skin: '#6b4128', facial: 'beard', glasses: 'round', shirt: '#22c55e', pants: '#8c7a58' }); Customize.apply(L); Customize.preview && Customize.preview.play('wave'); return true; });
     await page.wait(900);
     await page.shot('av-02-creator-changed');
+    await page.eval(() => { Customize.zoomT = 1; Customize.preview.setMood('happy', 5); return true; });
+    await page.wait(1200);
+    await page.shot('av-03-creator-zoom');
     await page.eval(() => { Customize.close(); return true; });
   }
   await page.startSolo('week');
@@ -90,6 +93,15 @@ module.exports = async page => {
     });
     await page.wait(1300);
     await page.shot('av-32-review');
+  }
+  if (want('boss')) {
+    await page.eval(() => { window.__avs.forEach(a => { a.group.visible = false; }); placeBoss(false, false); window.__cam(12.3, 1.75, 2.3, -Math.PI / 2 - 0.25, -0.08); return true; });
+    await page.wait(1000);
+    await page.shot('av-25-boss');
+    await page.eval(() => { placeBoss(false, true); return true; });
+    await page.wait(900);
+    await page.shot('av-26-boss-angry');
+    await page.eval(() => { placeBoss(false, false); window.__avs.forEach(a => { a.group.visible = true; }); return true; });
   }
   if (want('net')) {
     // fake remote players through the real sync path: look string in ext, talking flag, seat, net actions

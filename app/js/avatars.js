@@ -288,8 +288,8 @@ function avAccGeo(L, headset) {
     avGbAdd(b, avSphere(10, 8), avM(P[0], P[1], P[2], 0.034), avCol('#d6342c'));
     avGbAdd(b, avSphere(9, 8), avM(P[0], P[1] - 0.13, P[2] + 0.06, 0.05, 0.14, 0.05, -0.38, 0, 0), hc);
   } else if (h === 'mohawk') {
-    avGbAdd(b, avCap(0.006, 0.7, 1.5, 2.2), null, avMix(L.hairColor, L.skin, 0.5));
-    avGbAdd(b, avCap(0.0, 0.62, 1.5, 1.9, (ph, d, v) => 0.11 * Math.exp(-Math.pow(Math.sin(ph) / 0.13, 2)) * (1 - avSS(0.65, 1, v))), null, hc);
+    avGbAdd(b, avCap(0.006, 0.7, 1.5, 2.2), null, avMix(L.hairColor, L.skin, 0.62));
+    avGbAdd(b, avCap(0.0, 0.62, 1.5, 1.9, (ph, d, v) => 0.15 * Math.exp(-Math.pow(Math.sin(ph) / 0.15, 2)) * (1 - avSS(0.7, 1, v))), null, hc);
   } else if (h === 'fringe') {
     avGbAdd(b, avShell({ p0: 0, p1: PI * 2, nu: 36, nv: 8, closed: true, t0: () => 1.05, t1: avEdge(1.25, 1.75, 2.0),
       th: (u, v, ph, d) => 0.032 * avSS(0.27, 0.42, d) * Math.pow(Math.sin(v * PI), 0.6) + 0.001 }), null, hc);
@@ -311,8 +311,8 @@ function avAccGeo(L, headset) {
     const fr = avCol('#1c1c22'), ey = AV_HD.ry * Math.cos(1.42), ez = -AV_HD.rz * avEgg(1.42) - 0.022;
     [-1, 1].forEach(s => {
       const x = s * 0.066;
-      if (L.glasses === 'square') avGbAdd(b, new THREE.TorusGeometry(0.052, 0.0065, 5, 4), avM(x, ey, ez, 1.05, 0.72, 1, 0, 0, PI / 4), fr);
-      else avGbAdd(b, new THREE.TorusGeometry(0.045, 0.0065, 5, 16), avM(x, ey, ez, 1, 0.88, 1), fr);
+      if (L.glasses === 'square') avGbAdd(b, new THREE.TorusGeometry(0.048, 0.0065, 5, 4), avM(x, ey, ez, 1.05, 0.72, 1, 0, 0, PI / 4), fr);
+      else avGbAdd(b, new THREE.TorusGeometry(0.043, 0.0062, 5, 16), avM(x, ey, ez, 1, 0.9, 1), fr);
       if (L.glasses === 'shades') avGbAdd(b, new THREE.CylinderGeometry(0.045, 0.045, 0.006, 20), avM(x, ey, ez + 0.002, 1, 1, 0.88, PI / 2, 0, 0), avCol('#10131b'));
       const tx = s * 0.17, tz = -0.03, mx = (s * 0.112 + tx) / 2, mz = (ez + tz) / 2, len = Math.hypot(tx - s * 0.112, tz - ez);
       avGbAdd(b, new THREE.BoxGeometry(0.008, 0.008, 1), avM(mx, ey + 0.005, mz, 1, 1, len, 0, Math.atan2(tx - s * 0.112, tz - ez), 0), fr);

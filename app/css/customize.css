@@ -19,7 +19,7 @@
 .cz-note.n1{left:7%;top:12%;transform:rotate(-6deg)}
 .cz-note.n2{right:8%;top:9%;transform:rotate(5deg);background:#ff9ecb;font-size:.78rem}
 .cz-note.n3{right:14%;top:33%;transform:rotate(-3deg);background:#9be7ff;width:4.4rem;height:4.4rem}
-.cz-hint{position:absolute;z-index:2;left:50%;bottom:4.2rem;transform:translateX(-50%);font-size:.75rem;font-weight:800;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+.cz-hint{position:absolute;z-index:2;left:50%;bottom:4.6rem;transform:translateX(-50%);font-size:.75rem;font-weight:800;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
 .cz-zoom{position:absolute;z-index:2;left:.7rem;top:.7rem}
 .cz-acts{position:absolute;z-index:2;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;padding:.55rem .6rem;background:rgba(12,15,26,.72);border-top:2px solid rgba(0,0,0,.4);min-height:3.6rem;align-items:center}
 .cz-emote{border:2px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);font-weight:800;font-size:.78rem;padding:.25em .7em;box-shadow:0 2px 0 var(--ink)}
@@ -28,11 +28,11 @@
 .cz-sep{width:.6rem}
 
 /* options */
-.cz-opts{overflow:auto;padding:.9rem 1rem 1.1rem;display:flex;flex-direction:column;gap:.85rem}
-.cz-sec h4{font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.cz-opts{overflow:auto;padding:.8rem 1rem 1rem;display:flex;flex-direction:column;gap:.7rem}
+.cz-sec h4{font-size:.72rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem}
 .cz-name{width:100%;background:var(--ink);border:2px solid var(--navy3);border-radius:10px;padding:.5em .75em;font-family:var(--font-d);font-size:1.15rem;color:#fffaf0;letter-spacing:.01em}
 .cz-sw{display:flex;flex-wrap:wrap;gap:.42rem}
-.cz-dot{width:2.05rem;height:2.05rem;border-radius:50%;border:3px solid var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 2px 0 var(--ink);transition:transform .08s}
+.cz-dot{width:1.85rem;height:1.85rem;border-radius:50%;border:3px solid var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 2px 0 var(--ink);transition:transform .08s}
 .cz-dot:hover{transform:scale(1.1)}
 .cz-dot.on{outline:3px solid var(--yellow);outline-offset:2px;transform:scale(1.08)}
 .cz-chips{display:flex;flex-wrap:wrap;gap:.35rem}
