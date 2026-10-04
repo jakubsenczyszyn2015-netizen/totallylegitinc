@@ -167,7 +167,7 @@ const Wallpapers = (() => {
           r = col[k0 * 3] * a0 + col[k1 * 3] * a1; gg = col[k0 * 3 + 1] * a0 + col[k1 * 3 + 1] * a1; b = col[k0 * 3 + 2] * a0 + col[k1 * 3 + 2] * a1;
           tx = aux[k0 * 3] * a0 + aux[k1 * 3] * a1; ny = aux[k0 * 3 + 1] * a0 + aux[k1 * 3 + 1] * a1; vis = aux[k0 * 3 + 2] * a0 + aux[k1 * 3 + 2] * a1;
         }
-        const yt = Math.max(0, Math.ceil(y)), yb = Math.min(H, ybuf), smooth = lastJ === j - 1 && pw === wet, span = yb - yt, steep = face && !wet && ny < 0.6;
+        const yt = Math.max(0, Math.ceil(y)), yb = Math.min(H, ybuf), smooth = lastJ === j - 1 && pw === wet, span = yb - yt, steep = face && !wet && ny < (T.faceNy || 0.6);
         for (let yy = yt; yy < yb; yy++) {
           const p = yy * W + x;
           if (wet) { mask[p] = 1; continue; }
@@ -302,7 +302,7 @@ const Wallpapers = (() => {
       sky: { stops: [[0, '#18223a'], [0.35, '#2f3b58'], [0.66, '#7a6676'], [0.87, '#e39663'], [1, '#ffcf88']],
         sun: { x: 1.1, y: 0.56, glows: [[0.8, 'rgba(255,160,80,.55)'], [0.32, 'rgba(255,214,150,.65)']] },
         clouds: [{ seed: 11, scale: 0.0011, cover: -0.08, soft: 0.2, alt: 900, dark: '#222a3e', lit: '#d58c68', glow: '#ff9446', glowK: 2.6, sunX: 1.15, sunY: 1.2, haze: '#f0a777', hazeH: 0.3, hazeK: 0.8, lk: 5, oct: 6, warp: 0.55, clump: 0.4, squash: 1.2, fade: 0.06 }] },
-      terrain: { seed: 5, camH: 22, near: 6, far: 16000, steps: 520, fog: 0.00014, fogH: 900, grain: 0.1,
+      terrain: { seed: 5, camH: 22, near: 6, far: 16000, steps: 520, fog: 0.00014, fogH: 900, grain: 0.1, faceNy: 0.4,
         sun: norm3([0.9, 0.18, -0.3]), sunCol: [1.85, 1.1, 0.62], amb: [0.26, 0.29, 0.44], shadows: true, shadowSoft: 5,
         height(N, x, z, fp) {   // hand-placed mesas and buttes around the lake
           let best = -9, top = 0;
