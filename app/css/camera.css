@@ -4,7 +4,7 @@
 .win.camwin .wb.cam-body{padding:0;gap:0;background:#000;overflow:hidden}
 .cam-view{position:relative;flex:none;aspect-ratio:16/9;background:#0b0c10;overflow:hidden}
 .win.max.camwin .cam-view{flex:1;aspect-ratio:auto}
-.cam-cv{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover}
+.cam-cv{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;filter:saturate(1.12) contrast(1.05)}
 .win.camwin[data-fx=night] .cam-cv{filter:grayscale(1) sepia(1) hue-rotate(58deg) saturate(4.5) brightness(1.2) contrast(1.35)}
 .win.camwin[data-fx=beauty] .cam-cv{filter:saturate(1.3) brightness(1.08) contrast(.9) blur(.5px)}
 .win.camwin[data-fx=potato] .cam-cv{filter:saturate(1.7) contrast(1.35);image-rendering:pixelated}

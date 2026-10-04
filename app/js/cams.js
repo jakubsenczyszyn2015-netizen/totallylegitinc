@@ -296,8 +296,8 @@ const SnapCam = {
     FX.flash('#ffffff', 0.4, 0.92); this.sound(); this.glint(hp); Props.vmKick = 0;
     PhotoHud.show(id, [h('b', {}, 'Developing…'), h('span', {}, left ? left + ' shot' + (left === 1 ? '' : 's') + ' left' : 'Out of film')], 4.5);
     setTimeout(() => {   // the motor spits the photo out of the front slot
-      const o = Props.handPos(), f = aimDir(), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
-      Props.launch('photo', [o.x + f.x * 0.12, o.y + 0.02, o.z + f.z * 0.12], [f.x * 1.6 - sy * 0 + (P.vx || 0) * 0.5, 1.1 + f.y * 0.8, f.z * 1.6 + (P.vz || 0) * 0.5 + cy * 0], { id });
+      const o = Props.handPos(), f = aimDir();
+      Props.launch('photo', [o.x + f.x * 0.12, o.y + 0.02, o.z + f.z * 0.12], [f.x * 1.6 + (P.vx || 0) * 0.5, 1.1 + f.y * 0.8, f.z * 1.6 + (P.vz || 0) * 0.5], { id });
       if (!left) toast('Out of film. BonkMart sells more.', '');
     }, 420);
   },

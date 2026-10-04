@@ -4,7 +4,7 @@
    effects. Rendering goes through Cams (cams.js, loaded later: only used lazily). */
 const CamApp = {
   cam: null, win: null, cv: null, g: null, tiny: null, bgs: {}, fxT: 0, freeze: 0, sparks: null, _p: {}, _q: {}, _v: null,
-  W: 480, H: 270,
+  W: 480, H: 270, POS: [-0.012, 1.46, -0.36], LOOK: [0, 0.98, 0.8], FOV: 70, NEAR: 0.2,
   FX: [
     { id: 'none', name: 'No effect', svg: '<circle cx="24" cy="24" r="14" fill="none" stroke="#fff" stroke-width="4"/><path d="M14 34L34 14" stroke="#fff" stroke-width="4" stroke-linecap="round"/>' },
     { id: 'pro', name: 'Professional background', svg: '<rect x="7" y="9" width="34" height="30" rx="3" fill="#8a5a3a"/><rect x="10" y="12" width="28" height="7" fill="#d9a066"/><rect x="11" y="13" width="4" height="6" fill="#e5383b"/><rect x="16" y="13" width="3" height="6" fill="#2f7cf6"/><rect x="20" y="14" width="5" height="5" fill="#ffd23b"/><rect x="10" y="22" width="28" height="7" fill="#d9a066"/><circle cx="31" cy="26" r="3" fill="#3fa34d"/><rect x="12" y="23" width="9" height="6" fill="#fff"/><circle cx="24" cy="36" r="7" fill="#f2c4a0"/>' },
@@ -23,17 +23,18 @@ const CamApp = {
   visible() { const w = this.win; return !!(w && OS.open && P.seated && !P.cam && OS.wins.get('camera') === w && !w.el.classList.contains('min')); },
   ensure() {
     if (this.cam || typeof Cams === 'undefined') return this.cam;
-    this.cam = Cams.create({ w: this.W, h: this.H, fps: 12, fov: 66, near: 0.03, me: true, tags: false, visible: () => this.visible(), before: c => this.place(c), onFrame: c => this.draw(c) });
+    this.cam = Cams.create({ w: this.W, h: this.H, fps: 12, fov: this.FOV, near: 0.03, me: true, tags: false, visible: () => this.visible(), before: c => this.place(c), onFrame: c => this.draw(c) });
     this._v = new THREE.Vector3(); return this.cam;
   },
   /* aim from the webcam on top of the monitor (desk-local (0, 1.39, -0.21), facing the chair) */
   place(c) {
     const d = W.desks[P.seat]; if (!P.seated || !d) return false;
     const s = Math.sin(d.rot), co = Math.cos(d.rot), v = this._v, fx = this.fx();
-    c.cam.position.set(d.x + co * -0.012 + s * -0.18, 1.385, d.z - s * -0.012 + co * -0.18);
-    v.set(d.x + s * 0.85, 1.08, d.z + co * 0.85); c.cam.lookAt(v);
+    const A = this.POS, B = this.LOOK;
+    c.cam.position.set(d.x + co * A[0] + s * A[2], A[1], d.z - s * A[0] + co * A[2]);
+    v.set(d.x + co * B[0] + s * B[2], B[1], d.z - s * B[0] + co * B[2]); c.cam.lookAt(v);
     if (fx === 'potato') c.cam.rotation.z += Math.sin(W.t * 1.7) * 0.02;
-    const far = fx === 'pro' ? 1.62 : 40; if (c.cam.far !== far) { c.cam.far = far; c.cam.updateProjectionMatrix(); }
+    const far = fx === 'pro' ? 1.85 : 40; if (c.cam.far !== far || c.cam.near !== this.NEAR) { c.cam.far = far; c.cam.near = this.NEAR; c.cam.updateProjectionMatrix(); }
     c.alpha = fx === 'pro'; c.fps = fx === 'potato' ? 5 : 12;
     if (fx === 'potato' && this.freeze > 0) { this.freeze--; return false; }
     if (fx === 'potato' && Math.random() < 0.03) this.freeze = 6 + Math.floor(Math.random() * 8);
