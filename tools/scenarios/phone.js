@@ -37,8 +37,8 @@ module.exports = async page => {
   }
 
   if (want('moods')) {
-    await page.eval(() => { const T = window.__tli; T.Call.ring(false, 'granny'); return true; });
-    await page.wait(500);
+    await page.eval(() => { const T = window.__tli; T.Call.ring(false, 'granny'); T.Call.ringLeft = 60; return true; });
+    await page.wait(1800);
     await page.shot('phone-02-ringing');
     await page.eval(() => window.__tli.Call.answer().then(() => true));
     await page.wait(600);

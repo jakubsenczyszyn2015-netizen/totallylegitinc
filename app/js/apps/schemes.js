@@ -65,7 +65,7 @@ function schemeApp(s) {
           const inp = b.querySelector('input[data-f="' + f + '"]'); if (!inp) return; w.vals[f] = inp.value;
           if (Call.submitForm({ [f]: inp.value }).bad.length) { const el = b.querySelector('input[data-f="' + f + '"]'); if (el) { el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); el.focus(); } }
         };
-        kids.push(h('div', { class: 'sx-form', style: { borderLeftColor: s.color } }, banner, fs.form.map(f => {
+        kids.push(h('div', { class: 'sx-form' + (open || paid ? ' open' : ''), style: { borderLeftColor: s.color } }, banner, fs.form.map(f => {
           const ok = !!c.formOk[f.f], bad = !ok && c.formBad && c.formBad[f.f];
           const inp = h('input', { class: 'sx-inp' + (bad ? ' bad' : ''), type: 'text', maxLength: f.len + 4, placeholder: f.ph, autocomplete: 'off', spellcheck: false,
             value: ok ? schMask(c.caller[f.f]) : (w.vals[f.f] || ''), disabled: ok || !open, oninput: e => { w.vals[f.f] = e.target.value; }, onkeydown: e => { if (e.key === 'Enter') verify(f.f); } });
@@ -86,7 +86,7 @@ function schemeApp(s) {
         const x = s.steps[next], submit = () => { const inp = b.querySelector('input[data-f="pin"]'); w.vals.pin = inp.value; Call.submitPin(inp.value); };
         const inp = h('input', { class: 'sx-inp', type: 'text', maxLength: x.len || 6, placeholder: x.ph || '0000', autocomplete: 'off', value: w.vals.pin || '', oninput: e => { w.vals.pin = e.target.value; }, onkeydown: e => { if (e.key === 'Enter') submit(); } });
         inp.dataset.f = 'pin';
-        kids.push(h('div', { class: 'sx-form', style: { borderLeftColor: s.color } }, h('div', { class: 'sx-banner' }, 'Enter the customer PIN for ' + money(s.reward) + '.'),
+        kids.push(h('div', { class: 'sx-form open', style: { borderLeftColor: s.color } }, h('div', { class: 'sx-banner' }, 'Enter the customer PIN for ' + money(s.reward) + '.'),
           h('div', { class: 'sx-field' }, h('label', {}, 'Customer PIN (0000)'),
             h('div', { class: 'sx-frow' }, inp, h('button', { class: 'sx-btn', style: { background: PT.mix(s.color, '#0b1730', 0.45) }, onclick: submit }, 'Submit')),
             h('div', { class: 'sx-fst' }, 'It is in one of their files. ', h('a', { href: '#', onclick: e => { e.preventDefault(); OS.launch('nosy'); } }, 'Open NosyViewer')))));
@@ -99,7 +99,11 @@ function schemeApp(s) {
       else if (mine && st === 'ended') label = 'Call ended';
       kids.push(h('button', { class: 'sx-run' + (live && mine ? ' on' : ''), style: dis ? null : { background: s.color }, disabled: dis, onclick: () => Call.setScheme(s.id) }, label));
       kids.push(h('p', { class: 'sx-tip' }, h('b', {}, 'Tip: '), s.tips.join(' ')));
-      b.replaceChildren(...kids);
+      const top = b.scrollTop; b.replaceChildren(...kids); b.scrollTop = top;
+      /* bring the form (or the NosyViewer note) into view when the scheme reaches it */
+      const tgt = b.querySelector('.sx-form.open, .sx-note'), key = next + ':' + (c && c.result);
+      if (tgt && w.lastKey !== key) { const d = (tgt.getBoundingClientRect().bottom - b.getBoundingClientRect().bottom) / (OS.ws || 1) + 12; if (d > 0) b.scrollTop += d; }
+      w.lastKey = key;
       if (focusF) { const el = b.querySelector('input[data-f="' + focusF + '"]'); if (el && !el.disabled) { el.focus(); try { el.setSelectionRange(caret, caret); } catch (e) {} } }
     }
   };

@@ -77,7 +77,8 @@ OS.apps.script = {
     }
     if (live) page.append(h('div', { class: 'sc-lab' + (low ? ' warn' : '') }, low ? 'Trust is slipping: try one of these' : 'If trust slips'), h('div', { class: 'sc-lines' }, (Script.RECOVER[c.caller.baiter ? 'baiter' : c.caller.persona.id] || Script.RECOVER.sweet).map(t => Script.line(t))));
     b.replaceChildren(head, page);
-    const hot = page.querySelector('.sc-step.cur'); if (hot && force !== true) hot.scrollIntoView({ block: 'nearest' });
+    const hot = page.querySelector('.sc-step.cur');
+    if (hot) { const d = (hot.getBoundingClientRect().bottom - page.getBoundingClientRect().bottom) / (OS.ws || 1) + 8; if (d > 0) page.scrollTop += Math.min(d, (hot.getBoundingClientRect().top - page.getBoundingClientRect().top) / (OS.ws || 1) - 8); }
   }
 };
 OS.pinned.splice(1, 0, 'script');
