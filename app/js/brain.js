@@ -356,7 +356,8 @@ function offlineReply(call, text) {
     else if (!r.question) { d -= 2; if (b.ignored++ < 2) pre.push(fresh(b, BL.ignored)); }
   }
   const step = s ? call.steps.indexOf(false) : -1, st = step >= 0 ? s.steps[step] : null, sb = s && SCHEME_BRAIN[s.id];
-  /* the agent asked the caller something */
+  /* the agent asked the caller something (asking for a form detail, like a date of birth, is not "private" here) */
+  if (r.q === 'private' && st && st.form && st.form.some(f => !(call.formOk || {})[f.f] && kwCount(r.t, r.toks, f.k))) r.q = null;
   if (r.q) {
     const say = r.q === 'fine' ? fresh(b, BL.fine) : fresh(b, SHARED_L[r.q]);
     d += r.q === 'private' ? -2 : 2;

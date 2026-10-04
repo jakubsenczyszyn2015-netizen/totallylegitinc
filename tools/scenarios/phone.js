@@ -141,4 +141,11 @@ module.exports = async page => {
     console.log('notes saved: ' + saved);
     await page.shot('phone-15-script-notes');
   }
+
+  if (want('playbook')) {
+    await hush();
+    await page.eval(() => { const T = window.__tli; T.OS.launch('playbook', true); return true; });
+    await page.wait(1500);
+    await page.shot('phone-16-playbook-idle');
+  }
 };
