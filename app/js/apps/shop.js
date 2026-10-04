@@ -50,9 +50,9 @@ const BMArt = {
   perk(id) {
     const k = '#151a26', u = 'bm' + (++this.n);
     const A = {
-      poster: `<g transform="translate(66 50) rotate(-7)"><rect x="-27" y="-38" width="54" height="72" rx="2" fill="${k}"/><rect x="-23" y="-34" width="46" height="46" fill="#3b5bdb"/>
+      poster: `<g transform="translate(60 50) rotate(-9)"><rect x="-27" y="-38" width="54" height="72" rx="2" fill="${k}"/><rect x="-23" y="-34" width="46" height="46" fill="#3b5bdb"/>
         <path d="M-23 12l14-20 9 10 7-8 16 18z" fill="#d0ebff"/><circle cx="10" cy="-20" r="6" fill="#ffd43b"/><text x="0" y="26" text-anchor="middle" font-family="Alfa Slab One,serif" font-size="9.5" fill="#fff">HUSTLE</text></g>
-        <g transform="translate(116 52) rotate(5)"><rect x="-30" y="-42" width="60" height="80" rx="2" fill="${k}"/><defs><linearGradient id="${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b2ff7"/><stop offset=".6" stop-color="#ff6b3d"/><stop offset="1" stop-color="#ffd166"/></linearGradient></defs>
+        <g transform="translate(124 52) rotate(6)"><rect x="-30" y="-42" width="60" height="80" rx="2" fill="${k}"/><defs><linearGradient id="${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b2ff7"/><stop offset=".6" stop-color="#ff6b3d"/><stop offset="1" stop-color="#ffd166"/></linearGradient></defs>
         <rect x="-26" y="-38" width="52" height="52" fill="url(#${u})"/><path d="M-26 14l16-26 10 12 8-10 18 24z" fill="#2b1a3d"/><path d="M-2 -22c4-4 8-4 11 0-3-1-7-1-11 0zM-2 -22c-3-3-7-3-10 0 3-1 6-1 10 0z" fill="${k}"/>
         <text x="0" y="29" text-anchor="middle" font-family="Alfa Slab One,serif" font-size="10" fill="#ffd166">SYNERGY</text></g>`,
       chair: `<g transform="translate(95 50)" stroke="${k}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
@@ -419,20 +419,26 @@ const ChaosArt = {
   tex(key, w, hh, draw) { return this.m('tx' + key, () => { const t = canvasTexLocal(w, hh, draw); return t; }); },
   gold() { return this.m('gold', () => new THREE.MeshPhongMaterial({ color: '#e9a92a', specular: '#fff0b8', shininess: 85, emissive: '#3a2400' })); },
 
+  /* a gold stapler on a red velvet cushion on a little wooden plinth with a brass plate. Length ~0.3 m, faces -X */
   stapler() {
-    const g = new THREE.Group(), gold = this.gold(), dark = this.phong('#2b2622'), velvet = this.phong('#a3182f', { shininess: 6 }), geo = (k, f) => this.m('g' + k, f);
-    const side = (k, pts, depth, bev) => geo(k, () => { const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) { const p = pts[i]; if (p.length === 4) sh.quadraticCurveTo(p[0], p[1], p[2], p[3]); else sh.lineTo(p[0], p[1]); } sh.closePath(); const e = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 8 }); e.translate(0, 0, -depth / 2); return e; });
-    const cush = new THREE.Mesh(geo('cush', () => rboxGeo(0.29, 0.03, 0.13, 0.013, 2)), velvet); cush.position.y = 0.015; g.add(cush);
-    // base plate with a raised anvil at the front, the arm (stapler silhouette) hinged at the back
-    const base = new THREE.Mesh(side('sb2', [[0.11, 0], [-0.115, 0], [-0.125, 0.006, -0.115, 0.012], [0.11, 0.012]], 0.046, 0.004), gold); base.position.y = 0.034; g.add(base);
-    const anvil = new THREE.Mesh(geo('sa', () => rboxGeo(0.03, 0.006, 0.026, 0.002, 1)), dark); anvil.position.set(-0.098, 0.049, 0); g.add(anvil);
-    const arm = new THREE.Mesh(side('sarm', [[0.1, 0], [-0.105, 0], [-0.122, 0.01, -0.11, 0.022], [0.055, 0.04], [0.108, 0.043, 0.108, 0.018], [0.108, 0.006, 0.1, 0]], 0.04, 0.007), gold);
-    arm.position.set(0, 0.058, 0); arm.rotation.z = -0.05; g.add(arm);
-    const mag = new THREE.Mesh(geo('smag', () => new THREE.BoxGeometry(0.19, 0.008, 0.036)), dark); mag.position.set(0.0, 0.054, 0); g.add(mag);
-    const hinge = new THREE.Mesh(geo('sh2', () => new THREE.CylinderGeometry(0.012, 0.012, 0.062, 12)), gold); hinge.rotation.x = Math.PI / 2; hinge.position.set(0.098, 0.056, 0); g.add(hinge);
-    const plate = new THREE.Mesh(geo('sp', () => new THREE.PlaneGeometry(0.075, 0.022)), this.m('platem', () => new THREE.MeshBasicMaterial({ map: this.tex('plate', 128, 40, (c, w, hh) => { c.fillStyle = '#d9a72a'; c.fillRect(0, 0, w, hh); c.fillStyle = '#4a3000'; c.font = 'bold 20px Roboto, sans-serif'; c.textAlign = 'center'; c.fillText('EMPLOYEE', w / 2, 18); c.fillText('OF THE MONTH', w / 2, 36); }) })));
-    plate.position.set(0, 0.016, 0.0655); g.add(plate);
-    g.userData.thumb = { ry: -0.3, rx: 0.3, zoom: 1.12 };
+    const g = new THREE.Group(), gold = this.gold(), dark = this.phong('#24201d', { shininess: 30 }), steel = this.phong('#b8bcc4', { shininess: 90, specular: 0x999999 });
+    const velvet = this.phong('#b3162f', { shininess: 4, specular: 0x220000 }), wood = this.phong('#5b3420', { shininess: 25 }), geo = (k, f) => this.m('g' + k, f);
+    const side = (k, pts, depth, bev) => geo(k, () => { const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) { const p = pts[i]; if (p.length === 4) sh.quadraticCurveTo(p[0], p[1], p[2], p[3]); else sh.lineTo(p[0], p[1]); } sh.closePath(); const e = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 2, curveSegments: 6 }); e.translate(0, 0, -depth / 2); return e; });
+    const plinth = new THREE.Mesh(geo('plin', () => rboxGeo(0.3, 0.022, 0.14, 0.006, 1)), wood); plinth.position.y = 0.011; g.add(plinth);
+    const cush = new THREE.Mesh(geo('cush2', () => rboxGeo(0.27, 0.03, 0.115, 0.014, 2)), velvet); cush.position.y = 0.034; cush.scale.y = 0.9; g.add(cush);
+    // base: a long flat plate with a rounded nose, rubber foot, steel anvil at the front
+    const base = new THREE.Mesh(side('sb3', [[0.105, 0], [-0.112, 0], [-0.122, 0.0055, -0.112, 0.011], [0.105, 0.011]], 0.036, 0.003), gold); base.position.y = 0.047; g.add(base);
+    const foot = new THREE.Mesh(geo('sf', () => new THREE.BoxGeometry(0.21, 0.004, 0.034)), dark); foot.position.set(0, 0.046, 0); g.add(foot);
+    const anvil = new THREE.Mesh(geo('sa2', () => rboxGeo(0.026, 0.004, 0.024, 0.0015, 1)), steel); anvil.position.set(-0.098, 0.0615, 0); g.add(anvil);
+    // the arm, hinged at the back, front lifted a touch so the gap and the anvil show
+    const arm = new THREE.Group(); arm.position.set(0.094, 0.073, 0); arm.rotation.z = -0.07; g.add(arm);
+    arm.add(new THREE.Mesh(side('sarm2', [[0.014, -0.011], [-0.188, -0.011], [-0.2, -0.019], [-0.211, -0.016, -0.212, -0.004], [-0.212, 0.006, -0.2, 0.011], [-0.12, 0.017], [-0.02, 0.02], [0.018, 0.02, 0.018, 0.004], [0.018, -0.008, 0.014, -0.011]], 0.03, 0.004), gold));
+    const mag = new THREE.Mesh(geo('smag2', () => new THREE.BoxGeometry(0.17, 0.007, 0.026)), steel); mag.position.set(-0.095, -0.015, 0); arm.add(mag);
+    const stripe = new THREE.Mesh(geo('sst', () => new THREE.BoxGeometry(0.15, 0.004, 0.039)), dark); stripe.position.set(-0.07, 0.0, 0); arm.add(stripe);
+    const hinge = new THREE.Mesh(geo('sh3', () => new THREE.CylinderGeometry(0.009, 0.009, 0.046, 12)), steel); hinge.rotation.x = Math.PI / 2; hinge.position.set(0.094, 0.066, 0); g.add(hinge);
+    const plate = new THREE.Mesh(geo('sp2', () => new THREE.PlaneGeometry(0.11, 0.016)), this.m('platem2', () => new THREE.MeshPhongMaterial({ shininess: 80, specular: 0x886622, map: this.tex('plate2', 256, 40, (c, w, hh) => { const gr = c.createLinearGradient(0, 0, 0, hh); gr.addColorStop(0, '#f6d77a'); gr.addColorStop(1, '#b8861c'); c.fillStyle = gr; c.fillRect(0, 0, w, hh); c.fillStyle = '#3d2700'; c.font = 'bold 25px Roboto, sans-serif'; c.textAlign = 'center'; c.fillText('EMPLOYEE OF THE MONTH', w / 2, 29); }) })));
+    plate.position.set(0, 0.011, 0.0705); g.add(plate);   // on the plinth's long front side
+    g.userData.thumb = { ry: -0.42, rx: 0.34, zoom: 1.08 };
     return g;
   },
   pizzaTex() {
@@ -455,7 +461,11 @@ const ChaosArt = {
       c.fillStyle = '#e0c194'; c.fillRect(0, 0, w, hh); c.strokeStyle = '#c33'; c.lineWidth = 8; c.strokeRect(14, 14, w - 28, hh - 28);
       c.fillStyle = '#c62f2f'; c.beginPath(); c.arc(w / 2, 92, 44, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(w / 2 - 16, 80, 16, 0, 7); c.arc(w / 2 + 16, 80, 16, 0, 7); c.arc(w / 2, 70, 18, 0, 7); c.fill(); c.fillRect(w / 2 - 22, 82, 44, 22);
       c.fillStyle = '#c62f2f'; c.textAlign = 'center'; c.font = '44px "Lilita One", sans-serif'; c.fillText('BONK PIZZA', w / 2, 178); c.font = 'bold 20px Roboto, sans-serif'; c.fillText('HOT · FRESH · LEGIT', w / 2, 210);
-    }) }), card, card, card]);
+    }) }), new THREE.MeshLambertMaterial({ map: this.tex('lidin', 256, 256, (c, w, hh) => {   // inside of the lid (seen when open)
+      c.fillStyle = '#ead2a8'; c.fillRect(0, 0, w, hh); c.strokeStyle = 'rgba(150,100,50,.25)'; c.lineWidth = 2; for (let y = 10; y < hh; y += 9) { c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke(); }
+      c.fillStyle = '#c62f2f'; c.textAlign = 'center'; c.font = '40px "Lilita One", sans-serif'; c.fillText('THANK YOU', w / 2, 92); c.font = '28px "Lilita One", sans-serif'; c.fillText('for choosing', w / 2, 128); c.font = '40px "Lilita One", sans-serif'; c.fillText('BONK PIZZA', w / 2, 170);
+      c.fillStyle = 'rgba(180,90,30,.28)'; c.beginPath(); c.ellipse(70, 214, 30, 14, 0.3, 0, 7); c.fill(); c.beginPath(); c.ellipse(196, 46, 18, 9, -0.4, 0, 7); c.fill();   // grease spots
+    }) }), card, card]);
     if (open) {
       const pz = new THREE.Mesh(geo('pz', () => new THREE.CylinderGeometry(0.175, 0.175, 0.014, 28)), this.m('pzm', () => [this.phong('#d6a04e'), new THREE.MeshLambertMaterial({ map: this.pizzaTex() }), this.phong('#d6a04e')]));
       pz.position.y = 0.04; pz.rotation.y = 0.6; g.add(pz);
@@ -465,6 +475,14 @@ const ChaosArt = {
       const lid = new THREE.Mesh(geo('lid', () => new THREE.BoxGeometry(0.4, 0.012, 0.4)), lidMat); lid.position.y = 0.041; g.add(lid);
     }
     g.userData.thumb = { ry: -0.35, rx: 0.5, zoom: 1.12 };
+    return g;
+  },
+  /* two closed boxes and an open one on top (the shop picture) */
+  pizzaStack() {
+    const g = new THREE.Group();
+    for (let k = 0; k < 2; k++) { const b = this.pizzaBox(false); b.position.y = k * 0.047; b.rotation.y = k * 0.16 - 0.08; g.add(b); }
+    const top = this.pizzaBox(true); top.position.y = 0.094; top.rotation.y = 0.1; g.add(top);
+    g.userData.thumb = { ry: -0.3, rx: 0.62, zoom: 1.08 };
     return g;
   },
   missile(label, col) {
@@ -540,6 +558,95 @@ const ChaosArt = {
 /* small CanvasTexture helper (sRGB, mipmapped) */
 function canvasTexLocal(w, hh, draw) { const cv = h('canvas', { width: w, height: hh }); draw(cv.getContext('2d'), w, hh); const t = new THREE.CanvasTexture(cv); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; }
 
+/* ----- BonkNews: a live cartoon broadcast of the rival strike (a 2D canvas overlay, shown on the desktop and in 3D) ----- */
+const BMNews = {
+  W: 480, H: 270, on: false, el: null, cv: null, g: null, bg: null, t0: 0, hits: [], end: 0, spots: [], wins: null,
+  HEAD: ['MISSILES SPOTTED OVER ' + RIVAL.toUpperCase(), 'RIVAL CALL CENTRE HIT BY "SURPRISE AUDIT"', 'THEIR CUSTOMERS ARE NOW CALLING US. +' + money(RIVAL_BONUS) + ' FOR THE TEAM'],
+  TICK: 'Totally Legit Inc. denies everything  ·  Drywall futures up 400%  ·  The Boss: "Never heard of them"  ·  Local pigeons relocate  ·  Weather: scattered debris, clearing by 6  ·  ',
+  show(pts, t0) {
+    this.hits = pts.map(p => p[2]).sort((a, b) => a - b); this.t0 = t0; this.end = this.hits[this.hits.length - 1] + 2.8;
+    const r = rng(this.hits.length * 7 + 3);   // impact spots on the tower, same on every screen
+    this.spots = this.hits.map((_, i) => [205 + r() * 70, 92 + (i * 37 % 120) + r() * 18]);
+    this.wins = []; for (let y = 96; y < 232; y += 14) for (let x = 200; x < 284; x += 12) this.wins.push([x, y, r() < 0.62]);
+    if (!this.el) {
+      this.cv = h('canvas', { width: this.W, height: this.H }); this.g = this.cv.getContext('2d');
+      this.el = h('div', { id: 'bm-news' }, h('div', { class: 'bm-nw-cap' }, h('i'), h('b', {}, 'BONK NEWS'), h('span', {}, 'Channel 4 · live from across the street')), this.cv);
+      document.body.append(this.el);
+    }
+    this.bg = null; this.on = true; this.el.classList.remove('off'); void this.el.offsetWidth; this.el.classList.add('on');
+  },
+  hide() { if (!this.on) return; this.on = false; if (this.el) { this.el.classList.remove('on'); this.el.classList.add('off'); } },
+  background() {
+    const c = h('canvas', { width: this.W, height: this.H }), g = c.getContext('2d'), W2 = this.W, H2 = this.H, r = rng(11);
+    let gr = g.createLinearGradient(0, 0, 0, H2); gr.addColorStop(0, '#4a2f66'); gr.addColorStop(0.35, '#b9506a'); gr.addColorStop(0.62, '#ff8f4a'); gr.addColorStop(0.85, '#ffd07a'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+    gr = g.createRadialGradient(390, 190, 0, 390, 190, 150); gr.addColorStop(0, 'rgba(255,248,210,1)'); gr.addColorStop(0.18, 'rgba(255,226,150,.85)'); gr.addColorStop(1, 'rgba(255,160,80,0)'); g.fillStyle = gr; g.fillRect(0, 0, W2, H2);
+    g.fillStyle = 'rgba(255,215,190,.4)'; for (let i = 0; i < 6; i++) { rrect(g, r() * W2 * 0.85, 30 + i * 22 + r() * 8, 60 + r() * 120, 5, 3); g.fill(); }
+    for (const [col, base, hmax] of [['#9a4d5e', 236, 90], ['#5a2c44', 246, 120]]) {
+      let x = -6; while (x < W2) { const bw = 22 + r() * 34, bh = 30 + r() * hmax; if (x + bw > 180 && x < 300) { x += 6; continue; } g.fillStyle = col; g.fillRect(x, base - bh, bw, bh + 40);
+        if (col === '#5a2c44') { g.fillStyle = 'rgba(255,214,140,.8)'; for (let wy = base - bh + 6; wy < base - 4; wy += 9) for (let wx = x + 4; wx < x + bw - 4; wx += 7) if (r() < 0.3) g.fillRect(wx, wy, 3, 4); }
+        x += bw + 2; }
+    }
+    g.fillStyle = '#34192a'; g.fillRect(0, 240, W2, H2);
+    return c;
+  },
+  draw(t) {
+    const g = this.g, W2 = this.W, H2 = this.H, ink = '#1e1020'; if (!this.bg) this.bg = this.background();
+    let sh = 0; for (const th of this.hits) { const d = t - th; if (d >= 0 && d < 0.5) sh = Math.max(sh, 7 * (1 - d / 0.5)); }
+    g.save(); g.translate(rand(-sh, sh), rand(-sh, sh) - 30); g.drawImage(this.bg, -8, -8, W2 + 16, H2 + 46);
+    const done = this.hits.filter(th => t >= th).length, last = this.hits[this.hits.length - 1], fall = Math.max(0, t - last);
+    // the rival tower, its lit windows going dark as it takes hits
+    g.fillStyle = '#6d3a52'; g.strokeStyle = ink; g.lineWidth = 3; g.fillRect(192, 84, 100, 160); g.strokeRect(192, 84, 100, 160);
+    g.fillStyle = '#7f4660'; g.fillRect(195, 87, 14, 154);
+    this.wins.forEach(([x, y, lit], i) => { g.fillStyle = lit && (i * 13) % Math.max(1, 10 - done * 2) ? '#ffd67a' : '#2c1622'; g.fillRect(x, y, 7, 8); });
+    // the sign on the roof (tips over after the last hit)
+    g.save(); g.translate(242, 82); g.rotate(Math.min(0.5, fall * fall * 0.6)); g.translate(Math.min(18, fall * 14), Math.min(30, fall * fall * 22));
+    g.fillStyle = ink; g.fillRect(-36, -6, 4, 8); g.fillRect(32, -6, 4, 8);
+    rrect(g, -64, -38, 128, 34, 5); g.fillStyle = '#1aa39a'; g.fill(); g.stroke();
+    g.fillStyle = '#ffe14d'; g.textAlign = 'center'; g.font = '15px "Lilita One", sans-serif'; g.fillText('EVEN MORE LEGIT', 0, -22); g.font = 'bold 10px Roboto, sans-serif'; g.fillStyle = '#fff'; g.fillText('L · L · C', 0, -9);
+    g.restore();
+    // scorch marks + little fires where it has been hit
+    this.hits.forEach((th, i) => { if (t < th + 0.15) return; const [x, y] = this.spots[i];
+      g.fillStyle = 'rgba(30,14,22,.9)'; g.beginPath(); for (let k = 0; k < 9; k++) { const a = k / 9 * 6.283, rr = (k % 2 ? 7 : 13); g.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } g.fill();
+      const fl = 1 + Math.sin(t * 18 + i) * 0.15; g.fillStyle = '#ff7a1a'; g.beginPath(); g.moveTo(x - 7, y + 2); g.quadraticCurveTo(x - 6, y - 12 * fl, x, y - 20 * fl); g.quadraticCurveTo(x + 6, y - 12 * fl, x + 7, y + 2); g.fill();
+      g.fillStyle = '#ffe36a'; g.beginPath(); g.moveTo(x - 3.5, y + 2); g.quadraticCurveTo(x - 3, y - 6 * fl, x, y - 11 * fl); g.quadraticCurveTo(x + 3, y - 6 * fl, x + 3.5, y + 2); g.fill(); });
+    // smoke rising from the hits
+    this.hits.forEach((th, i) => { const d = t - th; if (d < 0.25) return; const [x, y] = this.spots[i];
+      for (let k = 0; k < 4; k++) { const e = d - k * 0.35; if (e < 0) continue; const a = Math.max(0, 0.75 - e * 0.16); if (!a) continue; g.fillStyle = 'rgba(52,40,44,' + a.toFixed(3) + ')'; g.beginPath(); g.arc(x + Math.sin(e * 1.3 + k) * 6 + e * 5, y - 14 - e * 15, 7 + e * 6, 0, 7); g.fill(); } });
+    // incoming missiles with smoke trails
+    this.hits.forEach((th, i) => { const d = th - t; if (d < 0 || d > 0.85) return; const k = 1 - d / 0.85, [tx, ty] = this.spots[i], sx = i % 2 ? W2 + 30 : -30, sy = -20;
+      const x = sx + (tx - sx) * k, y = sy + (ty - sy) * k * k, ang = Math.atan2((ty - sy) * 2 * k, tx - sx);
+      g.fillStyle = 'rgba(240,232,222,.75)'; for (let j = 1; j < 9; j++) { const kk = Math.max(0, k - j * 0.06); g.beginPath(); g.arc(sx + (tx - sx) * kk, sy + (ty - sy) * kk * kk, 2 + j * 0.9, 0, 7); g.fill(); }
+      g.save(); g.translate(x, y); g.rotate(ang); g.fillStyle = '#ffb347'; g.beginPath(); g.moveTo(-12, -3); g.lineTo(-22 - Math.random() * 6, 0); g.lineTo(-12, 3); g.fill();
+      g.fillStyle = '#f4f1ea'; g.strokeStyle = ink; g.lineWidth = 1.6; rrect(g, -12, -4, 20, 8, 3); g.fill(); g.stroke(); g.fillStyle = '#e03131'; g.beginPath(); g.moveTo(8, -4); g.lineTo(15, 0); g.lineTo(8, 4); g.closePath(); g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(-10, -4); g.lineTo(-14, -8); g.lineTo(-6, -4); g.moveTo(-10, 4); g.lineTo(-14, 8); g.lineTo(-6, 4); g.fill(); g.restore(); });
+    // cartoon fireballs + a comic word
+    this.hits.forEach((th, i) => { const d = t - th; if (d < 0 || d > 1.1) return; const [x, y] = this.spots[i], e = Math.min(1, d / 0.32), R = 12 + 46 * (1 - Math.pow(1 - e, 3)), a = d < 0.55 ? 1 : Math.max(0, 1 - (d - 0.55) / 0.55);
+      g.globalAlpha = a; if (d < 0.3) { g.fillStyle = '#fff3b0'; g.beginPath(); for (let k = 0; k < 20; k++) { const an = k / 20 * 6.283 + i, rr = k % 2 ? R * 1.25 : R * 0.7; g.lineTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr); } g.fill(); }
+      for (const [f, col] of [[1, '#e8401c'], [0.76, '#ff931f'], [0.5, '#ffe064'], [0.24, '#fffbe6']]) { g.fillStyle = col; g.beginPath(); g.arc(x, y - (1 - f) * R * 0.25, R * f, 0, 7); g.fill(); }
+      g.strokeStyle = ink; g.lineWidth = 2.5; g.beginPath(); g.arc(x, y, R, 0, 7); g.stroke();
+      if (d < 0.75) { g.save(); g.translate(x + (i % 2 ? -34 : 34), y - 30); g.rotate(i % 2 ? -0.2 : 0.18); const sc = Math.min(1, d / 0.12) * (1 + Math.max(0, 0.12 - d) * 3); g.scale(sc, sc);
+        g.font = '26px "Lilita One", sans-serif'; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 6; g.strokeStyle = ink; const w = ['KA-BONK!', 'BOOM!', 'POW!', 'KRAKOOM!', 'BONK!', 'WHAM!'][i % 6]; g.strokeText(w, 0, 0); g.fillStyle = '#ffe14d'; g.fillText(w, 0, 0); g.restore(); }
+      g.globalAlpha = 1; });
+    g.restore();
+    // flashes
+    for (const th of this.hits) { const d = t - th; if (d >= 0 && d < 0.14) { g.fillStyle = 'rgba(255,250,225,' + (0.55 * (1 - d / 0.14)).toFixed(3) + ')'; g.fillRect(0, 0, W2, H2); } }
+    // broadcast graphics: LIVE pill, channel bug, lower third, ticker
+    rrect(g, 12, 12, 58, 22, 4); g.fillStyle = '#e03131'; g.fill(); g.fillStyle = Math.floor(t * 2) % 2 ? '#fff' : '#ffb3b3'; g.beginPath(); g.arc(25, 23, 4, 0, 7); g.fill();
+    g.fillStyle = '#fff'; g.font = 'bold 13px Roboto, sans-serif'; g.textAlign = 'left'; g.fillText('LIVE', 34, 28);
+    g.font = '15px "Lilita One", sans-serif'; const bw = g.measureText('BONK').width, nw = g.measureText('NEWS').width, bx = W2 - 24 - bw - nw;
+    rrect(g, bx - 8, 12, bw + nw + 20, 24, 4); g.fillStyle = 'rgba(255,255,255,.92)'; g.fill(); g.fillStyle = '#e03131'; g.fillText('BONK', bx, 30); g.fillStyle = '#1d2433'; g.fillText('NEWS', bx + bw + 3, 30);
+    const head = this.HEAD[t < (this.hits[0] || 0) ? 0 : t < last + 1.1 ? 1 : 2];
+    g.fillStyle = '#c3151b'; g.fillRect(0, 200, W2, 22); g.fillStyle = '#ffd21f'; g.fillRect(0, 200, 128, 22);
+    g.fillStyle = '#1d1400'; g.font = 'bold 13px Roboto, sans-serif'; g.fillText('BREAKING NEWS', 12, 216); g.fillStyle = '#fff'; g.fillText(RIVAL.toUpperCase(), 140, 216);
+    g.fillStyle = 'rgba(255,255,255,.95)'; g.fillRect(0, 222, W2, 26); g.fillStyle = '#141824'; g.font = 'bold 14.5px Roboto, sans-serif';
+    const hw = g.measureText(head).width; g.save(); if (hw > W2 - 24) { g.translate(12, 0); g.scale((W2 - 24) / hw, 1); g.fillText(head, 0, 240); } else g.fillText(head, 12, 240); g.restore();
+    g.fillStyle = '#141824'; g.fillRect(0, 248, W2, 22); g.fillStyle = '#ffd21f'; g.font = 'bold 12px Roboto, sans-serif';
+    const tw = g.measureText(this.TICK).width, off = (t * 70) % tw; g.fillText(this.TICK, W2 - off - 40, 263); g.fillText(this.TICK, W2 - off - 40 + tw, 263); g.fillText(this.TICK, W2 - off - 40 - tw, 263);
+    g.fillStyle = 'rgba(0,0,0,.08)'; for (let y = 0; y < H2; y += 3) g.fillRect(0, y, W2, 1);   // scanlines
+  },
+  tick() { if (!this.on) return; const t = Chaos.t - this.t0; if (t > this.end) return this.hide(); this.draw(t); }
+};
+
 /* ----- the effects ----- */
 const Chaos = {
   st: { boss: false, pizza: 0 }, t: 0, sched: [], anims: [], busyUntil: 0, noDouble: false, localT: -9,
@@ -552,6 +659,7 @@ const Chaos = {
   order(k) {
     const d = { k, by: settings.name };
     if (k === 'strike') d.pts = this.plan();
+    if (k === 'rival') d.pts = this.rivalPlan();
     this.localT = this.t; this.run(d, true);
     Net.emit('shop:chaos', d);
   },
@@ -573,20 +681,26 @@ const Chaos = {
 
   /* ----- airstrike on the office ----- */
   plan() {
-    const pts = [], R = W.rooms || {}, ppl = [];
+    const R = W.rooms || {}, ppl = [], pts = [], rooms = [R.floor, R.hall, R.break, R.review].filter(Boolean);
+    const inside = (x, z) => rooms.some(r => x > r.x0 + 0.6 && x < r.x1 - 0.6 && z > r.z0 + 0.6 && z < r.z1 - 0.6);
     const at = (seat, x, z) => (seat >= 0 && W.desks[seat] ? [W.desks[seat].seat.x, W.desks[seat].seat.z] : [x, z]);
     ppl.push(P.seated ? at(P.seat) : [P.pos.x, P.pos.z]);
     if (Net.active) for (const [id, p] of Net.players) if (id !== Net.myId) ppl.push(at(p.seat, p.x, p.z));
-    for (const [x, z] of ppl) { const a = rand(6.283), r = rand(1.3, 2.3); pts.push([x + Math.cos(a) * r, z + Math.sin(a) * r]); }
-    const rects = [R.floor, R.floor, R.floor, R.hall, R.break, R.review].filter(Boolean);
-    while (pts.length < 13 && rects.length) { const r = pick(rects); pts.push([rand(r.x0 + 0.9, r.x1 - 0.9), rand(r.z0 + 0.9, r.z1 - 0.9)]); }
+    // around everyone: one close call (it knocks you over) and three in plain sight
+    for (const [x, z] of ppl) for (let k = 0; k < 4; k++) for (let n = 0; n < 10; n++) {
+      const a = rand(6.283), r = k ? rand(3, 6.5) : rand(1.3, 2.3), px = x + Math.cos(a) * r, pz = z + Math.sin(a) * r;
+      if (inside(px, pz) || (!k && n === 9)) { pts.push([px, pz]); break; }
+    }
+    const rects = [R.floor, R.floor, R.floor, R.hall, R.break, R.review].filter(Boolean), want = clamp(pts.length + 7, 15, 24);
+    while (pts.length < want && rects.length) { const r = pick(rects); pts.push([rand(r.x0 + 0.9, r.x1 - 0.9), rand(r.z0 + 0.9, r.z1 - 0.9)]); }
     shuffle(pts); let t = 3.6;
-    return pts.map(p => { const o = [+p[0].toFixed(2), +p[1].toFixed(2), +t.toFixed(2)]; t += rand(0.22, 0.42); return o; });
+    // volleys of four or five near-simultaneous hits, a breath between volleys
+    return pts.map((p, i) => { const o = [+p[0].toFixed(2), +p[1].toFixed(2), +t.toFixed(2)]; t += i % 5 === 4 ? rand(0.75, 1.05) : rand(0.05, 0.16); return o; });
   },
   strike(d, mine) {
     const pts = (Array.isArray(d.pts) ? d.pts : []).slice(0, 24).filter(p => Array.isArray(p) && p.length >= 3).map(p => [clamp(+p[0] || 0, -30, 30), clamp(+p[1] || 0, -30, 30), clamp(+p[2] || 0, 0, 20)]);
     if (!pts.length) return;
-    const end = Math.max(...pts.map(p => p[2])); this.busyUntil = this.t + end + 2; this._ouch = false;
+    const end = Math.max(...pts.map(p => p[2])); this.busyUntil = this.t + end + 2; this._ouch = false; this.last = { t0: this.t, pts };
     this.banner('INCOMING AIRSTRIKE', (mine ? 'You' : this.who(d.by)) + ' ordered it from BonkMart. Take cover!');
     toast((mine ? 'Airstrike ordered. Stand up and watch the show!' : this.who(d.by) + ' ordered an airstrike on the office. Duck!'), 'bad');
     this.siren(3, 0.045); FX.tint('#ff3b2a', 0.12, end + 1.5);
@@ -607,10 +721,10 @@ const Chaos = {
   },
   boom(x, z, i) {
     const y = Space.ground(x, 2.6, z) + 0.2;
-    FX.spawn('explosion', [x, y, z], { scale: 1.15 });
+    FX.spawn('explosion', [x, y, z], { scale: 1.3 });
     for (let k = 0; k < 14; k++) { const a = rand(6.283), sp = rand(1.5, 4.5); FX.particle({ layer: 'cut', pos: [x, y + 0.3, z], vel: [Math.cos(a) * sp, rand(3, 7.5), Math.sin(a) * sp], ttl: rand(2.6, 4.2), size: rand(0.09, 0.14), color: k % 5 ? '#f4f0e4' : '#ffe38a', frame: 'rect', gravity: 0.22, drag: 1.7, floor: true }); }
     if (i % 4 === 1) FX.fire([x, y, z], 0.75, 7);
-    if (Net.isAuth() && typeof Props !== 'undefined') for (let k = 0; k < 2; k++) { const a = rand(6.283), sp = rand(2.5, 5), b = Props.launch('paper', [x, y + 0.5, z], [Math.cos(a) * sp, rand(4, 7), Math.sin(a) * sp]); if (b) { b.t = 0.6; b.life = 15.4; } }   // (life < 15.5: nobody plays a throw animation)
+    if (Net.isAuth() && typeof Props !== 'undefined') for (let k = i < 12 ? 2 : 1; k > 0; k--) { const a = rand(6.283), sp = rand(2.5, 5), b = Props.launch('paper', [x, y + 0.5, z], [Math.cos(a) * sp, rand(4, 7), Math.sin(a) * sp]); if (b) { b.t = 0.6; b.life = 15.4; } }   // (life < 15.5: nobody plays a throw animation)
     this.knock(x, y, z, 3.4);
   },
   knock(x, y, z, R) {
@@ -633,24 +747,43 @@ const Chaos = {
   },
 
   /* ----- airstrike on the rival call centre (distant, outside the windows) ----- */
+  /* targets line up with the windows that have the most open blinds, so you can see them from the floor */
+  rivalPlan() {
+    const out = [];
+    for (let i = 0; i < 6; i++) {
+      const west = i % 3 !== 2, c = west ? pick([-2.2, -2.2, 6.5, -6.5]) : pick([-8.4, 2.0]), j = +(c + rand(-0.8, 0.8)).toFixed(2);
+      out.push(west ? [-16.4, j, +(2.2 + i * 0.55 + rand(0, 0.15)).toFixed(2)] : [j, -14.4, +(2.2 + i * 0.55 + rand(0, 0.15)).toFixed(2)]);
+    }
+    return out;
+  },
   rival(d, mine) {
-    this.busyUntil = this.t + 7;
+    const pts = (Array.isArray(d.pts) ? d.pts : this.rivalPlan()).slice(0, 8).filter(p => Array.isArray(p) && p.length >= 3).map(p => [clamp(+p[0] || 0, -30, 30), clamp(+p[1] || 0, -30, 30), clamp(+p[2] || 0, 0, 12)]);
+    const end = pts.length ? Math.max(...pts.map(p => p[2])) : 5; this.busyUntil = this.t + end + 2; this.last = { t0: this.t, pts };
     this.banner('AIRSTRIKE AUTHORISED', 'Target: ' + RIVAL + ', across the street. Look out the windows!', 'blue');
-    toast((mine ? 'Missiles away!' : this.who(d.by) + ' bombed ' + RIVAL + '!') + ' Watch the west windows.', 'good');
+    toast((mine ? 'Missiles away!' : this.who(d.by) + ' bombed ' + RIVAL + '!') + ' Watch the windows.', 'good');
     this.siren(2, 0.025);
-    for (let i = 0; i < 6; i++) this.after(2.2 + i * 0.5 + rand(0, 0.15), () => this.farBoom(i));
-    this.after(5.8, () => {
+    if (pts.length) this.after(0.6, () => BMNews.show(pts, this.t - 0.6));
+    pts.forEach((p, i) => {
+      this.after(Math.max(0, p[2] - 0.9), () => FXSnd.tone(1500, 300, 0.9, 'sine', 0.03));   // a faint whistle
+      this.after(p[2], () => this.farBoom(p[0], p[1], i));
+    });
+    this.after(end + 1.1, () => {
       toast('Direct hit! ' + RIVAL + '\'s customers are calling us now. +' + money(RIVAL_BONUS) + ' for the team.', 'good');
       if (mine) { Game.earn(RIVAL_BONUS); SFX.cash(); if (OS.open) OS.cashFx('+' + money(RIVAL_BONUS)); }
     });
   },
-  farBoom(i) {
-    const west = i % 3 !== 2, c = west ? [-16.3, rand(0.6, 1.4), rand(-7.5, 7.5)] : [rand(-9, 7), rand(0.6, 1.4), -14.3], sc = rand(1.8, 2.5);
-    FX.particle({ layer: 'add', pos: c, ttl: 0.4, size: [5 * sc, 2.5 * sc], color: '#fff3c8', alpha: [1, 0], frame: 'soft' });
-    for (let k = 0; k < 10; k++) FX.particle({ layer: 'add', pos: [c[0] + rand(-0.4, 0.4) * sc, c[1] + rand(0, 0.6) * sc, c[2] + rand(-0.4, 0.4) * sc], vel: [rand(-0.6, 0.6) * sc, rand(0.8, 2.6) * sc, rand(-0.6, 0.6) * sc], ttl: rand(0.8, 1.4), size: [0.8 * sc, 2.4 * sc], color: '#ffe39a', color2: '#ff4d12', alpha: [1, 0], frame: 'fireball', drag: 1.4 });
-    for (let k = 0; k < 14; k++) FX.particle({ layer: 'soft', pos: [c[0] + rand(-0.3, 0.3) * sc, c[1] + rand(0, 1.2) * sc, c[2] + rand(-0.3, 0.3) * sc], vel: [rand(-0.3, 0.3), rand(0.9, 2.4) * sc * 0.6, rand(-0.3, 0.3)], ttl: rand(4, 6.5), size: [1.1 * sc, 3.2 * sc], color: '#55443c', color2: '#2a2220', alpha: [0.85, 0], frame: 'smoke', drag: 0.5, gravity: -0.03 });
+  /* a distant cartoon blast at street level (we are on the 4th floor): flash, fireball, a smoke mushroom, sparks */
+  farBoom(x, z, i) {
+    const sc = 1 + (i % 3) * 0.18, y = 0.15, j = () => rand(-0.35, 0.35) * sc;
+    FX.particle({ layer: 'add', pos: [x, y + 0.9 * sc, z], ttl: 0.45, size: [6 * sc, 3.5 * sc], color: '#fff3c8', alpha: [1, 0], frame: 'soft' });
+    FX.particle({ layer: 'add', pos: [x, y + 0.4, z], ttl: 0.5, size: [0.5, 6 * sc], color: '#ffd890', alpha: [0.9, 0], frame: 'ring' });
+    for (let k = 0; k < 14; k++) FX.particle({ layer: 'add', pos: [x + j(), y + rand(0, 0.5) * sc, z + j()], vel: [rand(-0.9, 0.9) * sc, rand(1.2, 3.2) * sc, rand(-0.9, 0.9) * sc], ttl: rand(0.8, 1.5), size: [0.9 * sc, 2.4 * sc], color: '#fff1b0', color2: '#ff4a12', alpha: [1, 0], frame: 'fireball', drag: 1.6 });
+    // the stem rises, the cap rolls out on top
+    for (let k = 0; k < 9; k++) FX.particle({ layer: 'soft', pos: [x + j() * 0.5, y + k * 0.2 * sc, z + j() * 0.5], vel: [rand(-0.1, 0.1), rand(0.35, 0.6) * sc, rand(-0.1, 0.1)], ttl: rand(5, 7), size: [0.7 * sc, 1.3 * sc], color: '#6a5246', color2: '#2f2724', alpha: [0.95, 0], frame: 'smoke', drag: 0.3 });
+    for (let k = 0; k < 14; k++) { const a = k / 14 * 6.283 + rand(-0.2, 0.2); FX.particle({ layer: 'soft', pos: [x + Math.cos(a) * 0.35 * sc, y + 1.7 * sc, z + Math.sin(a) * 0.35 * sc], vel: [Math.cos(a) * rand(0.5, 0.9) * sc, rand(0.15, 0.45), Math.sin(a) * rand(0.5, 0.9) * sc], ttl: rand(5.5, 7.5), size: [1.0 * sc, 2.4 * sc], color: '#7a5e4e', color2: '#332a26', alpha: [0.95, 0], frame: 'smoke', drag: 0.7 }); }
+    for (let k = 0; k < 12; k++) { const a = rand(6.283), sp = rand(2.5, 6) * sc; FX.particle({ layer: 'add', pos: [x, y + 0.4, z], vel: [Math.cos(a) * sp, rand(3, 7) * sc, Math.sin(a) * sp], ttl: rand(1, 1.8), size: [0.3, 0.08], color: '#ffe08a', color2: '#ff6a1a', alpha: [1, 0.2], frame: 'spark', gravity: 0.8, drag: 0.6 }); }
     this.after(0.4, () => { FXSnd.noise(1.8, 0.32, 0, 220, 50, 'lowpass', 0.8); FXSnd.tone(62, 28, 1.4, 'sine', 0.32); FX.shake(0.2 + Math.random() * 0.12, 0.9); });
-    FX.flash('#ffc070', 0.7, 0.16);
+    FX.flash('#ffc070', 0.7, 0.18);
   },
 
   /* ----- pizza party ----- */
@@ -708,7 +841,7 @@ const Chaos = {
     for (const di of want) {
       const d = W.desks[di]; if (!d || this.staplers.has(di)) continue;
       const m = ChaosArt.stapler(), c = Math.cos(d.rot), s = Math.sin(d.rot), lx = -0.36, lz = -0.12;
-      m.position.set(d.x + c * lx + s * lz, 0.768, d.z - s * lx + c * lz); m.rotation.y = d.rot + 0.4; W.scene.add(m); this.staplers.set(di, m);
+      m.position.set(d.x + c * lx + s * lz, 0.768, d.z - s * lx + c * lz); m.rotation.y = d.rot + 0.3; W.scene.add(m); this.staplers.set(di, m);
     }
     // a little glint now and then
     this.glintT += 0.3;
@@ -724,9 +857,9 @@ const Chaos = {
       FX.particle({ layer: 'soft', pos: [a.m.position.x, a.m.position.y + 0.6, a.m.position.z], vel: [rand(-0.2, 0.2), 0.3, rand(-0.2, 0.2)], ttl: 0.9, size: [0.15, 0.5], color: '#efe9e0', alpha: [0.75, 0], frame: 'puff', drag: 1.5 });
       if (k >= 1) { W.scene.remove(a.m); this.anims.splice(i, 1); }
     }
-    this.bossAnim(dt, t); this.staplerTick(dt);
+    this.bossAnim(dt, t); this.staplerTick(dt); BMNews.tick();
   },
-  reset() { for (const a of this.anims) if (W.scene) W.scene.remove(a.m); this.anims = []; this.sched = []; this.busyUntil = 0; this.st.pizza = 0; this.boxesOn(false); this.boss(false); for (const m of this.staplers.values()) if (W.scene) W.scene.remove(m); this.staplers.clear(); this.lastDesk = -1; }
+  reset() { BMNews.hide(); for (const a of this.anims) if (W.scene) W.scene.remove(a.m); this.anims = []; this.sched = []; this.busyUntil = 0; this.st.pizza = 0; this.boxesOn(false); this.boss(false); for (const m of this.staplers.values()) if (W.scene) W.scene.remove(m); this.staplers.clear(); this.lastDesk = -1; }
 };
 Loop.add((dt, t) => Chaos.tick(dt, t));
 Net.on('shop:chaos', (d, from) => { if (d && typeof d.k === 'string') Chaos.run(Object.assign({}, d, { by: typeof d.by === 'string' ? d.by.slice(0, 24) : '' }), false); });
@@ -748,7 +881,7 @@ Bus.on('player:sit', i => { Chaos.lastDesk = i; });
     blocked: () => Chaos.busy() ? 'Missiles in the air…' : '', model: () => ChaosArt.missile('OOPS', '#f08c00'), buy() { Chaos.order('strike'); } },
   { id: 'chaos_pizza', name: 'Pizza Party', price: 250, color: '#ffd43b', repeatable: true, sort: 402,
     desc: 'Three large pizzas, in lieu of a raise. Everyone walks faster for a bit and there are free slices in the break room.',
-    blocked: () => Chaos.st.pizza > 0 ? 'Party in progress' : '', model: () => ChaosArt.pizzaBox(true), buy() { Chaos.order('pizza'); } },
+    blocked: () => Chaos.st.pizza > 0 ? 'Party in progress' : '', model: () => ChaosArt.pizzaStack(), buy() { Chaos.order('pizza'); } },
   { id: 'chaos_boss', name: 'Inflatable Boss', price: 800, color: '#9775fa', sort: 403,
     desc: 'A three-metre vinyl boss for the lobby. Waves at visitors, scares the police and never asks for a status report.',
     owned: () => Chaos.st.boss, ownedLabel: 'In the lobby', model: () => ChaosArt.balloonBoss(),

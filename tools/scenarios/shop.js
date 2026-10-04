@@ -33,7 +33,7 @@ module.exports = async page => {
     await ev(() => { const T = window.__tli; T.G.wallet = 640; T.OS.close('memo', true); BonkMart.open('goods'); return true; });
     await gw(1.5);   // 3D thumbnails render one per ~20 ms
     await page.shot('s01-goods');
-    await ev(() => { BonkMart.win.body.querySelector('.bm-scroll').scrollTop = 99999; return true; });
+    await ev(() => { const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].find(e => e.textContent === 'Chaos'); s.scrollTop = sec ? sec.offsetTop - 8 : 99999; return true; });
     await gw(0.3);
     await page.shot('s02-goods-chaos');
     for (const [t, n] of [['scams', 's03-scams'], ['apps', 's04-business'], ['games', 's05-games']]) {
@@ -62,7 +62,7 @@ module.exports = async page => {
     const r = await ev(() => ({ wallet: window.__tli.G.wallet, lvl: window.__tli.Game.lvl('comm') }));
     check('hold to buy: Bigger Cut level 1 for $200', r.wallet === 440 && r.lvl === 1, r);
     // perks + owned / maxed states
-    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].pop(); s.scrollTop = sec.offsetTop - 260; return true; });
+    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].pop(); s.scrollTop = sec.offsetTop - 8; return true; });
     await gw(1.2);
     await page.shot('s09-owned-need');
     const pc = await ev(() => ({ walk: PC.walk, chair: bmPerk('chair') }));
@@ -102,6 +102,8 @@ module.exports = async page => {
 
   if (await ev(() => window.__tli.P.seated)) await page.stand();
 
+  // wait until the chaos clock reaches the k-th hit of the last strike plan (+ dt)
+  const atHit = (k, dt) => ev((k, dt) => new Promise(res => { const L = Chaos.last, t = L.t0 + L.pts[Math.min(k, L.pts.length - 1)][2] + dt; const f = () => (Chaos.t >= t ? res(true) : setTimeout(f, 15)); f(); }), k, dt);
   if (want('strike')) {
     await page.sit(0);
     await ev(() => { window.__tli.G.wallet = 3000; BonkMart.open('goods'); return true; });
@@ -110,29 +112,44 @@ module.exports = async page => {
     await gw(0.4);
     await page.shot('s12-strike-ordered');
     await page.stand();
-    // watch from the cross aisle, looking down the floor; keep the player still so the view stays put
-    await look(9.2, -0.4, -2, 0.6, 0.6);
-    await ev(() => { const T = window.__tli; T.P.stunT = 0; window.__hold = T.Loop.add(() => { if (Chaos.busy()) { const P = T.P; P.kx = P.kz = 0; P.pos.x = 9.2; P.pos.z = -0.4; P.pos.y = 0; } }); return true; });
-    await gw(3.7);
+    // stand in the cross aisle looking down the floor; keep the player still so the view stays put
+    await look(3.2, 0.3, -9, 1.0, -0.4);
+    await ev(() => { const T = window.__tli; T.P.stunT = 0; window.__hold = T.Loop.add(() => { if (Chaos.busy()) { const P = T.P; P.kx = P.kz = 0; P.pos.x = 3.2; P.pos.z = 0.3; P.pos.y = 0; } }); return true; });
+    const n = await ev(() => Chaos.last.pts.length);
+    await atHit(1, 0.12);
     await page.shot('s13-strike-1');
+    // the first hit after that lands in front of us, 3-9 m away, with no close call right before it
+    const k2 = await ev(() => { const L = Chaos.last.pts, near = L.filter(p => Math.hypot(p[0] - 3.2, p[1] - 0.3) < 2.6).map(p => p[2]);
+      for (let i = 2; i < L.length; i++) { const [x, z, t] = L[i], dx = 3.2 - x; if (dx > 3 && dx < 9 && Math.abs(z - 0.3) < dx * 0.55 && !near.some(n => n <= t && t - n < 0.9)) return i; } return 6; });
     await ev(() => { setThird(true); return true; });
-    await gw(1.3);
+    await atHit(k2, 0.1);
     await page.shot('s14-strike-2');
-    await gw(1.6);
-    await page.shot('s15-strike-3');
-    await ev(() => { window.__tli.Loop.remove(window.__hold); setThird(false); return true; });
-    check('airstrike ordered', ok, ok);
+    // a high view over the floor with the ceiling off: hits everywhere
+    await ev(() => { W.setCeiling(false); W.camOverride = { pos: [10.5, 9.5, 7.5], look: [-0.5, 0, -1] }; window.__novm = window.__tli.Loop.add(() => { if (Props.vm) Props.vm.root.visible = false; }); return true; });
+    await atHit(Math.max(k2 + 1, 10), 0.12);
+    await page.shot('s15-strike-overview');
+    await atHit(n - 1, 1.2);
+    await page.shot('s15b-strike-after');
+    await ev(() => { W.setCeiling(true); setThird(false); W.camOverride = null; window.__tli.Loop.remove(window.__hold); window.__tli.Loop.remove(window.__novm); return true; });
+    check('airstrike ordered', ok && n >= 15, { ok, n });
     await gw(2.5);
   }
 
   if (want('rival')) {
     await ev(() => { const T = window.__tli; FX.clear(); T.G.wallet = 3000; return true; });
     const team0 = await ev(() => window.__tli.G.team);
-    await ev(() => BonkMart.buy('chaos_rival'));
-    await look(-9.5, -3.2, -17, 1.6, -4.5);
-    await gw(3.2);
-    await page.shot('s16-rival');
-    await gw(3.2);
+    // ordered from the desk: the BonkNews broadcast covers it live over the desktop
+    await page.sit(0);
+    await ev(() => { BonkMart.open('goods'); return BonkMart.buy('chaos_rival'); });
+    await atHit(1, 0.12);
+    await page.shot('s16-rival-news');
+    await page.stand();
+    await look(-6.5, -2.0, -17, 1.25, -2.6);
+    await atHit(4, 0.3);
+    await page.shot('s16b-rival-window');
+    await atHit(99, 3.0);
+    const nw = await ev(() => ({ on: BMNews.on, el: !!document.getElementById('bm-news') }));
+    check('news broadcast shown and gone', nw.el && !nw.on, nw);
     const team1 = await ev(() => window.__tli.G.team);
     check('rival airstrike pays the team', team1 - team0 >= 1000, { team0, team1 });
   }
