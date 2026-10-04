@@ -5,12 +5,21 @@ name badge, belt and trousers, floppy noodle arms with mitten hands, short legs 
 a headset with a mic boom. Hair, facial hair, glasses, build and colours come from a **look**.
 Everything is generated in code (no art files).
 
+## Proportions (for cameras and props)
+Chunky cartoon proportions: a big egg head (about 0.55 m tall), short legs. Standing: feet at y 0,
+hips 0.74, shoulders 1.14, eyes 1.53, top of the head 1.76 (afro/quiff a
+little more), name tag at 2.1. Seated at a desk: hips 0.59, eyes about 1.38. For exact positions use the
+bones (`av.head.getWorldPosition(v)`), they follow every animation. The body is modelled with long
+legs and squashed between ankle and hip at build time (`AV_LEG`); everything else is unaffected.
+
 ## How an avatar is built (performance)
 Each avatar is about **5 draw calls**: one `SkinnedMesh` body (17 bones, vertex colours, one
 shared Lambert material), the head (`av.headMat`), the face decal (per-avatar 256x256 canvas,
 redrawn only when the expression changes), and one merged mesh for hair + beard + headset +
 glasses. Plus a blob shadow, the name tag sprite (players only) and the talk icon (only when
-talking). Body and accessory geometries are cached per look, so identical looks share them.
+talking). Body and accessory geometries are cached per look and reference-counted, so identical
+looks share them and geometries nobody uses any more are freed (the creator does not leak). Each
+avatar keeps one `THREE.Skeleton` for its whole life, even across `setLook`.
 Roughly 5-7k triangles per avatar. Face canvases are CPU canvases (`willReadFrequently`) so
 uploading them never stalls the GPU.
 
@@ -104,7 +113,8 @@ little with distance so they stay readable and fades them out far away. `sprite.
 
 ## Character creator (`customize.js`)
 `Customize.show()` / `Customize.close()`: a "Character" button on the main menu and in the pause
-menu. Live 3D turntable preview (own small `WebGLRenderer`, drag to spin, wheel/Zoom for a face
+menu (inserted before their Settings button on `boot`, and re-checked whenever `UI.menu('home')` or
+`Game.pause(true)` runs, so a menu that re-renders keeps it). Live 3D turntable preview (own small `WebGLRenderer`, drag to spin, wheel/Zoom for a face
 close-up, emote and mood test buttons) and options for name, skin, hair style and colour, facial
 hair, glasses, build, shirt, trousers and shoes, plus Randomise. Saves to `settings.look`
 immediately, updates `W.me` (and so the network look). Emits `Bus` event `look:change` (look) on
@@ -112,7 +122,8 @@ close. `Customize.apply(look)` sets a look programmatically; `Customize.preview`
 avatar.
 
 ## Testing
-`tools/scenarios/avatars.js` (set `AV_ONLY=creator,line,walk,net,sit,me` to run parts): creator
-panel, 8 characters in poses/actions/moods, close-ups, walking/running, fake remote players
-through the real sync path (asserts the results), desks top-down and close, review room, and the
-local player seated.
+`tools/scenarios/avatars.js` (set `AV_ONLY=creator,line,gallery,walk,sit,boss,net,me` to run parts):
+creator panel (default, changed, face zoom), 8 characters plus `W.me` in poses/actions/moods,
+close-ups, a gallery of every hair style / facial hair / glasses option (front and back),
+walking/running/jumping, desks top-down and close, review room, the boss (calm and red-faced),
+fake remote players through the real sync path (asserts the results), and the local player seated.
