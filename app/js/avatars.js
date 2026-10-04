@@ -279,11 +279,26 @@ function avBumps(b, col, n, r0, r1, off, f, s, k, seed) {
     avGbAdd(b, avSphere(7, 5), avM(P[0], P[1], P[2], rr, rr * 0.9, rr), col);
   }
 }
+/* a tube along a curve with radius rf(u), u = 0..1 (ponytails) */
+function avTaper(pts, rf, n, seg) {
+  const cv = new THREE.CatmullRomCurve3(pts), fr = cv.computeFrenetFrames(n, false), pos = [], idx = [], p = new THREE.Vector3();
+  for (let i = 0; i <= n; i++) {
+    const u = i / n, r = rf(u), N = fr.normals[i], B = fr.binormals[i]; cv.getPointAt(u, p);
+    for (let j = 0; j <= seg; j++) { const a = j / seg * Math.PI * 2, c = Math.cos(a) * r, s = Math.sin(a) * r; pos.push(p.x + c * N.x + s * B.x, p.y + c * N.y + s * B.y, p.z + c * N.z + s * B.z); }
+  }
+  for (let i = 0; i < n; i++) for (let j = 0; j < seg; j++) { const A = i * (seg + 1) + j, C = A + seg + 1; idx.push(A, C, A + 1, A + 1, C, C + 1); }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals(); return g;
+}
+/* hair colour with a soft top highlight and darker ends */
+function avHairCol(hex) {
+  const base = new THREE.Color(hex), c = new THREE.Color(), w = new THREE.Color(1, 0.96, 0.9);
+  return (x, y) => { const t = avSS(-0.14, 0.24, y); return c.copy(base).multiplyScalar(0.78 + 0.3 * t).lerp(w, 0.05 * t); };
+}
 const AV_ACC = new Map();
 function avAccGeo(L, headset) {
   const key = [L.hair, L.hairColor, L.facial, L.glasses, L.skin, headset ? 1 : 0].join('|');
   if (AV_ACC.has(key)) return AV_ACC.get(key);
-  const b = avGbNew(false), hc = avCol(L.hairColor), P = [0, 0, 0], PI = Math.PI, h = L.hair;
+  const b = avGbNew(false), hc = avHairCol(L.hairColor), P = [0, 0, 0], PI = Math.PI, h = L.hair;
   // hair
   if (h === 'buzz') avGbAdd(b, avCap(0.007, 0.72, 1.48, 2.2), null, avMix(L.hairColor, L.skin, 0.35));
   else if (h === 'short') avGbAdd(b, avCap(0.026, 0.62, 1.45, 2.2, (ph, d, v) => 0.014 * (1 - v)), null, hc);
@@ -291,12 +306,13 @@ function avAccGeo(L, headset) {
   else if (h === 'quiff') avGbAdd(b, avCap(0.024, 0.6, 1.45, 2.2, (ph, d, v) => 0.085 * Math.exp(-Math.pow(d / 0.2, 2)) * Math.exp(-Math.pow((v - 0.66) / 0.26, 2)) + 0.01 * (1 - v)), null, hc);
   else if (h === 'curly') { avGbAdd(b, avCap(0.03, 0.6, 1.5, 2.25), null, hc); avBumps(b, hc, 28, 0.036, 0.052, 0.03, 0.62, 1.48, 2.1, 11); }
   else if (h === 'afro') { avGbAdd(b, avCap(0.1, 0.64, 1.58, 2.05, (ph, d, v) => 0.03 * (1 - v)), null, hc); avBumps(b, hc, 32, 0.055, 0.078, 0.1, 0.7, 1.5, 1.95, 23); }
-  else if (h === 'long') avGbAdd(b, avCap(0.028, 0.6, 2.3, 2.55, (ph, d, v, th) => th > 1.5 ? 0.014 : 0.01 * (1 - v), 0.2), null, hc);
+  else if (h === 'long') avGbAdd(b, avCap(0.028, 0.6, 2.45, 3.05, (ph, d, v, th) => th > 1.5 ? 0.016 : 0.01 * (1 - v), 0.26), null, hc);
   else if (h === 'bun') { avGbAdd(b, avCap(0.018, 0.6, 1.45, 2.15), null, hc); avHeadPt(0.55, 0, 0.05, P); avGbAdd(b, avSphere(10, 8), avM(P[0], P[1] + 0.02, P[2], 0.078), hc); }
   else if (h === 'ponytail') {
     avGbAdd(b, avCap(0.02, 0.6, 1.45, 2.15), null, hc); avHeadPt(1.15, 0, 0.02, P);
-    avGbAdd(b, avSphere(10, 8), avM(P[0], P[1], P[2], 0.034), avCol('#d6342c'));
-    avGbAdd(b, avSphere(9, 8), avM(P[0], P[1] - 0.13, P[2] + 0.06, 0.05, 0.14, 0.05, -0.38, 0, 0), hc);
+    avGbAdd(b, avSphere(10, 8), avM(P[0], P[1], P[2] + 0.012, 0.036, 0.036, 0.03), avCol('#d6342c'));
+    const V = (x, y, z) => new THREE.Vector3(P[0] + x, P[1] + y, P[2] + z);
+    avGbAdd(b, avTaper([V(0, 0.005, 0.01), V(0, -0.01, 0.075), V(0, -0.12, 0.105), V(0, -0.25, 0.085), V(0, -0.33, 0.05)], u => (0.034 + 0.034 * Math.sin(Math.min(1, u * 1.6) * PI * 0.5)) * (1 - avSS(0.45, 1, u) * 0.85), 14, 10), null, hc);
   } else if (h === 'mohawk') {
     avGbAdd(b, avCap(0.006, 0.7, 1.5, 2.2), null, avMix(L.hairColor, L.skin, 0.8).multiplyScalar(0.9));
     avGbAdd(b, avCap(0.0, 0.62, 1.5, 1.9, (ph, d, v) => 0.15 * Math.exp(-Math.pow(Math.sin(ph) / 0.15, 2)) * (1 - avSS(0.7, 1, v))), null, hc);
@@ -321,7 +337,7 @@ function avAccGeo(L, headset) {
     const fr = avCol('#1c1c22'), ey = AV_HD.ry * Math.cos(1.42), ez = -AV_HD.rz * avEgg(1.42) - 0.022;
     [-1, 1].forEach(s => {
       const x = s * 0.066;
-      if (L.glasses === 'square') avGbAdd(b, new THREE.TorusGeometry(0.048, 0.0065, 5, 4), avM(x, ey, ez, 1.05, 0.72, 1, 0, 0, PI / 4), fr);
+      if (L.glasses === 'square') avGbAdd(b, new THREE.TorusGeometry(0.05, 0.0065, 5, 4).rotateZ(PI / 4), avM(x, ey, ez, 1.02, 0.74, 1), fr);
       else avGbAdd(b, new THREE.TorusGeometry(0.043, 0.0062, 5, 16), avM(x, ey, ez, 1, 0.9, 1), fr);
       if (L.glasses === 'shades') avGbAdd(b, new THREE.CylinderGeometry(0.045, 0.045, 0.006, 20), avM(x, ey, ez + 0.002, 1, 1, 0.88, PI / 2, 0, 0), avCol('#10131b'));
       const tx = s * 0.17, tz = -0.03, mx = (s * 0.112 + tx) / 2, mz = (ez + tz) / 2, len = Math.hypot(tx - s * 0.112, tz - ez);

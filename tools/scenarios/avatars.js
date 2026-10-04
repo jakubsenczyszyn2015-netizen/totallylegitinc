@@ -65,6 +65,30 @@ module.exports = async page => {
     await page.shot('av-16-face-close');
     await page.eval(() => { window.__avs[2].talking = false; return true; });
   }
+  if (want('gallery')) {
+    // every hair style, facial hair and glasses option side by side (two rows of 6)
+    await page.eval(() => {
+      window.__avs.forEach(a => { a.group.visible = false; });
+      const O = AV_OPT, hairs = O.hairs.map(x => x[0]), fac = O.facials.map(x => x[0]), gl = O.glasses.map(x => x[0]);
+      const skins = ['#f8dcc6', '#6b4128', '#cd935f', '#48291a', '#f2c4a0', '#8f5c36', '#e2ad80', '#b17447', '#f08a3c', '#f4c84a', '#8fd0a6', '#b9a2e0'];
+      window.__gal = hairs.map((hr, i) => {
+        const L = { skin: skins[i], hair: hr, hairColor: O.hairCols[(i * 3) % O.hairCols.length], facial: fac[i % fac.length], glasses: gl[(i >> 1) % gl.length], shirt: O.shirts[i], pants: O.pants[i % O.pants.length], shoes: O.shoes[i % O.shoes.length], build: O.builds[i % 3][0] };
+        const a = buildAvatar({ look: L, name: hr });
+        a.group.position.set(7.4, 0, -2.6 + (i % 6) * 1.04); a.group.rotation.y = -Math.PI / 2; a.group.visible = i < 6; W.scene.add(a.group); a.setMood(['neutral', 'happy', 'surprised'][i % 3]); return a;
+      });
+      Loop.add((dt, t) => window.__gal.forEach(a => a.group.visible && poseAvatar(a, false, t, 0)));
+      window.__cam(10.6, 1.6, 0.0, Math.PI / 2, -0.06); return true;
+    });
+    await page.wait(1300);
+    await page.shot('av-05-gallery-a');
+    await page.eval(() => { window.__gal.forEach((a, i) => { a.group.visible = i >= 6; }); return true; });
+    await page.wait(700);
+    await page.shot('av-06-gallery-b');
+    await page.eval(() => { window.__cam(5.0, 1.75, -0.2, -Math.PI / 2 + 0.25, -0.1); return true; });
+    await page.wait(600);
+    await page.shot('av-07-gallery-back');
+    await page.eval(() => { window.__gal.forEach(a => { a.group.visible = false; }); window.__avs.forEach(a => { a.group.visible = true; }); return true; });
+  }
   if (want('walk')) {
     await page.eval(() => { window.__avs.forEach((a, i) => { a.act = null; a.stunT = 0; a.walk = i < 4 ? { x: 7, z: -1.5, r: 1.8, a: i * 1.57, s: i % 2 ? 5.2 : 3.2 } : null; if (!a.walk) a.group.position.y = i === 5 ? 0.5 : 0; }); window.__cam(11.2, 2.0, -1.0, Math.PI / 2, -0.2); return true; });
     await page.wait(1200);
