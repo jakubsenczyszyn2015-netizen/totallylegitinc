@@ -42,7 +42,7 @@
 .bm-pic{aspect-ratio:1.9;border-radius:4px;overflow:hidden;display:grid;place-items:center;
   background-image:radial-gradient(ellipse at 50% 38%,rgba(255,255,255,.26),rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.1))}
 .bm-pic > svg{width:100%;height:100%;display:block}
-.bm-pic img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.bm-pic img,.bm-pic canvas{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
 .bm-pic img.bm-3d{filter:drop-shadow(0 7px 5px rgba(0,0,0,.3))}
 .bm-ico{width:56%;height:74%;display:grid;place-items:center;filter:drop-shadow(0 4px 3px rgba(0,0,0,.28))}
 .bm-ico svg{width:100%;height:100%;fill:#fff;stroke:#fff}

@@ -170,10 +170,10 @@ const BonkMart = {
       h('div', { class: 'bm-logo' }, h('i', { class: 'bm-mark', html: BM_MARK }), h('b', {}, 'BonkMart'), h('span', { class: 'bm-tag' }, 'MARKET')),
       h('div', { class: 'bm-hello' }, h('span', {}, 'Hello, ' + (settings.name || 'Agent')), h('span', { class: 'bm-wallet', title: 'Your Bonk Pay wallet: half of every scam you close' }, h('i', { html: OS.glyph('card') }), h('small', {}, 'Bonk Pay'), h('b', { class: 'bm-bal' }, money(G.wallet)))));
     const tabs = h('div', { class: 'bm-tabs' }, this.TABS.map(t => h('button', {
-      class: 'bm-tab' + (t.id === this.tab ? ' on' : ''), style: { '--tc': t.col },
+      class: 'bm-tab' + (t.id === this.tab ? ' on' : ''), style: '--tc:' + t.col,
       onclick: () => { if (this.tab === t.id) return; SFX.click(); this.tab = t.id; this.build(body, true); }
     }, t.name)));
-    const scroll = h('div', { class: 'bm-scroll', style: { '--tc': tabCol } });
+    const scroll = h('div', { class: 'bm-scroll', style: '--tc:' + tabCol });
     if (!secs.length) scroll.append(h('div', { class: 'bm-empty' }, h('i', { html: OS.glyph('box') }), h('b', {}, 'Out of stock'), h('span', {}, 'The intern is restocking this aisle. Check back after your next scam.')));
     for (const s of secs) {
       scroll.append(h('div', { class: 'bm-sec' }, h('span', {}, s.name)));
@@ -203,10 +203,9 @@ const BonkMart = {
   pic(it) {
     const box = h('div', { class: 'bm-pic', style: { backgroundColor: bmVal(it.color, it) || '#5f6b7d' } });
     const img = url => { if (!url) return; const im = h('img', { class: 'bm-3d', src: url, alt: '', draggable: false }); box.replaceChildren(im); box.classList.add('has3d'); };
-    if (typeof it.art === 'function') {   // canvas art: art(ctx, w, h)
-      let url = BMThumb.cache.get('art:' + it.id);
-      if (url === undefined) { url = null; try { const cv = h('canvas', { width: 380, height: 200 }); it.art(cv.getContext('2d'), 380, 200); url = cv.toDataURL(); } catch (e) { console.warn('shop art', e); } BMThumb.cache.set('art:' + it.id, url); }
-      if (url) { box.append(h('img', { class: 'bm-art', src: url, alt: '', draggable: false })); return box; }
+    if (typeof it.art === 'function') {   // canvas art: art(ctx, w, h); a live canvas, so art that draws late (images) still shows
+      const cv = h('canvas', { class: 'bm-art', width: 380, height: 200 });
+      try { it.art(cv.getContext('2d'), 380, 200); box.append(cv); return box; } catch (e) { console.warn('BonkMart art failed for ' + it.id, e); }
     }
     if (it.svg) { box.innerHTML = bmVal(it.svg, it); return box; }
     const ic = it.icon, gname = typeof ic === 'string' && OS_GLYPHS[ic] ? ic : (!ic || typeof ic !== 'string' || !ic.trim().startsWith('<svg')) && OS_EMOJI_GLYPH[it.emoji];
@@ -531,7 +530,7 @@ const ChaosArt = {
     };
     const aL = arm(-1), aR = arm(1);
     g.add(base, grill, body, head, knot, aL, aR);
-    g.userData = { body, head, aL, aR, thumb: { ry: Math.PI + 0.45, rx: 0.08, zoom: 1.15 } };
+    g.userData = { body, head, aL, aR, thumb: { ry: Math.PI + 0.45, rx: 0.08, zoom: 1.0 } };
     return g;
   }
 };

@@ -15,9 +15,11 @@ module.exports = async page => {
   };
   const check = (name, ok, info) => console.log((ok ? 'OK   ' : 'FAIL ') + name + (info !== undefined ? '  ' + JSON.stringify(info) : ''));
 
+  await ev(() => { const T = window.__tli; T.Saves.week[2] = null; writeSaves(); return true; });   // a fresh save
   await page.startSolo('week');
   await ev(() => {
     const T = window.__tli; T.OS.fastBoot = true; T.G.timeLeft = 9999;
+    T.Loop.add(() => { if (T.Call.state === 'idle') T.Call.wait = 999; });   // no calls during the shop shots
     // the purchasable apps belong to other modules: stand-ins so the Games tab has stock in this test
     if (!T.Shop.list('games').length) [['cookie', 'Cosmic Cookie', 150, 'cookie', '#c47a2c', 'Click a cookie. Then click it again. A thrilling career in confectionery.'], ['casino', 'LuckyBonk Casino', 300, 'dice', '#d6336c', 'Eight games of chance, one wallet. The house always wins, and you are not the house.'],
       ['paint', 'Doodle Pro', 100, 'palette', '#1c7ed6', 'Professional art software for unprofessional art.'], ['antivirus', 'BugBuster', 200, 'shield', '#2f9e44', 'Squashes pop-ups, bugs and, occasionally, hope.'], ['cctv', 'CCTV', 400, 'cctv', '#495057', 'Watch your coworkers from the comfort of your desk. Legally ambiguous.']]
@@ -60,7 +62,7 @@ module.exports = async page => {
     const r = await ev(() => ({ wallet: window.__tli.G.wallet, lvl: window.__tli.Game.lvl('comm') }));
     check('hold to buy: Bigger Cut level 1 for $200', r.wallet === 440 && r.lvl === 1, r);
     // perks + owned / maxed states
-    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); return true; });
+    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].pop(); s.scrollTop = sec.offsetTop - 260; return true; });
     await gw(1.2);
     await page.shot('s09-owned-need');
     const pc = await ev(() => ({ walk: PC.walk, chair: bmPerk('chair') }));
