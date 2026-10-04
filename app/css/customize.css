@@ -1,1 +1,53 @@
-/* customize */
+/* ---------- character creator ---------- */
+.cz{position:fixed;inset:0;z-index:65;background:rgba(10,13,22,.74);display:flex;align-items:center;justify-content:center;padding:1rem}
+.cz-win{width:min(72rem,100%);height:min(46rem,100%);background:var(--navy);border:3px solid var(--ink);border-radius:18px;box-shadow:8px 8px 0 rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden}
+.cz-head{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.7rem 1rem;background:var(--navy2);border-bottom:3px solid var(--ink)}
+.cz-head h2{font-family:var(--font-d);font-weight:400;font-size:1.5rem;line-height:1;color:var(--yellow);text-shadow:3px 3px 0 var(--ink)}
+.cz-sub{font-size:.8rem;color:var(--muted);font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.cz-main{flex:1;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);min-height:0}
+
+/* the stage looks like a cubicle wall in warm evening light */
+.cz-stage{position:relative;overflow:hidden;border-right:3px solid var(--ink);
+  background:radial-gradient(ellipse 70% 55% at 50% 30%,rgba(255,188,112,.38),transparent 70%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.025) 0 2px,transparent 2px 5px),
+    repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0 2px,transparent 2px 4px),
+    linear-gradient(#46558a,#2f3a60 62%,#232b47 62.2%,#1c2238)}
+.cz-stage::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px rgba(10,12,24,.55)}
+.cz-gl{position:absolute;left:0;right:0;top:0;bottom:3.6rem;width:100%;height:calc(100% - 3.6rem);display:block;cursor:grab;touch-action:none;z-index:1}
+.cz-gl:active{cursor:grabbing}
+.cz-note{position:absolute;z-index:0;width:5.2rem;height:5.2rem;padding:.55rem .4rem;background:#ffe36b;color:#3b3221;font:700 .9rem/1.05 'Comic Sans MS','Segoe Print',cursive;text-align:center;box-shadow:2px 3px 0 rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center}
+.cz-note.n1{left:7%;top:12%;transform:rotate(-6deg)}
+.cz-note.n2{right:8%;top:9%;transform:rotate(5deg);background:#ff9ecb;font-size:.78rem}
+.cz-note.n3{right:14%;top:33%;transform:rotate(-3deg);background:#9be7ff;width:4.4rem;height:4.4rem}
+.cz-hint{position:absolute;z-index:2;left:50%;bottom:4.2rem;transform:translateX(-50%);font-size:.75rem;font-weight:800;color:rgba(255,255,255,.55);letter-spacing:.06em;text-transform:uppercase;pointer-events:none}
+.cz-zoom{position:absolute;z-index:2;left:.7rem;top:.7rem}
+.cz-acts{position:absolute;z-index:2;left:0;right:0;bottom:0;display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;padding:.55rem .6rem;background:rgba(12,15,26,.72);border-top:2px solid rgba(0,0,0,.4);min-height:3.6rem;align-items:center}
+.cz-emote{border:2px solid var(--ink);border-radius:999px;background:var(--paper);color:var(--ink);font-weight:800;font-size:.78rem;padding:.25em .7em;box-shadow:0 2px 0 var(--ink)}
+.cz-emote:hover{background:var(--yellow)}
+.cz-emote:active{transform:translateY(2px);box-shadow:none}
+.cz-sep{width:.6rem}
+
+/* options */
+.cz-opts{overflow:auto;padding:.9rem 1rem 1.1rem;display:flex;flex-direction:column;gap:.85rem}
+.cz-sec h4{font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem}
+.cz-name{width:100%;background:var(--ink);border:2px solid var(--navy3);border-radius:10px;padding:.5em .75em;font-family:var(--font-d);font-size:1.15rem;color:#fffaf0;letter-spacing:.01em}
+.cz-sw{display:flex;flex-wrap:wrap;gap:.42rem}
+.cz-dot{width:2.05rem;height:2.05rem;border-radius:50%;border:3px solid var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 2px 0 var(--ink);transition:transform .08s}
+.cz-dot:hover{transform:scale(1.1)}
+.cz-dot.on{outline:3px solid var(--yellow);outline-offset:2px;transform:scale(1.08)}
+.cz-chips{display:flex;flex-wrap:wrap;gap:.35rem}
+.cz-chip{border:2px solid var(--ink);border-radius:10px;background:var(--navy2);color:var(--text);font-weight:800;font-size:.84rem;padding:.38em .75em;box-shadow:0 3px 0 var(--ink);transition:transform .06s}
+.cz-chip:hover{filter:brightness(1.15)}
+.cz-chip:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.cz-chip.on{background:var(--yellow);color:var(--ink)}
+.cz-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.2rem}
+
+/* menu button icon: a tiny headset face */
+.cz-open .cz-ic{display:inline-block;width:1.15em;height:1.15em;border-radius:50% 50% 46% 46%;background:#f2c4a0;border:2px solid var(--ink);position:relative;margin-right:.1em;flex:none}
+.cz-open .cz-ic::before{content:"";position:absolute;left:-.22em;right:-.22em;top:-.2em;height:.75em;border:2.5px solid var(--ink);border-bottom:0;border-radius:1em 1em 0 0}
+.cz-open .cz-ic::after{content:"";position:absolute;left:.22em;top:.36em;width:.12em;height:.12em;border-radius:50%;background:var(--ink);box-shadow:.38em 0 0 var(--ink)}
+
+@media (max-width:760px){
+  .cz-main{grid-template-columns:1fr;grid-template-rows:minmax(16rem,46%) 1fr}
+  .cz-stage{border-right:0;border-bottom:3px solid var(--ink)}
+}
