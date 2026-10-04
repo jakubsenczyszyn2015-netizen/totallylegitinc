@@ -134,6 +134,7 @@ const OS = {
   glyphs: OS_GLYPHS, logoSVG: OS_LOGO,
   pinned: ['phone', 'playbook', 'nosy'],   // taskbar apps shown even when closed (push your app id to pin it)
   badges: new Map(), attn: new Set(), sel: null, bootKey: null, ringFor: null, wallId: null, st: null,
+  fastBoot: false,                         // true skips the boot screen (handy in test scenarios)
 
   build() {
     const el = $('#os');
@@ -233,6 +234,7 @@ const OS = {
   boot() {
     const key = G.mode + '|' + G.slot + '|' + G.day, quick = this.bootKey === key, b = $('#os-boot'), dur = quick ? 300 : 1200;
     this.bootKey = key; clearTimeout(this.bootT);
+    if (this.fastBoot) { b.classList.add('hidden'); this.setWallpaper(settings.wallpaper); return; }
     b.classList.remove('hidden', 'out', 'quick'); if (quick) b.classList.add('quick');
     b.style.setProperty('--bt', dur + 'ms');
     $('.msg', b).textContent = quick ? 'Welcome back, ' + settings.name : pick(['Loading quota…', 'Polishing scripts…', 'Untangling phone cords…', 'Calibrating sincerity…', 'Installing ethics… skipped']);
@@ -462,5 +464,7 @@ const OS = {
     $('#os-wins').append(el); this.popups++; SFX.popup();
     return el;
   },
-  virus(n) { for (let i = 0; i < n; i++) setTimeout(() => { if (G.phase !== 'menu') this.popup(); }, i * 170); }
+  virus(n) { for (let i = 0; i < n; i++) setTimeout(() => { if (G.phase !== 'menu') this.popup(); }, i * 170); },
+  /* close every fake alert (e.g. an antivirus scan) and return how many there were */
+  clearPopups() { const ps = $$('#os-wins .popup'); ps.forEach(p => p.remove()); this.popups = 0; return ps.length; }
 };

@@ -64,6 +64,8 @@ Helpers: `OS.glyph(name)` -> `<svg>` string, `OS.tile(def, cls)` -> a coloured t
 | `OS.cashFx(text, bad)` | huge chunky money pop-up over the desktop (`'+$250'`; `bad` = red, e.g. `'BAITED'`) |
 | `OS.popup(opts)` | a cheesy fake-alert window. `opts` optional: `{ title, head, text, icon, color, ok, bar, flash }` |
 | `OS.virus(n)` | a storm of `n` pop-ups; `OS.popups` counts the open ones (`#os-wins .popup` elements) |
+| `OS.clearPopups()` | removes every pop-up, returns how many there were (antivirus scan) |
+| `OS.fastBoot` | set `true` to skip the boot screen (test scenarios) |
 | `OS.power(on)` | open/close the start menu (Stand up, Wallpapers, Settings, Quit to main menu) |
 | `OS.clock()` | `['4:37 PM', 'Mon, Aug 24, 2026']` in-game time and date (see below) |
 | `OS.setWallpaper(id)` | show a wallpaper (normally use `Wallpapers.set(id)`) |
@@ -87,6 +89,9 @@ the last 30 s). Endless mode: `TEAM $x` and `OVERTIME`. A Bonk Pay pill on the l
 
 `OS.show()` shows a black monitor boot screen with the LegitOS logo and a loading bar: 1.2 s the first time
 you sit down in a shift (key: mode, slot, day), 0.3 s after that. The wallpaper is painted while it is up.
+
+**Test scenarios:** `page.sit()` waits ~0.9 s, so a screenshot taken right after it shows the boot screen.
+Either wait ~1.8 s more, or run `window.__tli.OS.fastBoot = true` before sitting down.
 
 ## Incoming call card
 
