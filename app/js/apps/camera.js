@@ -14,12 +14,14 @@ const CamApp = {
     { id: 'night', name: 'Night vision', svg: '<circle cx="16" cy="24" r="8" fill="none" stroke="#7dff6a" stroke-width="4"/><circle cx="32" cy="24" r="8" fill="none" stroke="#7dff6a" stroke-width="4"/><path d="M24 22v4" stroke="#7dff6a" stroke-width="3"/><circle cx="16" cy="24" r="3" fill="#7dff6a"/><circle cx="32" cy="24" r="3" fill="#7dff6a"/>' }
   ],
   fx() { return settings.camFx && this.FX.some(f => f.id === settings.camFx) ? settings.camFx : 'none'; },
+  BGS: ['Home office', 'Beach', 'Skyline'],
   setFx(id) {
     settings.camFx = id; saveSettings(); this.fxT = W.t || 0; SFX.click(); this.freeze = 0;
-    if (this.win) { this.win.el.dataset.fx = id; this.win.el.querySelectorAll('.cam-chip').forEach(c => c.classList.toggle('on', c.dataset.fx === id)); const n = this.FX.find(f => f.id === id); this.badge.textContent = id === 'none' ? '' : n.name; this.badge.classList.toggle('show', id !== 'none'); }
-    if (id === 'pro') this.bgIdx = ((this.bgIdx || 0) + (this._lastFx === 'pro' ? 1 : 0)) % 3;
+    if (id === 'pro') this.bgIdx = ((this.bgIdx || 0) + (this._lastFx === 'pro' ? 1 : 0)) % 3;   // click again: next backdrop
     this._lastFx = id;
+    if (this.win) { this.win.el.dataset.fx = id; this.win.el.querySelectorAll('.cam-chip').forEach(c => c.classList.toggle('on', c.dataset.fx === id)); this.showBadge(id); }
   },
+  showBadge(id) { const n = this.FX.find(f => f.id === id); this.badge.textContent = id === 'none' ? '' : id === 'pro' ? 'Background: ' + this.BGS[this.bgIdx || 0] : n.name; this.badge.classList.toggle('show', id !== 'none'); },
   visible() { const w = this.win; return !!(w && OS.open && P.seated && !P.cam && OS.wins.get('camera') === w && !w.el.classList.contains('min')); },
   ensure() {
     if (this.cam || typeof Cams === 'undefined') return this.cam;
@@ -163,7 +165,7 @@ const CamApp = {
       h('i', { html: '<svg viewBox="0 0 48 48">' + f.svg + '</svg>' }), h('span', {}, f.name))));
     const tab = h('button', { class: 'cam-tab', onclick: () => { const on = win.el.classList.toggle('fxopen'); tab.innerHTML = on ? '&#9660; Hide' : '&#9650; Show'; SFX.click(); if (OS.clampWin) OS.clampWin(win); } }, '▲ Show');
     b.append(h('div', { class: 'cam-view' }, this.cv, h('div', { class: 'cam-live' }, h('i'), 'LIVE'), this.badge), h('div', { class: 'cam-bar' }, tab), strip);
-    const fx = this.fx(); if (fx !== 'none') { this.badge.textContent = this.FX.find(f => f.id === fx).name; this.badge.classList.add('show'); }
+    this.showBadge(this.fx());
     if (this.cam) { this.cam.on = true; this.cam.last = -1e9; }
   },
   close(win) { if (this.win === win) this.win = null; }
