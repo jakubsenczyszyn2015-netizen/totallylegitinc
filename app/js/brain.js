@@ -16,9 +16,10 @@ const TASTE = {
   confused: { simple: 4, empathy: 3, polite: 2, name: 2, story: 1, long: -4, jargon: -4, urgency: -2, detail: -1, threat: -1 },
   hype:     { excite: 5, compliment: 2, urgency: 2, name: 2, story: 2, jargon: 0, long: -1, authority: -1, threat: -2 },
   auditor:  { detail: 5, compliment: 3, authority: 2, polite: 1, concise: 1, urgency: -3, excite: -3, threat: -4, story: -1 },
+  dramatic: { compliment: 5, story: 4, excite: 3, name: 2, polite: 1, empathy: 1, urgency: 1, concise: -1, jargon: -3, threat: -3, detail: -1 },
   baiter:   { polite: 1, empathy: 1, name: 1, compliment: 1, excite: 1, story: 2, detail: 1, urgency: 1, authority: 1, jargon: 1 }
 };
-const ADDRESS = { sweet: 'dear', grumpy: 'pal', paranoid: 'buddy', busy: '', confused: '', hype: 'dude', auditor: '', baiter: 'friend' };
+const ADDRESS = { sweet: 'dear', grumpy: 'pal', paranoid: 'buddy', busy: '', confused: '', hype: 'dude', auditor: '', dramatic: 'darling', baiter: 'friend' };
 
 /* extra lines per personality, on top of each persona's L lines */
 const BRAIN_L = {
@@ -109,6 +110,19 @@ const BRAIN_L = {
     answered: ['That is a satisfactory answer.', 'The figures are consistent. Very well.'],
     ignored: ['You have not answered my question.']
   },
+  dramatic: {
+    name: ['You said my name! Say it again, with feeling.', 'Ah, {me}. It sounds better when you say it.'],
+    intro: ['{agent}! What a name. It belongs on a poster.', 'Charmed, {agent}. Truly. Go on.'],
+    compliment: ['Oh, stop. No, continue. Continue!', 'Finally, someone who appreciates talent.'],
+    pressure: ['Ooh, a ticking clock. How thrilling!'],
+    proof: ['And who ARE you, really? Reveal yourself!', 'Is this real, or is it an elaborate performance?'],
+    contra: ['Plot hole! You said you were from {claim} before!'],
+    admit: ['A SCAM? The betrayal! The twist! I am devastated.'],
+    fine: ['Exhausted, darling. Art is a burden.', 'Radiant, as always. Thank you for noticing.'],
+    answered: ['Oh, how convincing. Bravo.', 'Fine. I believe you. For now.'],
+    ignored: ['You ignored my question. The audience noticed.'],
+    waffle: ['Too much exposition, darling. Get to the drama.', 'Cut! Shorter, please.']
+  },
   baiter: {
     name: ['Yes, that\'s me! Say it again, for the... record.'],
     intro: ['{agent}! Great name. And your last name? And your employee number?', 'Hi {agent}! Can you spell that? Slowly?'],
@@ -177,7 +191,13 @@ const SCHEME_BRAIN = {
   parcel: { echo: ['A parcel? For me? I didn\'t order anything.', 'Something valuable? Ooh, who sent it?', 'A customs fee? How much?'],
     hint: ['Is there a delivery for me?', 'What\'s in it?', 'How do I get it released?', 'How do I pay?'] },
   deskrefund: { echo: ['A big refund? For me? Wonderful!', 'On my computer? I suppose I can try.'],
-    hint: ['Do I have money coming?', 'How do I get the refund?', 'How do you get into the computer?', 'Did you find what you needed?'] }
+    hint: ['Do I have money coming?', 'How do I get the refund?', 'How do you get into the computer?', 'Did you find what you needed?'] },
+  idv: { echo: ['My Citizen Card? Flagged?! I only used it to rent a bowling shoe.', 'Over the phone? Oh, that is handy. I hate queues.'],
+    hint: ['Is something wrong with my Citizen Card?', 'Do I have to go somewhere to fix it?', 'What do you need off the card?'] },
+  bonkweb: { echo: ['A vibe check? On my online banking? Is it failing?', 'You can do it for me? Oh, I never know where to click.'],
+    hint: ['Is something wrong with my online banking?', 'Can you sort it out for me?', 'What do you need to log in?'] },
+  petpass: { echo: ['{pet} has a passport? I mean, of course {pet} has a passport!', 'Lose the miles? {pet} has been saving those for a beach trip!'],
+    hint: ['Is this about {pet}?', 'What happens if we do not renew it?', 'What do you need from the passport?'] }
 };
 /* organisations an agent might claim to be from, to catch them contradicting themselves */
 const CLAIMS = [
@@ -243,7 +263,7 @@ function fresh(b, arr) {
 }
 function fill(s, call) {
   const c = call.caller, b = call.brain, pid = c.baiter ? 'baiter' : c.persona.id;
-  return s.replace(/\{me\}/g, c.first).replace(/\{age\}/g, c.age).replace(/\{agent\}/g, b.agent || 'there')
+  return s.replace(/\{me\}/g, c.first).replace(/\{age\}/g, c.age).replace(/\{agent\}/g, b.agent || 'there').replace(/\{pet\}/g, c.pet ? c.pet.name : 'my cat')
     .replace(/\{claim\}/g, b.claimLabel || 'somewhere else').replace(/\{you\}/g, ADDRESS[pid] || 'friend');
 }
 
@@ -303,7 +323,7 @@ function tasteDelta(call, r, lastYou) {
 /* the caller AI: same reply shape as an LLM turn */
 function offlineReply(call, text) {
   const c = call.caller, b = brainOf(call), pid = c.baiter ? 'baiter' : c.persona.id;
-  const L = c.baiter ? BAITER_L : c.persona.L, BL = BRAIN_L[pid], r = readAgent(call, text), s = call.scheme;
+  const L = c.baiter ? BAITER_L : (c.L || c.persona.L), BL = BRAIN_L[pid], r = readAgent(call, text), s = call.scheme, QL = c.quirkL || QUIRK_L[c.quirk];
   const out = (say, d, extra) => Object.assign({ say: fill(say, call), trust_delta: clamp(Math.round(d), -25, 15), steps_done: [], hangup: false }, extra || {});
   const lastYou = b.lastYou; b.lastYou = r.t;
 
@@ -350,7 +370,7 @@ function offlineReply(call, text) {
   const say = (main, delta, extra) => {
     const lead = pre.length ? pre[0] : gripe && !extra ? fresh(b, gripe) : '';
     let line = [lead, main].filter(Boolean).join(' ');
-    if (!extra && !c.baiter && Math.random() < 0.18 && b.askedQuirk < 3 && QUIRK_L[c.quirk]) { line += ' ' + fresh(b, QUIRK_L[c.quirk]); b.askedQuirk++; }
+    if (!extra && !c.baiter && Math.random() < 0.18 && b.askedQuirk < 3 && QL) { line += ' ' + fresh(b, QL); b.askedQuirk++; }
     return out(line, delta, extra);
   };
 
@@ -359,6 +379,12 @@ function offlineReply(call, text) {
     return say(fresh(b, L.meh.concat(SHARED_L.why, ['So what is this about, exactly?', 'Why was I told to call this number?'])), clamp(d, -6, 5));
   }
 
+  /* NosyViewer: the caller already read out the connection code; the agent has to type it in */
+  if (st && st.remote && call.codeGiven) {
+    const code = c.nosy.split('').join(' ').replace(/ - /g, ', ');
+    if (kwCount(r.t, r.toks, ['code', 'number', 'again', 'repeat', 'digits', 'say that', 'what was'])) return say(fresh(b, ['It says ' + code + '. Did you get that?', 'The code? ' + code + '. Slowly: ' + code + '.', 'Once more: ' + c.nosy + '.']), clamp(d, -4, 4));
+    return say(fresh(b, ['Is it working? I read you the code. ' + c.nosy + '.', 'Are you in yet? The little box still says ' + c.nosy + '.', 'Nothing has happened yet. Did you type the code in?']), clamp(d, -4, 3));
+  }
   /* checklist steps the caller judges from conversation */
   if (st && !st.pin) {
     let hits = kwCount(r.t, r.toks, st.k) + (st.num && /\d/.test(r.t) ? 1 : 0);
@@ -372,7 +398,7 @@ function offlineReply(call, text) {
       const last = step === s.steps.length - 1;
       b.prog[step] = 0;
       let main;
-      if (st.remote) main = pick(['Okay... I clicked the thing. It says "NosyViewer connected". Is that good?', 'Alright, it is open. I can see the little arrow moving. Is that you?']);
+      if (st.remote) main = pick(['Okay... I opened the NosyViewer thing. It says my connection code is ' + c.nosy + '.', 'Alright, it is open! There is a code in a little box: ' + c.nosy + '. Is that what you need?', 'Fine, I installed it. It shows a code: ' + c.nosy + '.']);
       else if (last) main = fresh(b, L.close);
       else main = sb && sb.echo[step] && Math.random() < 0.7 ? sb.echo[step] + ' ' + fresh(b, L.step) : fresh(b, L.step);
       return say(main, clamp(d + randi(4, 9), -20, 15), { steps_done: [step] });

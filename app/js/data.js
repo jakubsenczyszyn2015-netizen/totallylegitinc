@@ -352,7 +352,7 @@ const CALLER_TYPES = [
     about: 'a retired astronaut who still wears the space helmet at home and does everything strictly "by the book"',
     quirks: [{ q: 'counts down from five before answering big questions', L: ['Five, four, three, two, one... Affirmative.', 'Countdown initiated. Three, two, one. Proceed.'] },
       { q: 'calls the kitchen "mission control"', L: ['Hold, agent. Mission control is beeping. It is the toaster.', 'Mission control reports the kettle has achieved boil.'] }],
-    L: { greet: ['This is Commander {first}. State your business, agent.', 'Commander {first} here. Your flyer reached my orbit. Explain.'], ok: ['Copy that.', 'Roger. Continue.'] },
+    L: { greet: ['This is Commander {me}. State your business, agent.', 'Commander {me} here. Your flyer reached my orbit. Explain.'], ok: ['Copy that.', 'Roger. Continue.'] },
     pitch: -0.05, file: { n: 'launch_checklist.txt', c: '1. Helmet ON\n2. Kettle ON\n3. Feed the space hamster\n4. Do NOT press the red one' } },
   { id: 'crypto', label: 'Crypto bro', persona: 'busy', age: [21, 34],
     first: ['Chad', 'Tyler', 'Brayden', 'Kofi', 'Ravi', 'Logan', 'Mateo', 'Jaxon', 'Dev', 'Sven'],
@@ -379,7 +379,7 @@ const CALLER_TYPES = [
     about: 'a very rich yacht captain shouting "ahoy" from the deck of the third of his yachts',
     quirks: [{ q: 'shouts orders at a deckhand called Kevin', L: ['KEVIN! Tighten that rope! Sorry. Go on.', 'Kevin, not the good champagne! Where were we?'] },
       { q: 'measures money in "doubloons", then corrects himself', L: ['That is about forty doubloons. Dollars! I mean dollars.', 'A pittance. Three doubloons. Er, dollars.'] }],
-    L: { greet: ['Ahoy! Captain {first} speaking, from the deck of the Golden Mullet.', 'Ahoy there. Make it brief, the tide waits for no one.'], ok: ['Aye. Carry on.', 'Smooth sailing so far.'] },
+    L: { greet: ['Ahoy! Captain {me} speaking, from the deck of the Golden Mullet.', 'Ahoy there. Make it brief, the tide waits for no one.'], ok: ['Aye. Carry on.', 'Smooth sailing so far.'] },
     pitch: -0.15, file: { n: 'yacht_names.txt', c: 'Golden Mullet\nGolden Mullet II\nReel Estate\nKnot Working' } },
   { id: 'cowboy', label: 'Cowboy', persona: 'grumpy', age: [38, 70], hat: 'cowboy', bandana: 1,
     first: ['Wade', 'Hank', 'Loretta', 'Royce', 'Ezra', 'Tess', 'Boone', 'Delia', 'Amos'],
@@ -451,7 +451,7 @@ const CALLER_TYPES = [
     about: 'a mad scientist calling from a lab where something keeps exploding',
     quirks: [{ q: 'has something explode in the background now and then', L: ['*BOOM* Ignore that. Totally controlled.', 'Hold on, the beaker is fizzing again. Okay.'] },
       { q: 'calls every number a "data point"', L: ['Fascinating data point. Continue.', 'I am logging this as data point forty-two.'] }],
-    L: { greet: ['Hello? Hold on, the beaker is fizzing. Okay. Speak!', 'Doctor {first} speaking. Quickly, the experiment is unstable.'] },
+    L: { greet: ['Hello? Hold on, the beaker is fizzing. Okay. Speak!', 'Doctor {me} speaking. Quickly, the experiment is unstable.'] },
     pitch: 0.05, rate: 0.05, file: { n: 'experiment_log.txt', c: 'Day 1: added more fizz\nDay 2: too much fizz\nDay 3: eyebrows grew back' } },
   { id: 'regular', label: 'Regular caller', persona: null, age: [24, 88] }
 ];
