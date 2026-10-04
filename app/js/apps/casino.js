@@ -112,11 +112,13 @@ const Casino = (() => {
       if (s.ph === 'idle') { big(s.last ? 'LAST: ' + xs(s.last) : 'PLACE YOUR BET', s.last ? (s.last >= 2 ? '#35e08a' : '#ff4d6d') : '#e6e0ff', 30); sub('Pick a wager, press BET, cash out before it pops'); }
       else if (s.ph === 'count') { big('LAUNCHING…', '#ffc93c', 34); sub('Fasten your lanyard'); }
       else if (s.ph === 'fly') { big(xs(s.m), s.out ? '#35e08a' : '#ffffff', 56); sub(s.out ? 'Cashed out: +' + money(Math.floor(s.bet * s.out)) : 'Current payout ' + money(Math.floor(s.bet * s.m))); }
-      else { big('POPPED @ ' + xs(s.at), '#ff4d6d', 40); sub(s.out ? 'You got out at ' + xs(s.out) + ' — nice' : s.bet ? 'Lost ' + money(s.bet) : ''); }
+      else { big('POPPED @ ' + xs(s.at), '#ff4d6d', 38); sub(s.out ? 'You got out at ' + xs(s.out) + ' — nice' : s.bet ? 'Lost ' + money(s.bet) : ''); }
       if (tip) rocket(tip[0], tip[1], tip[2]);
     }
-    function big(t, col, size) { g.font = `400 ${size}px "Lilita One",sans-serif`; g.lineWidth = 6; g.strokeStyle = 'rgba(10,6,30,.85)'; g.lineJoin = 'round'; g.strokeText(t, 208, 108); g.fillStyle = col; g.fillText(t, 208, 108); }
-    function sub(t) { g.font = '600 12px Roboto,sans-serif'; g.fillStyle = '#b8b0e0'; g.fillText(t, 208, 132); }
+    /* big caption: centred while idle, top-left while the curve is on screen */
+    const at = () => s.ph === 'fly' || s.ph === 'crashed' ? [52, 70, 'left'] : [208, 108, 'center'];
+    function big(t, col, size) { const [px, py, al] = at(); g.textAlign = al; g.font = `400 ${size}px "Lilita One",sans-serif`; g.lineWidth = 6; g.strokeStyle = 'rgba(10,6,30,.85)'; g.lineJoin = 'round'; g.strokeText(t, px, py); g.fillStyle = col; g.fillText(t, px, py); }
+    function sub(t) { const [px, py, al] = at(); g.textAlign = al; g.font = '600 12px Roboto,sans-serif'; g.fillStyle = '#b8b0e0'; g.fillText(t, px + (al === 'left' ? 2 : 0), py + 24); }
     function rocket(x0, y0, a) {
       g.save(); g.translate(x0, y0); g.rotate(a);
       const fl = 8 + Math.random() * 6; g.fillStyle = '#ffc93c'; g.beginPath(); g.moveTo(-10, -4); g.lineTo(-10 - fl, 0); g.lineTo(-10, 4); g.fill();
@@ -403,7 +405,7 @@ const Casino = (() => {
         const res = Math.random() < 0.5 ? 'h' : 't', win = res === p.side, turns = 6 + randi(0, 2);
         const from = face === 'h' ? 0 : 180, to = turns * 360 + (res === 'h' ? 0 : 180);
         flip = { b, res, win };
-        const an = coin.animate([{ transform: `translateY(0) rotateX(${from}deg) scale(1)` }, { transform: `translateY(-92px) rotateX(${(from + to) / 2}deg) scale(1.18)`, offset: 0.45 }, { transform: `translateY(0) rotateX(${to}deg) scale(1)` }],
+        const an = coin.animate([{ transform: `translateY(0) rotateX(${from}deg) scale(1)` }, { transform: `translateY(-66px) rotateX(${(from + to) / 2}deg) scale(1.12)`, offset: 0.45 }, { transform: `translateY(0) rotateX(${to}deg) scale(1)` }],
           { duration: 1300, easing: 'cubic-bezier(.3,.1,.35,1)', fill: 'forwards' });
         shadow.animate([{ transform: 'scale(1)', opacity: 0.6 }, { transform: 'scale(.55)', opacity: 0.25, offset: 0.45 }, { transform: 'scale(1)', opacity: 0.6 }], { duration: 1300, easing: 'cubic-bezier(.3,.1,.35,1)' });
         AudioSys.tone(1800, 0.05, 'square', 0.05); const tk = setInterval(() => snd.tick(2400), 110); setTimeout(() => clearInterval(tk), 1100);

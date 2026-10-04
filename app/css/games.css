@@ -271,8 +271,8 @@
 @keyframes lbboom{0%{scale:1}20%{scale:1.3}40%{scale:.9}100%{scale:1}}
 /* coinflip */
 .lb-coinwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.lb-stagec{position:relative;width:200px;height:206px;display:flex;align-items:flex-end;justify-content:center;perspective:800px}
-.lb-coin{position:relative;width:150px;height:150px;margin-bottom:30px;transform-style:preserve-3d;z-index:2}
+.lb-stagec{position:relative;width:200px;height:214px;display:flex;align-items:flex-end;justify-content:center;perspective:800px}
+.lb-coin{position:relative;width:140px;height:140px;margin-bottom:28px;transform-style:preserve-3d;z-index:2}
 .lb-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:50%;filter:drop-shadow(0 0 18px rgba(255,201,60,.35))}
 .lb-face svg{width:100%;height:100%;display:block}
 .lb-face.t{transform:rotateX(180deg);filter:drop-shadow(0 0 18px rgba(177,151,252,.45))}
