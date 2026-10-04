@@ -5,6 +5,9 @@ module.exports = async page => {
   const only = (process.env.TOOLS_ONLY || '').split(',').filter(Boolean), want = k => !only.length || only.includes(k);
   const ok = (cond, msg) => { console.log((cond ? 'OK   ' : 'FAIL ') + msg); if (!cond) page.errors.push('ASSERT ' + msg); };
   await page.startSolo('week');
+  // the harness profile (and save slot 2) is shared between runs: start from "not bought" and clean up at the end
+  const unbuy = () => page.eval(() => { const T = window.__tli; if (T.G.prog.apps) { delete T.G.prog.apps.paint; delete T.G.prog.apps.antivirus; } delete T.G.prog.antivirus; T.Game.saveProgress(); return true; });
+  await unbuy();
   await page.eval(() => { const T = window.__tli; T.OS.fastBoot = true; T.G.timeLeft = 230; T.G.personal = 350; T.G.team = 350; T.G.wallet = 500; window.__fc = 0; T.Loop.addRender(() => { window.__fc++; }); return true; });
   // rendering is slow in the harness: finish the sit-down zoom at once and wait for the desktop
   const desk = async seat => {
@@ -162,4 +165,5 @@ module.exports = async page => {
     await page.wait(300);
     await page.shot('av-05-shield');
   }
+  await unbuy();
 };
