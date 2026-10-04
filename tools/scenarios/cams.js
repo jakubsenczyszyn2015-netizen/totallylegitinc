@@ -15,7 +15,7 @@ module.exports = async page => {
   const frames = (which, n) => ev((w, n) => new Promise(res => { const c = w === 'web' ? CamApp.cam : w === 'big' ? CCTV.big : CCTV.grid[0]; const f0 = c ? c.frames : 0, t0 = W.t; const f = () => ((c && c.frames >= f0 + n) || W.t - t0 > 6 ? res(c ? c.frames : -1) : setTimeout(f, 40)); f(); }), which, n);
 
   await page.startSolo('week');
-  await ev(() => { const T = window.__tli; T.OS.fastBoot = true; T.Call.state = 'off'; return true; });
+  await ev(() => { const T = window.__tli; T.OS.fastBoot = true; T.Call.state = 'idle'; T.Call.wait = 1e9; return true; });
   const desk = await ev(() => { const T = window.__tli; const d = T.W.desks.filter(x => !x.npc && !T.Game.deskTaken(x.i))[2]; sitAt(d.i); return d.i; });
   await gw(1.2);
   await ev(() => { const T = window.__tli; T.OS.close('memo', true); const ph = T.OS.wins.get('phone'); if (ph) T.OS.minimise('phone'); settings.camFx = 'none'; return true; });
@@ -25,6 +25,7 @@ module.exports = async page => {
     const mate = window.__mate = buildAvatar({ name: 'Dana', look: Object.assign(lookFromSeed(77), { skin: '#8d5524', hair: 'afro', hairColor: '#1b1410', shirt: '#14b8a6', glasses: 'round' }) });
     W.scene.add(mate.group); mate.lookCam = false; window.__mateL = L; window.__mateD = D;
     window.__matePose = Loop.add((dt, t) => poseAvatar(mate, false, t, 0));
+    Cams.labels.push(() => mate.group.visible ? [{ pos: mate.head.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, 0.55, 0)), text: 'Dana', color: '#14b8a6', kind: 'player', av: mate }] : []); Cams.hideTags.push(mate.tag);
     mate.group.visible = false; return true;
   }, desk);
 
@@ -76,7 +77,7 @@ module.exports = async page => {
     const pid = await ev(() => {
       const T = window.__tli, P = T.P, m = __mate; m.group.visible = true; m.stop(); Inv.give('polaroid', 5); Props.refreshHeld(); Props.select(Props.slots.indexOf('polaroid'));
       // stand in the aisle facing the teammate, who strikes a pose
-      const A = W.spawn.players[0], f = freeSpot(A.x - 1.2, A.z); P.pos.x = f[0]; P.pos.z = f[1]; m.group.position.set(f[0] - 2.4, 0, f[1] + 0.2); m.group.rotation.y = -Math.PI / 2 + 0.2 + Math.PI; m.play('cheer', { loop: true }); m.setMood('joy');
+      const A = W.spawn.players[0], f = freeSpot(A.x - 1.2, A.z); P.pos.x = f[0]; P.pos.z = f[1]; m.group.position.set(f[0] - 2.4, 0, f[1] + 0.2); m.group.rotation.y = -Math.PI / 2 + 0.25; m.play('cheer', { loop: true }); m.setMood('joy');
       const a = lookAngles({ x: P.pos.x, y: 1.62, z: P.pos.z }, { x: m.group.position.x, y: 1.3, z: m.group.position.z }); P.yaw = a.yaw; P.pitch = a.pitch; P.third = false;
       return true;
     });

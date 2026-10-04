@@ -43,7 +43,7 @@ const CamApp = {
   /* compose the frame + effect overlays on the visible canvas */
   draw(c) {
     const g = this.g, w = this.W, hh = this.H, fx = this.fx(), t = W.t || 0; if (!g) return;
-    g.save(); g.imageSmoothingEnabled = true;
+    g.save(); g.imageSmoothingEnabled = true; g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.filter = 'none';
     if (fx === 'pro') { g.drawImage(this.backdrop(this.bgIdx || 0), 0, 0, w, hh); g.drawImage(c.canvas, 0, 0); }
     else if (fx === 'potato') {
       if (!this.tiny) { this.tiny = document.createElement('canvas'); this.tiny.width = 60; this.tiny.height = 34; }
@@ -54,7 +54,11 @@ const CamApp = {
     else if (fx === 'beauty') this.drawBeauty(g, c, t);
     else if (fx === 'night') this.drawNight(g, t);
     else if (fx === 'potato') this.drawPotato(g, t);
-    else if (fx === 'pro') { g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(0, hh - 22, w, 22); g.font = '600 12px Roboto, sans-serif'; g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.fillText((settings.name || 'Agent') + ' · Senior Trust Associate · Totally Legit Inc.', 10, hh - 11); }
+    else if (fx === 'pro') {   // a lower third, like a real meeting app
+      g.save(); g.fillStyle = 'rgba(12,16,28,.62)'; g.beginPath(); g.roundRect(10, hh - 46, 300, 34, 5); g.fill(); g.fillStyle = '#ffb02e'; g.fillRect(10, hh - 46, 4, 34);
+      g.textAlign = 'left'; g.textBaseline = 'alphabetic'; g.fillStyle = '#fff'; g.font = '700 14px Roboto, sans-serif'; g.fillText(settings.name || 'Agent', 22, hh - 30);
+      g.fillStyle = '#c9d2e3'; g.font = '500 10px Roboto, sans-serif'; g.fillText('Senior Trust Associate · Totally Legit Inc.', 22, hh - 17); g.restore();
+    }
   },
   /* head / chest points of your avatar in canvas pixels */
   pt(c, bone, x, y, z, out) { const v = this._v; bone.localToWorld(v.set(x, y, z)); return c.project(v, out); },
@@ -105,7 +109,7 @@ const CamApp = {
         g.restore();
       }
     }
-    g.save(); g.font = '24px "Lilita One", sans-serif'; g.textAlign = 'center'; g.lineWidth = 5; g.lineJoin = 'round'; g.strokeStyle = '#c2185b'; g.fillStyle = '#fff';
+    g.save(); g.font = '24px "Lilita One", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.lineWidth = 5; g.lineJoin = 'round'; g.strokeStyle = '#c2185b'; g.fillStyle = '#fff';
     g.strokeText('✦ flawless ✦', w / 2, hh - 14); g.fillText('✦ flawless ✦', w / 2, hh - 14); g.restore();
   },
   heart(g, x, y, s) { g.beginPath(); g.moveTo(x, y + s * 0.9); g.bezierCurveTo(x - s * 1.6, y - s * 0.2, x - s * 0.6, y - s * 1.3, x, y - s * 0.4); g.bezierCurveTo(x + s * 0.6, y - s * 1.3, x + s * 1.6, y - s * 0.2, x, y + s * 0.9); g.fill(); },
@@ -116,15 +120,14 @@ const CamApp = {
     const vg = g.createRadialGradient(w / 2, hh / 2, hh * 0.25, w / 2, hh / 2, w * 0.55); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(0.8, 'rgba(0,0,0,.55)'); vg.addColorStop(1, 'rgba(0,0,0,.95)'); g.fillStyle = vg; g.fillRect(0, 0, w, hh);
     g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = 1.5; const cx = w / 2, cy = hh / 2;
     g.beginPath(); g.moveTo(cx - 18, cy); g.lineTo(cx - 6, cy); g.moveTo(cx + 6, cy); g.lineTo(cx + 18, cy); g.moveTo(cx, cy - 18); g.lineTo(cx, cy - 6); g.moveTo(cx, cy + 6); g.lineTo(cx, cy + 18); g.stroke();
-    g.font = '700 13px "Roboto Mono", Consolas, monospace'; g.fillStyle = '#fff'; g.textBaseline = 'top';
-    g.fillText('NV-3000  IR ON', 12, 10); g.textAlign = 'right'; g.fillText((Math.floor(t * 2) % 2 ? '● ' : '  ') + 'REC  ' + fmtTime(t), w - 12, 10);
-    g.textAlign = 'left'; g.textBaseline = 'bottom'; g.fillText('ZOOM 1.0x   GAIN +24dB', 12, hh - 10); g.restore();
+    g.font = '700 12px "Roboto Mono", Consolas, monospace'; g.fillStyle = '#fff'; g.textBaseline = 'bottom'; g.textAlign = 'left';
+    g.fillText('NV-3000  IR ON  GAIN +24dB', 14, hh - 12); g.textAlign = 'right'; g.fillText((Math.floor(t * 2) % 2 ? '● ' : '  ') + 'REC ' + fmtTime(t), w - 14, hh - 12); g.restore();
   },
   drawPotato(g, t) {
     const w = this.W, hh = this.H;
-    g.save(); g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.roundRect(10, 10, 150, 26, 6); g.fill();
-    for (let i = 0; i < 4; i++) { g.fillStyle = i < 1 ? '#ff5252' : 'rgba(255,255,255,.3)'; g.fillRect(20 + i * 7, 29 - i * 4, 5, 4 + i * 4); }
-    g.font = '700 12px Roboto, sans-serif'; g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.fillText('Poor connection', 54, 23);
+    const y0 = hh - 36; g.save(); g.fillStyle = 'rgba(0,0,0,.55)'; g.beginPath(); g.roundRect(10, y0, 150, 26, 6); g.fill();
+    for (let i = 0; i < 4; i++) { g.fillStyle = i < 1 ? '#ff5252' : 'rgba(255,255,255,.3)'; g.fillRect(20 + i * 7, y0 + 19 - i * 4, 5, 4 + i * 4); }
+    g.font = '700 12px Roboto, sans-serif'; g.fillStyle = '#fff'; g.textBaseline = 'middle'; g.textAlign = 'left'; g.fillText('Poor connection', 54, y0 + 13);
     if (this.freeze > 0) { g.fillStyle = 'rgba(0,0,0,.45)'; g.fillRect(0, 0, w, hh); g.fillStyle = '#fff'; g.font = '700 16px Roboto, sans-serif'; g.textAlign = 'center'; g.fillText('Reconnecting' + '...'.slice(0, 1 + Math.floor(t * 3) % 3), w / 2, hh / 2); }
     g.restore();
   },

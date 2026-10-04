@@ -7,6 +7,7 @@ const CCTV = {
   ID: 'cctv', win: null, mode: 'grid', sel: 'lobby', auto: false, autoT: 0, grid: [], big: null, alerts: {}, noise: null, _p: {}, _q: {},
   GRID: ['lobby', 'floor', 'break', 'review'],
   NAMES: { lobby: 'Entrance', floor: 'Call floor', floorW: 'Call floor west', hall: 'Hallway', break: 'Break room', review: 'Review room' },
+  SHORT: { lobby: 'ENTRANCE', floor: 'FLOOR', floorW: 'FLOOR W', hall: 'HALL', break: 'BREAK', review: 'REVIEW' },
   ROOMS: { floor: 'Call floor', hall: 'Hallway', review: 'Review room', break: 'Break room', boss: "Boss's office", lobby: 'Lobby' },
   owned() { return !!(G.prog.apps && G.prog.apps[this.ID]); },
   spots() { return W.cctvSpots || []; },
@@ -32,7 +33,7 @@ const CCTV = {
   /* after each frame: tag people (brackets + name) when the camera can see them */
   overlay(c) {
     const g = c.ctx, ppl = Cams.people(), cp = c.cam.position, sc = c.w / 320; let n = 0, bad = false;
-    g.save(); g.lineWidth = Math.max(1.5, sc * 1.4); g.font = '700 ' + Math.round(9 * sc) + 'px "Roboto Mono", Consolas, monospace'; g.textBaseline = 'bottom';
+    g.save(); g.lineWidth = Math.max(1.5, sc * 1.4); g.font = '700 ' + Math.round(10 * sc) + 'px "Roboto Mono", Consolas, monospace'; g.textBaseline = 'bottom';
     for (const p of ppl) {
       const top = c.project(p.pos, this._p); if (!top.ok) continue;
       const dx = p.pos.x - cp.x, dy = p.pos.y - 0.3 - cp.y, dz = p.pos.z - cp.z, d = Math.hypot(dx, dy, dz);
@@ -100,7 +101,7 @@ const CCTV = {
     win.autoBtn = h('button', { class: 'cc-btn auto', title: 'Cycle through every camera', onclick: () => { SFX.click(); this.auto = !this.auto; if (this.auto && this.mode !== 'one') this.setMode('one'); else this.tick(true); } }, h('i', { html: OS.glyph('refresh') }), 'AUTO');
     win.camBar = h('div', { class: 'cc-cams' },
       h('button', { class: 'cc-btn grid', title: 'All feeds', onclick: () => { SFX.click(); this.auto = false; this.setMode('grid'); } }, h('i', { html: OS.glyph('grid') }), 'GRID'),
-      ...this.spots().map(s => h('button', { class: 'cc-btn', 'data-id': s.id, onclick: () => { SFX.click(); this.sel = s.id; this.auto = false; this.setMode('one'); } }, this.num(s.id) + ' ' + String(this.NAMES[s.id] || s.label).toUpperCase())),
+      ...this.spots().map(s => h('button', { class: 'cc-btn', 'data-id': s.id, onclick: () => { SFX.click(); this.sel = s.id; this.auto = false; this.setMode('one'); } }, this.num(s.id) + ' ' + (this.SHORT[s.id] || String(s.label).toUpperCase()))),
       win.autoBtn);
     win.who = h('div', { class: 'cc-whos' });
     b.append(

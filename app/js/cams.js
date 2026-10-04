@@ -24,7 +24,7 @@ const Cams = (() => {
     _hid.length = 0; const vis = (o, v) => { if (o && o.visible !== v) { _hid.push(o, o.visible); o.visible = v; } };
     if (W.me) vis(W.me.group, !!c.me);
     if (typeof Props !== 'undefined' && Props.vm) vis(Props.vm.root, false);
-    if (!c.tags) { if (W.me) vis(W.me.tag, false); for (const a of W.avatars.values()) { vis(a.av.tag, false); vis(a.av.talk, false); } if (W.boss) vis(W.boss.tag, false); }
+    if (!c.tags) { if (W.me) vis(W.me.tag, false); for (const a of W.avatars.values()) { vis(a.av.tag, false); vis(a.av.talk, false); } if (W.boss) vis(W.boss.tag, false); for (const n of W.npcs) vis(n.tag, false); for (const l of api.hideTags) vis(l, false); }
   }
   function unprep() { for (let i = _hid.length - 2; i >= 0; i -= 2) _hid[i].visible = _hid[i + 1]; _hid.length = 0; }
   function draw(c) {
@@ -77,7 +77,7 @@ const Cams = (() => {
   });
   let _snap = null;
   const api = {
-    t: 0, list: cams, labels: [],
+    t: 0, list: cams, labels: [], hideTags: [],
     create(o) { const c = new Cam(o); cams.push(c); return c; },
     /* render once into a new canvas: {w, h, pos, look | quat, fov, me, near} (defaults: the main camera's view) */
     snap(o) {
@@ -174,14 +174,16 @@ Bus.on('quit', () => Photos.clear());
 const PhotoArt = {
   geo: null, edge: null, back: null, blankMat: null,
   init() {
-    if (this.geo) return; this.geo = new THREE.BoxGeometry(0.14, 0.004, 0.17);
+    if (this.geo) return; this.geo = new THREE.BoxGeometry(0.16, 0.004, 0.195);
     this.edge = new THREE.MeshLambertMaterial({ color: '#f1ede2' }); this.back = new THREE.MeshLambertMaterial({ color: '#d9d4c6' });
     this.blankMat = new THREE.MeshLambertMaterial({ color: '#f1ede2', map: canvasTex(64, 78, (g, w, hh) => { g.fillStyle = '#f6f3ea'; g.fillRect(0, 0, w, hh); g.fillStyle = '#34302a'; g.fillRect(5, 5, w - 10, w - 10); }) });
   },
-  model(p) { this.init(); const m = new THREE.Mesh(this.geo, [this.edge, this.edge, p ? Photos.front(p) : this.blankMat, this.back, this.edge, this.edge]); m.castShadow = false; return m; },
-  dress(m, id) { const p = Photos.get(id); if (!p || !m || !m.material) return; m.material = [this.edge, this.edge, Photos.front(p), this.back, this.edge, this.edge]; }
+  mats(p) { return [this.edge, this.edge, p ? Photos.front(p) : this.blankMat, this.back, this.edge, this.edge]; },
+  /* a group holding the card; held in a hand it is tilted up to face you (bodies reset the tilt) */
+  model(p, held) { this.init(); const g = new THREE.Group(), m = new THREE.Mesh(this.geo, this.mats(p)); if (held) m.rotation.x = 1.15; g.add(m); return g; },
+  dress(g, id) { const p = Photos.get(id), m = g && g.children[0]; if (!m) return; m.rotation.set(0, 0, 0); if (p) m.material = this.mats(p); }
 };
-PropTypes.photo = { name: 'photo', r: 0.04, bounce: 0.05, fric: 1.4, box: 0.002, model: () => PhotoArt.model(Props.carry && Props.carry.type === 'photo' ? Photos.get(Props.carry.id) : null) };
+PropTypes.photo = { name: 'photo', r: 0.04, bounce: 0.05, fric: 1.4, box: 0.002, model: () => { const c = Props.carry && Props.carry.type === 'photo'; return PhotoArt.model(c ? Photos.get(Props.carry.id) : null, c); } };
 (() => {
   /* wrap Props from here: photos get their picture, a nicer label, a usage count, and leaf-like air drag */
   const _spawn = Props.spawn, _remove = Props.remove, _step = Props.step;
@@ -244,19 +246,22 @@ const SnapCam = {
     return (this.mats = { body: L('#efe6cf'), dark: L('#2c2e35'), lens: new THREE.MeshPhongMaterial({ color: '#4d79ad', shininess: 90, specular: 0x99aacc }), orange: L('#ff7a2e'), teal: L('#2bb5a5'), red: L('#e5383b'),
       glow: new THREE.MeshBasicMaterial({ color: '#fff6c8', toneMapped: false }), slot: L('#121216') });
   },
-  /* a chunky boxy instant camera, ~14 cm wide, lens facing -z */
+  /* a chunky boxy instant camera, ~14 cm wide, lens facing -z (the holder sees the back: eyepiece, counter, stripes) */
   model() {
-    const M = this.M(), g = new THREE.Group(), add = (geo, mat, x, y, z, rx) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; g.add(m); return m; };
-    add(rboxGeo(0.14, 0.095, 0.11, 0.02, 2), M.body, 0, 0.0475, 0);
-    add(rboxGeo(0.12, 0.03, 0.07, 0.01, 1), M.dark, 0, 0.105, 0.012);                // top hump
-    add(rboxGeo(0.035, 0.018, 0.006, 0.004, 1), M.glow, 0.035, 0.105, -0.025);       // flash window
-    add(rboxGeo(0.022, 0.016, 0.01, 0.004, 1), M.dark, -0.035, 0.108, -0.024);        // viewfinder
-    add(rboxGeo(0.142, 0.012, 0.112, 0.004, 1), M.orange, 0, 0.026, 0);              // stripes
-    add(rboxGeo(0.142, 0.01, 0.112, 0.004, 1), M.teal, 0, 0.015, 0);
-    add(cylGeo(0.034, 0.036, 0.03, 18), M.dark, 0, 0.055, -0.058, Math.PI / 2);       // lens barrel
-    add(cylGeo(0.022, 0.022, 0.006, 16), M.lens, 0, 0.055, -0.073, Math.PI / 2);
-    add(cylGeo(0.008, 0.008, 0.008, 10), M.red, -0.05, 0.097, -0.035);                // shutter button
-    add(rboxGeo(0.09, 0.006, 0.01, 0.002, 1), M.slot, 0, 0.006, -0.052);              // photo slot
+    const M = this.M(), g = new THREE.Group(), add = (geo, mat, x, y, z, rx, rz) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); if (rx) m.rotation.x = rx; if (rz) m.rotation.z = rz; g.add(m); return m; };
+    add(rboxGeo(0.14, 0.085, 0.1, 0.022, 2), M.body, 0, 0.0425, 0);                   // body
+    add(rboxGeo(0.144, 0.011, 0.104, 0.005, 1), M.orange, 0, 0.03, 0);               // wrap-around stripes
+    add(rboxGeo(0.144, 0.009, 0.104, 0.004, 1), M.teal, 0, 0.019, 0);
+    add(rboxGeo(0.1, 0.034, 0.05, 0.012, 1), M.dark, 0.012, 0.098, -0.022);          // flash hump (front half of the top)
+    add(rboxGeo(0.04, 0.02, 0.006, 0.004, 1), M.glow, 0.03, 0.1, -0.048);             // flash window
+    add(rboxGeo(0.03, 0.026, 0.03, 0.008, 1), M.dark, -0.045, 0.094, 0.03);           // viewfinder housing
+    add(rboxGeo(0.022, 0.018, 0.006, 0.004, 1), M.lens, -0.045, 0.094, 0.046);        // eyepiece glass (back)
+    add(rboxGeo(0.026, 0.016, 0.006, 0.003, 1), M.slot, 0.04, 0.066, 0.051);          // shot counter window (back)
+    add(rboxGeo(0.01, 0.01, 0.004, 0.002, 1), M.orange, 0.04, 0.066, 0.0545);
+    add(cylGeo(0.036, 0.038, 0.03, 20), M.dark, 0, 0.05, -0.058, Math.PI / 2);        // lens barrel
+    add(cylGeo(0.024, 0.024, 0.006, 18), M.lens, 0, 0.05, -0.074, Math.PI / 2);
+    add(cylGeo(0.009, 0.009, 0.01, 12), M.red, -0.05, 0.088, -0.03);                  // shutter button
+    add(rboxGeo(0.09, 0.006, 0.01, 0.002, 1), M.slot, 0, 0.007, -0.05);               // photo slot
     g.userData.nozzle = new THREE.Vector3(0, 0.0, -0.06);
     return g;
   },
@@ -267,8 +272,9 @@ const SnapCam = {
       if (!av || !av.group.visible) return; const p = av.head.getWorldPosition(new THREE.Vector3()).sub(cam.position), d = p.length(); if (d > 9 || d < 0.3) return;
       const dot = p.dot(f) / d; if (dot > bs && Space.ray(cam.position.x, cam.position.y, cam.position.z, p.x / d, p.y / d, p.z / d, d, 0) >= d - 0.4) { bs = dot; best = { name, kind }; }
     };
-    for (const [id, a] of W.avatars) { const p = Net.players.get(id); test(a.av, p && p.name, 'player'); }
+    for (const q of Cams.people()) if (q.kind !== 'me' && q.av) test(q.av, q.text, q.kind === 'police' ? 'police' : 'player');
     W.npcs.forEach(n => test(n, null, 'npc')); test(W.boss, 'The Boss', 'boss');
+    if (best && best.kind === 'police') return pick(['Officer, smile!', 'Evidence (theirs)', 'Totally legit visitor']);
     if (best && best.kind === 'boss') return pick(['The Boss (burn after viewing)', 'Boss, unaware', 'Evidence for the union', 'Management, in the wild']);
     if (best && best.kind === 'player' && best.name) return pick([best.name + ', hard at work', best.name + ' (caught)', 'Employee of the month: ' + best.name, best.name + ' mid-scam', 'Wanted: ' + best.name]);
     if (best) return pick(['Coworker, probably', 'Who is this guy?', 'Team building', 'Not my best angle', 'Fresh hire']);
