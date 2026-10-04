@@ -80,7 +80,7 @@ const Customize = {
     this.look = normLook(Avatars.myLook()); this.nameInp.value = settings.name || '';
     this.el.classList.remove('hidden'); this.isOpen = true; releaseLock && releaseLock();
     if (this.renderer) {
-      if (!this.preview) { this.preview = buildAvatar({ look: this.look, name: settings.name }); this.scene.add(this.preview.group); }
+      if (!this.preview) { this.preview = buildAvatar({ look: this.look, name: settings.name }); this.preview.lookCam = this.camera; this.scene.add(this.preview.group); }
       else { this.preview.setLook(this.look); this.preview.setName(settings.name); }
       this.resize(); this.t0 = performance.now(); this.spin = true; this.rotY = Math.PI - 0.4; this.preview.group.rotation.y = this.rotY; this.preview.play('wave');
       cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame(() => this.frame());

@@ -165,7 +165,10 @@ function avBodyGeo(L) {
   const tR = y => avTorsoR(y, B), tZ = y => tR(y) * zs;
   const wTorso = (x, y) => y > 1.285 ? [AVBI.chest, AVBI.neck, avSS(1.29, 1.36, y)] : [AVBI.hips, AVBI.chest, avSS(0.89, 1.12, y)];
   // torso: trousers, belt, shirt
-  avGbAdd(b, avLathe(AV_TORSO_Y.filter(y => y <= 0.865), tR, 16, zs), null, pants, wTorso);
+  const seat = avLathe(AV_TORSO_Y.filter(y => y <= 0.865), tR, 16, zs), sp = seat.attributes.position;   // trousers seat: flatter front/back towards the crotch
+  for (let k = 0; k < sp.count; k++) sp.setZ(k, sp.getZ(k) * (0.8 + 0.2 * avSS(0.81, 0.86, sp.getY(k))));
+  const pc = new THREE.Color();
+  avGbAdd(b, seat, null, (x, y) => pc.copy(pants).multiplyScalar(0.72 + 0.28 * avSS(0.81, 0.865, y)), wTorso);
   avGbAdd(b, avLathe([0.862, 0.866, 0.902, 0.906], y => tR(y) + (y > 0.864 && y < 0.904 ? 0.008 : 0.001), 16, zs), null, belt, wTorso);
   avGbAdd(b, avLathe(AV_TORSO_Y.filter(y => y >= 0.905), tR, 16, zs), null, top, wTorso);
   avGbAdd(b, avSphere(8, 6), avM(0, 0.885, -tZ(0.885) - 0.008, 0.024, 0.018, 0.008), avCol('#d4b25a'), [AVBI.hips]);   // buckle
@@ -302,7 +305,7 @@ function avAccGeo(L, headset) {
   if (h === 'buzz') avGbAdd(b, avCap(0.007, 0.72, 1.48, 2.2), null, avMix(L.hairColor, L.skin, 0.35));
   else if (h === 'short') avGbAdd(b, avCap(0.026, 0.62, 1.45, 2.2, (ph, d, v) => 0.014 * (1 - v)), null, hc);
   else if (h === 'sidepart') avGbAdd(b, avCap(0.026, 0.66, 1.45, 2.2, (ph, d, v) => 0.012 * (1 - v) + 0.034 * Math.exp(-Math.pow((d - 0.2) / 0.16, 2)) * Math.exp(-Math.pow((v - 0.55) / 0.3, 2)) * (Math.sin(ph) > 0 ? 1 : 0.35)), null, hc);
-  else if (h === 'quiff') avGbAdd(b, avCap(0.024, 0.6, 1.45, 2.2, (ph, d, v) => 0.085 * Math.exp(-Math.pow(d / 0.2, 2)) * Math.exp(-Math.pow((v - 0.66) / 0.26, 2)) + 0.01 * (1 - v)), null, hc);
+  else if (h === 'quiff') avGbAdd(b, avCap(0.024, 0.6, 1.45, 2.2, (ph, d, v) => 0.062 * Math.exp(-Math.pow(d / 0.3, 2)) * Math.exp(-Math.pow((v - 0.6) / 0.3, 2)) + 0.012 * (1 - v)), null, hc);
   else if (h === 'curly') { avGbAdd(b, avCap(0.03, 0.6, 1.5, 2.25), null, hc); avBumps(b, hc, 28, 0.036, 0.052, 0.03, 0.62, 1.48, 2.1, 11); }
   else if (h === 'afro') { avGbAdd(b, avCap(0.1, 0.64, 1.58, 2.05, (ph, d, v) => 0.03 * (1 - v)), null, hc); avBumps(b, hc, 32, 0.055, 0.078, 0.1, 0.7, 1.5, 1.95, 23); }
   else if (h === 'long') avGbAdd(b, avCap(0.028, 0.6, 2.45, 3.05, (ph, d, v, th) => th > 1.5 ? 0.016 : 0.01 * (1 - v), 0.26), null, hc);
@@ -623,6 +626,7 @@ class AvatarRig {
       avLerpCh(T, AVC.ltx, 0.8, w); avLerpCh(T, AVC.lkx, 1.2, w); avLerpCh(T, AVC.rtx, -0.1, w); avLerpCh(T, AVC.rkx, 0.6, w); avLerpCh(T, AVC.cx, -0.08, w);
       avLerpCh(T, AVC.laz, up ? 0.9 : 1.5 + fl, w); avLerpCh(T, AVC.raz, up ? 0.9 : 1.5 - fl, w); avLerpCh(T, AVC.lex, 0.5, w); avLerpCh(T, AVC.rex, 0.5, w); avLerpCh(T, AVC.lax, 0.3, w); avLerpCh(T, AVC.rax, 0.3, w); avLerpCh(T, AVC.nx, up ? 0.15 : -0.1, w);
     }
+    this.lookAtCam(T, dt);
     if (this.talkW > 0 && !this.act) {   // chatty hand gestures
       const w = this.talkW * (1 - this.moveW * 0.7), g = 0.5 + 0.5 * Math.sin(t * 2.3 + ph);
       T[AVC.rax] += 0.35 * g * w; T[AVC.rex] += 0.9 * g * w; T[AVC.rez] -= 0.2 * g * w; T[AVC.nx] += 0.05 * Math.sin(t * 7.3) * w; T[AVC.nz] += 0.05 * Math.sin(t * 1.7) * w;
@@ -654,6 +658,19 @@ class AvatarRig {
     this.shadow.position.set(0, 0.012 - y, c[AVC.rz] * 0.5); this.shadow.scale.setScalar(clamp(1 - y * 0.5, 0.5, 1) * (c[AVC.rrx] > 0.5 ? 1.5 : 1));
     this.tag.position.y = AV_TAG_Y + c[AVC.ry] * (1 - Math.min(1, c[AVC.rrx])) - Math.min(1, c[AVC.rrx]) * 1.2; this.talk.position.y = this.tag.position.y + 0.27;
     if (this._stars || this.stars && this.stars.visible) this.starsUpdate(t, this._stars);
+  }
+  /* standing avatars glance at a camera that comes close (W.camera, or av.lookCam; av.lookCam = false turns it off) */
+  lookAtCam(T, dt) {
+    const cam = this.lookCam === undefined ? (this !== W.me && W.camera) : this.lookCam;
+    let w = 0, ny = 0, nx = 0;
+    if (cam && this.sitW < 0.5 && this.moveW < 0.4 && this.airW < 0.5 && this.group.parent) {
+      const g = this.group, cp = cam.position, dx = cp.x - g.position.x, dz = cp.z - g.position.z, d = Math.hypot(dx, dz), ry = g.rotation.y;
+      const lx = dx * Math.cos(ry) - dz * Math.sin(ry), lz = dx * Math.sin(ry) + dz * Math.cos(ry);
+      ny = Math.atan2(-lx, -lz); nx = clamp(Math.atan2(cp.y - 1.5 * (g.scale.y || 1), d), -0.45, 0.5);
+      w = avSS(4.5, 2.2, d) * (1 - avSS(1.25, 1.7, Math.abs(ny))); ny = clamp(ny, -1.05, 1.05);
+    }
+    this.lookW = avApp(this.lookW || 0, w, dt * 2.5); if (this.lookW <= 0) return;
+    const k = this.lookW * this.lookW * (3 - 2 * this.lookW) * 0.85; avLerpCh(T, AVC.ny, ny, k); avLerpCh(T, AVC.nx, nx, k * 0.8); avLerpCh(T, AVC.cy, ny * 0.15, k);
   }
   standPose(T, t, speed, dt) {
     const ph = this.phase, br = Math.sin(t * 1.7 + ph), sw = avNoise(t * 0.33 + ph * 3), look = avNoise(t * 0.21 + ph * 7);

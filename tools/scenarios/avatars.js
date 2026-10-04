@@ -70,7 +70,7 @@ module.exports = async page => {
   if (want('gallery')) {
     // every hair style, facial hair and glasses option side by side (two rows of 6)
     await page.eval(() => {
-      window.__avs.forEach(a => { a.group.visible = false; });
+      window.__avs.forEach(a => { a.group.visible = false; }); W.me.group.visible = false;
       const O = AV_OPT, hairs = O.hairs.map(x => x[0]), fac = O.facials.map(x => x[0]), gl = O.glasses.map(x => x[0]);
       const skins = ['#f8dcc6', '#6b4128', '#cd935f', '#48291a', '#f2c4a0', '#8f5c36', '#e2ad80', '#b17447', '#f08a3c', '#f4c84a', '#8fd0a6', '#b9a2e0'];
       window.__gal = hairs.map((hr, i) => {
@@ -89,7 +89,7 @@ module.exports = async page => {
     await page.eval(() => { window.__cam(5.0, 1.75, -0.2, -Math.PI / 2 + 0.25, -0.1); return true; });
     await page.wait(600);
     await page.shot('av-07-gallery-back');
-    await page.eval(() => { window.__gal.forEach(a => { a.group.visible = false; }); window.__avs.forEach(a => { a.group.visible = true; }); return true; });
+    await page.eval(() => { window.__gal.forEach(a => { a.group.visible = false; }); window.__avs.forEach(a => { a.group.visible = true; }); W.me.group.visible = true; return true; });
   }
   if (want('walk')) {
     await page.eval(() => { W.me.group.visible = false; W.me.setName(''); return true; });
