@@ -199,11 +199,12 @@
 .dp-dotw{width:2rem;height:2rem;display:grid;place-items:center;background:#fff;border:1px solid #d3d8df;border-radius:6px}
 .dp-dotw i{display:block;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.22)}
 .dp-fillt{gap:0}
+.dp-hint{margin-left:auto;border:0;font-size:.68rem;color:#8a93a3;white-space:nowrap}
 .dp-tg{padding:.3rem .55rem;font:600 .72rem 'Roboto',sans-serif;border:1px solid #cfd4dc;background:#fff;color:#4a5264;cursor:pointer}
 .dp-tg:first-child{border-radius:6px 0 0 6px;border-right:0}
 .dp-tg:last-child{border-radius:0 6px 6px 0}
 .dp-tg.on{background:#d6336c;border-color:#d6336c;color:#fff}
-.dp-hang{margin-left:auto;display:flex;align-items:center;gap:.4rem;height:2.3rem;padding:0 .95rem;border:0;border-radius:8px;background:linear-gradient(180deg,#ffe066,#f59f00);color:#3d2600;font:400 1.08rem 'Lilita One',sans-serif;letter-spacing:.01em;white-space:nowrap;cursor:pointer;
+.dp-hang{margin-left:auto;display:flex;align-items:center;gap:.45rem;height:2.5rem;padding:0 1.1rem;border:0;border-radius:8px;background:linear-gradient(180deg,#ffe066,#f59f00);color:#3d2600;font:400 1.08rem 'Lilita One',sans-serif;letter-spacing:.01em;white-space:nowrap;cursor:pointer;
   box-shadow:0 3px 0 #c27c00,0 6px 14px rgba(245,159,0,.35);transition:transform .08s}
 .dp-hang:hover{filter:brightness(1.05)}
 .dp-hang:active{transform:translateY(2px);box-shadow:0 1px 0 #c27c00}

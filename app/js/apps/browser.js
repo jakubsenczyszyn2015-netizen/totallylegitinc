@@ -44,6 +44,7 @@ const Browser = (() => {
   function go(raw, t, noPush) {
     t = t || tab(); const url = norm(raw);
     if (!noPush) { t.hist.length = t.i + 1; t.hist.push(url); t.i = t.hist.length - 1; }
+    const r = route(url); t.title = r.s.title(r.u); t.fav = r.s.fav; t.url = url;
     t.loadT = now(); if (t === tab()) draw(true); else drawTabs();
   }
   const back = () => { const t = tab(); if (t.i > 0) { t.i--; go(t.hist[t.i], t, true); } };

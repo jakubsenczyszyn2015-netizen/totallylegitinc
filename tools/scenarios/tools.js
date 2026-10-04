@@ -5,10 +5,17 @@ module.exports = async page => {
   const only = (process.env.TOOLS_ONLY || '').split(',').filter(Boolean), want = k => !only.length || only.includes(k);
   const ok = (cond, msg) => { console.log((cond ? 'OK   ' : 'FAIL ') + msg); if (!cond) page.errors.push('ASSERT ' + msg); };
   await page.startSolo('week');
-  await page.eval(() => { const T = window.__tli; T.OS.fastBoot = true; T.G.timeLeft = 900; T.G.personal = 350; T.G.team = 350; T.G.wallet = 500; return true; });
-  await page.sit();
-  await page.eval(() => { const T = window.__tli; T.Call.state = 'off'; T.Call.wait = 1e9; T.OS.close('memo', true); T.OS.minimise('phone'); return true; });
-  await page.wait(500);
+  await page.eval(() => { const T = window.__tli; T.OS.fastBoot = true; T.G.timeLeft = 230; T.G.personal = 350; T.G.team = 350; T.G.wallet = 500; window.__fc = 0; T.Loop.addRender(() => { window.__fc++; }); return true; });
+  // rendering is slow in the harness: finish the sit-down zoom at once and wait for the desktop
+  const desk = async seat => {
+    await page.eval(d => { const T = window.__tli, free = T.W.desks.filter(x => !x.npc && !T.Game.deskTaken(x.i)); sitAt(d != null ? d : free[0].i); if (T.P.cam) T.P.cam.t = 0.999; return true; }, seat);
+    for (let i = 0; i < 150 && !(await page.eval(() => window.__tli.OS.open)); i++) await page.wait(100);
+    await page.wait(300);
+    await page.eval(() => { const T = window.__tli; if (T.Call.state === 'ringing') T.Call.decline(); T.Call.state = 'idle'; T.Call.wait = 1e9; T.OS.close('memo', true); T.OS.minimise('phone'); return true; });
+  };
+  const frames = async n => { const f0 = await page.eval(() => window.__fc); for (let i = 0; i < 300 && (await page.eval(() => window.__fc)) < f0 + n; i++) await page.wait(100); };
+  await desk();
+  await page.wait(300);
   const clean = () => page.eval(() => { const T = window.__tli; [...T.OS.wins.keys()].forEach(id => T.OS.close(id, true)); T.OS.clearPopups(); document.getElementById('os-fx').replaceChildren(); document.querySelectorAll('#toasts .toast').forEach(t => t.remove()); return true; });
 
   if (want('chat')) {
@@ -32,10 +39,11 @@ module.exports = async page => {
     await page.wait(400);
     await page.shot('chat-03-gift');
     await page.eval(() => { document.querySelector('.cbx-gift:not(.mine)').click(); return true; });
-    await page.wait(2400);
+    await page.wait(750);
+    await page.shot('chat-04-pranked');
+    await page.wait(1600);
     const r2 = await page.eval(() => ({ pops: window.__tli.OS.popups, sys: Chat.threads.get('bot:bank').filter(m => m.sys).length }));
     ok(r2.pops >= 8 && r2.sys === 1, 'claiming the gift caused a pop-up storm: ' + JSON.stringify(r2));
-    await page.shot('chat-04-pranked');
     await page.eval(() => { window.__tli.OS.clearPopups(); return true; });
     // a teammate (fake remote player through the real Net handler): message, we send Gold, they click it
     await page.eval(() => {
@@ -92,7 +100,7 @@ module.exports = async page => {
       const at = (lx, ly, lz) => [d.x + lx * Math.cos(d.rot) + lz * Math.sin(d.rot), ly, d.z - lx * Math.sin(d.rot) + lz * Math.cos(d.rot)];
       T.W.camOverride = { pos: at(-0.25, 1.45, 0.75), look: at(-0.55, 1.15, -0.45) }; return [s, c];
     }, r1.seat);
-    await page.wait(1500);
+    await frames(4);
     await page.shot('paint-03-office');
     // a remote player's painting arrives over the network + an easel in front of us
     await page.eval(seat => {
@@ -101,13 +109,11 @@ module.exports = async page => {
       const img = DoodlePro.jpeg(160, 0.7); Paintings.hang(img, { desk: -1, name: 'Easel Test' });
       T.Net.handlers.get('paint:hang')({ id: 'p2:x', img, name: 'Kim', desk: seat + 1 }, 'p2'); return true;
     }, r1.seat);
-    await page.wait(1500);
+    await frames(4);
     const r3 = await page.eval(() => Paintings.list.size);
     ok(r3 === 3, 'easel + remote painting added: ' + r3);
     await page.shot('paint-04-easel');
-    await page.sit(r1.seat);
-    await page.eval(() => { const T = window.__tli; T.Call.state = 'off'; T.Call.wait = 1e9; T.OS.close('memo', true); T.OS.minimise('phone'); return true; });
-    await page.wait(300);
+    await desk(r1.seat);
   }
 
   if (want('browser')) {
