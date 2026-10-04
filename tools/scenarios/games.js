@@ -67,7 +67,7 @@ module.exports = async page => {
     console.log('crash cash out: ' + await act());
     await page.wait(250);
     await page.shot('cz-03-crash-win');
-    await page.wait(5000);
+    await page.wait(7600);
     await page.shot('cz-04-crash-popped');
   }
   if (want('slots')) {
