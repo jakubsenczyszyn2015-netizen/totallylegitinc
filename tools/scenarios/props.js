@@ -5,7 +5,13 @@ module.exports = async page => {
   const only = (process.env.PROPS_ONLY || '').split(',').filter(Boolean), want = k => !only.length || only.includes(k);
   const ev = (f, ...a) => page.eval(f, ...a);
   const gw = sec => ev(s => new Promise(res => { const t0 = W.t; const f = () => (W.t - t0 >= s ? res(true) : setTimeout(f, 30)); f(); }), sec);
-  const shot0 = page.shot; page.shot = async n => { await ev(() => { document.querySelectorAll('.toast').forEach(t => t.remove()); return true; }); return shot0(n); };
+  /* screenshots freeze the frame loop while capturing (software GL is slow; short effects would be over) */
+  const shot0 = page.shot; page.shot = async n => {
+    await ev(() => new Promise(res => { document.querySelectorAll('.toast').forEach(t => t.remove()); const raf = window.requestAnimationFrame; window.__raf = raf; window.requestAnimationFrame = cb => { window.__cb = cb; return 0; }; raf(() => setTimeout(() => res(true), 30)); }));
+    const r = await shot0(n);
+    await ev(() => { window.requestAnimationFrame = window.__raf; if (window.__cb) window.__raf(window.__cb); return true; });
+    return r;
+  };
   await page.startSolo('week');
   await ev(() => {
     const P = window.__tli.P; P.third = false;
@@ -86,6 +92,90 @@ module.exports = async page => {
     await ev(() => { Props.select(0); const P = window.__tli.P; P.yaw += 0.6; P.pitch = -0.25; return true; });
     await gw(0.5);
     await page.shot('p09-third-person-walk');
+  }
+
+  if (want('pickup')) {
+    // a box on the floor: look at it, E prompt, pick it up, carry it, throw it
+    const lab = await ev(b => {
+      __clearStuff(); __stand(b.x + 2.6, b.z + 1.2, b.x + 1.4, 0.15, b.z + 1.2); const P = window.__tli.P;
+      Props.spawn('box', [P.pos.x - Math.sin(P.yaw) * 1.2, 0.15, P.pos.z - Math.cos(P.yaw) * 1.2], [0, 0, 0], { rest: true, ry: 0.5 });
+      P.pitch = -0.62; return true;
+    }, bin);
+    await gw(0.3);
+    const cur = await ev(() => W.cur && W.cur.label());
+    console.log('looking at: ' + cur);
+    await page.shot('p13-pickup-prompt');
+    await ev(() => { W.cur && W.cur.act(); window.__tli.P.pitch = 0; return !!Props.carry; });
+    await gw(0.4);
+    await page.shot('p14-carry-box');
+    await ev(() => { Props.throwT = 0; Props.throwSel(); return true; });
+    await gw(0.25);
+    await page.shot('p15-throw-box');
+    await gw(1.5);
+    const rest = await ev(() => Props.bodies.filter(b => b.type === 'box').map(b => ({ rest: b.rest, y: +b.pos.y.toFixed(2) })));
+    console.log('box after throw: ' + JSON.stringify(rest));
+  }
+
+  if (want('whoopee')) {
+    // a cushion on an NPC's chair pops at once; one on the floor pops when you step on it
+    await ev(() => {
+      __clearStuff(); const n = W.npcs[1], g = n.group.position, ry = n.group.rotation.y, fx = -Math.sin(ry), fz = -Math.cos(ry), sx = Math.cos(ry), sz = -Math.sin(ry);
+      __stand(g.x - fx * 1.3 + sx * 1.2, g.z - fz * 1.3 + sz * 1.2, g.x, 0.6, g.z); Props.select(Props.slots.indexOf('whoopee')); return true;
+    });
+    await gw(0.2);
+    await ev(() => { Props.startUse(); return true; });
+    await gw(0.75);
+    await page.shot('p16-whoopee-npc');
+    await ev(b => { Inv.give('whoopee'); __stand(b.x + 3, b.z + 1.5, b.x, 0.3, b.z); Props.select(Props.slots.indexOf('whoopee')); return true; }, bin);
+    await gw(0.2);
+    await ev(() => { window.__tli.P.pitch = -0.5; Props.startUse(); return Props.cushions.length; });
+    await gw(0.4);
+    await page.shot('p17-whoopee-floor');
+    await gw(1.0);
+    await page.key('KeyW', 900);
+    await gw(0.2);
+    const left = await ev(() => Props.cushions.length);
+    console.log('cushions left after stepping on it: ' + left);
+    await page.shot('p18-whoopee-pop');
+  }
+
+  if (want('confetti')) {
+    await ev(b => { __clearStuff(); __stand(b.x + 3, b.z + 1.5, b.x, 1.2, b.z); Props.select(Props.slots.indexOf('confetti')); return true; }, bin);
+    await gw(0.2);
+    await ev(() => { Props.startUse(); return true; });
+    await gw(0.35);
+    await page.shot('p19-party-popper');
+  }
+
+  if (want('net')) {
+    // a fake remote player through the real sync path: they hold + spray soda, get punched, punch back, fart, throw
+    await ev(b => {
+      __clearStuff(); const P = window.__tli.P; __stand(b.x + 3.4, b.z + 1.6, b.x + 1.2, 1.2, b.z + 1.6);
+      Net.active = true; Net.isHost = true; Net.myId = 'me'; Net.players.set('me', Net.me());
+      const x = P.pos.x - Math.sin(P.yaw) * 1.3, z = P.pos.z - Math.cos(P.yaw) * 1.3;
+      Net.players.set('p2', { name: 'Remote Rita', color: '#ef4444', x, y: 0, z, ry: P.yaw + 2.2, seat: -1, talk: false, personal: 0, ext: { held: { i: 'soda', u: 1, p: -0.1 } } });
+      syncAvatars(Net.players, Net.myId); return true;
+    }, bin);
+    await gw(1.0);
+    await page.shot('p20-net-remote-spray');
+    await ev(() => { const p = Net.players.get('p2'); p.ext = { held: { i: 'soda', u: 0 } }; Props.select(0); Props.punchT = 0; Props.punch(); return true; });
+    await gw(0.2);
+    await page.shot('p21-net-punch-remote');
+    await ev(() => { Net.handlers.get('hit')({ id: 'me', d: [Math.sin(window.__tli.P.yaw), Math.cos(window.__tli.P.yaw)], f: 6.5, s: 1.4, y: 1.6 }, 'p2'); return true; });
+    await gw(0.3);
+    const kb = await ev(() => ({ kx: +window.__tli.P.kx.toFixed(2), kz: +window.__tli.P.kz.toFixed(2), stun: +window.__tli.P.stunT.toFixed(2) }));
+    console.log('knockback on me: ' + JSON.stringify(kb));
+    await page.shot('p22-net-got-hit');
+    await gw(1.2);
+    await ev(() => {
+      const P = window.__tli.P, a = W.avatars.get('p2').av.group.position;
+      Net.handlers.get('fx')({ k: 'fart', p: [a.x, 0.75, a.z], o: { dir: [0, 0.1, 1] } }, 'p2');
+      Net.handlers.get('prop:throw')({ id: 'p2.1', t: 'paper', o: [a.x, 1.3, a.z], v: [-Math.sin(P.yaw) * -4, 3, -Math.cos(P.yaw) * -4] }, 'p2');
+      return true;
+    });
+    await gw(1.0);
+    await page.shot('p23-net-fart-cough');
+    await ev(() => { Net.players.clear(); syncAvatars(Net.players, 'me'); Net.active = false; Net.isHost = false; return true; });
   }
 
   if (want('fx')) {

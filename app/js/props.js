@@ -81,7 +81,7 @@ const PropArt = (() => {
     const g = new THREE.Group(), m = lam(skin);
     const f = new THREE.Mesh(once('fist', () => rbox(0.1, 0.09, 0.11, 0.038, 3)), m); g.add(f);
     const t = new THREE.Mesh(once('thumb', () => rbox(0.035, 0.035, 0.065, 0.016, 2)), m); t.position.set(-0.05, -0.015, -0.01); t.rotation.y = 0.3; g.add(t);
-    const cuff = new THREE.Mesh(once('cuff', () => new THREE.CylinderGeometry(0.045, 0.05, 0.09, 12)), lam(shirt || '#f4f4f4')); cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.09; g.add(cuff);
+    const cuff = new THREE.Mesh(once('cuff', () => new THREE.CylinderGeometry(0.045, 0.05, 0.09, 12)), lam(shirt || '#f4f4f4')); cuff.rotation.x = Math.PI / 2; cuff.position.set(0.004, -0.004, 0.1); cuff.scale.setScalar(0.85); g.add(cuff);
     return g;
   }
   /* first-person hand gripping an item (palm behind, fingers wrapped in front, thumb, shirt cuff) */
@@ -467,7 +467,7 @@ const Cushions = {
   pop(id, who) {
     const i = Props.cushions.findIndex(c => c.id === id); if (i < 0) return; const c = Props.cushions[i]; Props.cushions.splice(i, 1); W.scene.remove(c.m);
     _pV.set(c.x, c.y + 0.1, c.z); SFX.whoopee(_pV);
-    FX.spawn('fart', [c.x, c.y + 0.1, c.z], { dir: [0, 0.3, 0], scale: 0.55, sound: false }); FX.spawn('confetti', [c.x, c.y + 0.2, c.z], { n: 14, dir: [0, 1, 0], scale: 0.6, sound: false });
+    FX.spawn('fart', [c.x, c.y + 0.1, c.z], { dir: [0, 0.3, 0], scale: 0.55, sound: false, prank: 1 }); FX.spawn('confetti', [c.x, c.y + 0.2, c.z], { n: 14, dir: [0, 1, 0], scale: 0.6, sound: false });
     const av = who === 'me' || who === Net.myId ? null : (typeof who === 'number' ? npcAv(who) : avatarOf(who));
     if (av && av.group) { FX.bubble(av, 'PFFFRRT!', 1.8); if (av.play) av.play('hit'); }
   },
@@ -586,7 +586,7 @@ const VM = {
     }
     if (v.item) v.hold.remove(v.item);
     const m = this.model(key), box = _vmBox.setFromObject(m), size = box.getSize(_pV), mx = Math.max(size.x, size.y, size.z);
-    const sc = mx > 0.16 ? 0.16 / mx : 1; m.scale.multiplyScalar(sc);
+    const lim = key === 'paper' || key === 'prop:paper' ? 0.1 : 0.16, sc = mx > lim ? lim / mx : 1; m.scale.multiplyScalar(sc);
     m.position.y = -box.min.y * sc - 0.045; m.position.x = -(box.min.x + box.max.x) / 2 * sc; m.position.z = -(box.min.z + box.max.z) / 2 * sc;
     v.item = m; v.hold.add(m);
     const top = m.position.y + box.max.y * sc, nz = m.userData.nozzle;
@@ -615,8 +615,8 @@ const VM = {
     v.fist.visible = pp < 1;
     if (pp < 1) {   // quick jab out, short hold, slower pull back
       const e = pp < 0.22 ? pp / 0.22 : pp < 0.45 ? 1 : 1 - (pp - 0.45) / 0.55, s = e * e * (3 - 2 * e);
-      if (Props.vmSlap) { v.fist.position.set(0.42 - s * 0.62, -0.3 + s * 0.16, -0.48 - s * 0.1); v.fist.rotation.set(0.2, 0.6 - s * 0.9, -1.3 + s * 0.5); }
-      else { v.fist.position.set(-0.3 + s * 0.22, -0.42 + s * 0.3, -0.3 - s * 0.36); v.fist.rotation.set(0.15 + s * 0.1, 0.3 - s * 0.3, 0.1); }
+      if (Props.vmSlap) { v.fist.position.set(0.42 - s * 0.62, -0.3 + s * 0.16, -0.48 - s * 0.1); v.fist.rotation.set(0.8, 0.6 - s * 0.9, -1.3 + s * 0.5); }
+      else { v.fist.position.set(-0.3 + s * 0.22, -0.42 + s * 0.3, -0.3 - s * 0.36); v.fist.rotation.set(0.95 - s * 0.25, 0.35 - s * 0.3, 0.15); }
     }
   }
 };
@@ -700,8 +700,8 @@ function buildTargets() {
 }
 
 /* ---------- farts make people cough ---------- */
-Bus.on('fx', (kind, c) => {
-  if (kind !== 'fart' || !c || G.phase === 'menu') return;
+Bus.on('fx', (kind, c, o) => {
+  if (kind !== 'fart' || !c || G.phase === 'menu' || (o && o.prank)) return;
   const near = Math.hypot(c.x - P.pos.x, c.z - P.pos.z) < 4 && !(W.t - (Props._fartT || -9) < 1.5);
   if (near) setTimeout(() => {
     SFX.cough(); FX.tint('#9fd63a', 0.22, 2.2); const f = aimDir(), e = eyePos();

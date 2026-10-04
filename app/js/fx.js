@@ -173,8 +173,8 @@ const FX = (() => {
     });
     cell(FR.puff, g => {
       const blobs = [[64, 70, 34], [38, 72, 24], [90, 72, 25], [52, 48, 26], [78, 50, 24], [64, 88, 24]];
-      g.fillStyle = 'rgba(0,0,0,.18)'; blobs.forEach(b => { g.beginPath(); g.arc(b[0], b[1] + 2, b[2] + 3, 0, 7); g.fill(); });
-      const gr = g.createLinearGradient(0, 24, 0, 116); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#bdbdbd'); g.fillStyle = gr;
+      g.fillStyle = 'rgba(0,0,0,.07)'; blobs.forEach(b => { g.beginPath(); g.arc(b[0], b[1] + 2, b[2] + 2, 0, 7); g.fill(); });
+      const gr = g.createLinearGradient(0, 24, 0, 116); gr.addColorStop(0, '#ffffff'); gr.addColorStop(1, '#c9c9c9'); g.fillStyle = gr;
       blobs.forEach(b => { g.beginPath(); g.arc(b[0], b[1], b[2], 0, 7); g.fill(); });
       g.fillStyle = 'rgba(255,255,255,.8)'; g.beginPath(); g.arc(50, 46, 11, 0, 7); g.fill();
     });
@@ -566,7 +566,7 @@ const FX = (() => {
         p(cx + Math.cos(a) * r, cy + rand(-0.2, 0.5) * sc, cz + Math.sin(a) * r); Q.L = SOFT;
         Q.vx = Math.cos(a) * rand(0.1, 0.4) + d.x * 0.3; Q.vz = Math.sin(a) * rand(0.1, 0.4) + d.z * 0.3; Q.vy = rand(0, 0.15); Q.drag = 0.8; Q.grav = -0.004;
         Q.ttl = rand(5, 7.5); Q.s0 = rand(0.3, 0.5) * sc; Q.s1 = rand(1.0, 1.5) * sc; Q.grow = 0.08; Q.delay = 0.1 + i * 0.015; Q.rv = rand(-0.35, 0.35);
-        Q.c0 = i % 4 === 0 ? '#86b52a' : '#a8d93e'; Q.c1 = '#9fc23c'; Q.a0 = 0.92; Q.a1 = 0; Q.fr = FR.puff; add();
+        Q.c0 = i % 4 === 0 ? '#93c232' : '#b4e04a'; Q.c1 = '#a6cc44'; Q.a0 = 0.85; Q.a1 = 0; Q.fr = FR.puff; add();
       }
       if (o.sound !== false) SFX.fart(c);
     },
@@ -580,7 +580,7 @@ const FX = (() => {
         Q.c0 = PAL[i % PAL.length]; Q.fl = FLUTTER | FLOOR | REST; Q.bounce = 0.1; Q.fr = Math.random() < 0.7 ? FR.rect : FR.curl; add();
       }
       p(c.x, c.y, c.z); Q.L = ADD; Q.ttl = 0.14; Q.s0 = 0.6; Q.s1 = 0.3; Q.c0 = '#fff6d0'; Q.a1 = 0; Q.fr = FR.soft; add();
-      for (let i = 0; i < 5; i++) { p(c.x, c.y, c.z); Q.L = SOFT; Q.vx = d.x * 1.5 + rand(-0.5, 0.5); Q.vy = d.y * 1.5 + rand(-0.3, 0.5); Q.vz = d.z * 1.5 + rand(-0.5, 0.5); Q.drag = 4; Q.ttl = 0.7; Q.s0 = 0.08; Q.s1 = 0.35; Q.c0 = '#e8e2d6'; Q.a0 = 0.7; Q.a1 = 0; Q.fr = FR.puff; add(); }
+      for (let i = 0; i < 5; i++) { p(c.x, c.y, c.z); Q.L = SOFT; Q.vx = d.x * 1.5 + rand(-0.5, 0.5); Q.vy = d.y * 1.5 + rand(-0.3, 0.5); Q.vz = d.z * 1.5 + rand(-0.5, 0.5); Q.drag = 4; Q.ttl = 0.5; Q.s0 = 0.06; Q.s1 = 0.22; Q.c0 = '#f0ebe0'; Q.a0 = 0.55; Q.a1 = 0; Q.fr = FR.puff; add(); }
       if (o.sound !== false) SFX.pop(c);
     },
     smoke(c, o) {
