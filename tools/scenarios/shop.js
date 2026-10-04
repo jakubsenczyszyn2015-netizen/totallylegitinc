@@ -33,7 +33,7 @@ module.exports = async page => {
     await ev(() => { const T = window.__tli; T.G.wallet = 640; T.OS.close('memo', true); BonkMart.open('goods'); return true; });
     await gw(1.5);   // 3D thumbnails render one per ~20 ms
     await page.shot('s01-goods');
-    await ev(() => { const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].find(e => e.textContent === 'Chaos'); s.scrollTop = sec ? sec.offsetTop - 8 : 99999; return true; });
+    await ev(() => { const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].find(e => e.textContent === 'Chaos'); s.scrollTop = sec ? sec.offsetTop - s.offsetTop - 8 : 99999; return true; });
     await gw(0.3);
     await page.shot('s02-goods-chaos');
     for (const [t, n] of [['scams', 's03-scams'], ['apps', 's04-business'], ['games', 's05-games']]) {
@@ -62,7 +62,7 @@ module.exports = async page => {
     const r = await ev(() => ({ wallet: window.__tli.G.wallet, lvl: window.__tli.Game.lvl('comm') }));
     check('hold to buy: Bigger Cut level 1 for $200', r.wallet === 440 && r.lvl === 1, r);
     // perks + owned / maxed states
-    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].pop(); s.scrollTop = sec.offsetTop - 8; return true; });
+    await ev(() => { const T = window.__tli; T.G.wallet = 5000; ['perk_chair', 'perk_poster', 'up_patience', 'up_patience'].forEach(id => BonkMart.buy(id)); T.G.wallet = 120; BonkMart.update(); const s = BonkMart.win.body.querySelector('.bm-scroll'), sec = [...s.querySelectorAll('.bm-sec')].pop(); s.scrollTop = sec.offsetTop - s.offsetTop - 8; return true; });
     await gw(1.2);
     await page.shot('s09-owned-need');
     const pc = await ev(() => ({ walk: PC.walk, chair: bmPerk('chair') }));
