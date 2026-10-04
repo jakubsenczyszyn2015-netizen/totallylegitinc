@@ -100,9 +100,13 @@ function avGbAdd(b, geo, m, color, skin) {
   for (let k = 0; k < pos.count; k++) {
     _avV.fromBufferAttribute(pos, k); if (m) _avV.applyMatrix4(m);
     _avN.fromBufferAttribute(nor, k); if (m) _avN.applyMatrix3(_avM3).normalize();
-    b.p.push(_avV.x, _avV.y, _avV.z); b.n.push(_avN.x, _avN.y, _avN.z); b.u.push(uv ? uv.getX(k) : 0, uv ? uv.getY(k) : 0);
     const c = typeof color === 'function' ? color(_avV.x, _avV.y, _avV.z) : color; b.c.push(c.r, c.g, c.b);
-    if (b.sk) { const s = typeof skin === 'function' ? skin(_avV.x, _avV.y, _avV.z) : skin; const w = s[2] || 0; b.si.push(s[0], s.length > 1 ? s[1] : s[0], 0, 0); b.sw.push(1 - w, w, 0, 0); }
+    if (b.sk) {
+      const s = typeof skin === 'function' ? skin(_avV.x, _avV.y, _avV.z) : skin; const w = s[2] || 0; b.si.push(s[0], s.length > 1 ? s[1] : s[0], 0, 0); b.sw.push(1 - w, w, 0, 0);
+      if (b.leg && _avV.y > AV_LEG.a && _avV.y < AV_LEG.b) { _avV.y = AV_LEG.a + (_avV.y - AV_LEG.a) * AV_LEG.s; _avN.y /= AV_LEG.s; _avN.normalize(); }   // squash the legs
+      else if (!b.leg || _avV.y >= AV_LEG.b) _avV.y -= AV_LEG.dy;
+    }
+    b.p.push(_avV.x, _avV.y, _avV.z); b.n.push(_avN.x, _avN.y, _avN.z); b.u.push(uv ? uv.getX(k) : 0, uv ? uv.getY(k) : 0);
   }
   const cnt = geo.index ? geo.index.count : pos.count, ix = k => geo.index ? geo.index.getX(k) : k;
   for (let k = 0; k < cnt; k += 3) { const a = ix(k), c2 = ix(k + 1), d = ix(k + 2); if (flip) b.i.push(base + a, base + d, base + c2); else b.i.push(base + a, base + c2, base + d); }
@@ -130,18 +134,22 @@ const AV_BONES = ['root', 'hips', 'chest', 'neck', 'head', 'shL', 'elL', 'haL', 
 const AVBI = {}; AV_BONES.forEach((n, i) => { AVBI[n] = i; });
 const AV_PAR = { hips: 'root', chest: 'hips', neck: 'chest', head: 'neck', shL: 'chest', elL: 'shL', haL: 'elL', shR: 'chest', elR: 'shR', haR: 'elR', thL: 'hips', knL: 'thL', ftL: 'knL', thR: 'hips', knR: 'thR', ftR: 'knR' };
 const AV_Y = { sh: 1.255, el: 0.985, ha: 0.745, th: 0.84, kn: 0.47, ft: 0.1 };
-function avDims(L) { const b = L.build; return { shX: b === 'slim' ? 0.186 : b === 'big' ? 0.216 : 0.2, hipX: b === 'slim' ? 0.092 : b === 'big' ? 0.108 : 0.1, zs: b === 'big' ? 0.82 : b === 'slim' ? 0.72 : 0.74 }; }
+/* the body is modelled in these (long-legged) units, then the legs are squashed between ankle and hip at build time
+   for short cartoon legs; everything above the hips moves down by dy */
+const AV_LEG = { a: 0.13, b: 0.86, s: 0.84 }; AV_LEG.dy = (AV_LEG.b - AV_LEG.a) * (1 - AV_LEG.s);
+const avLegY = y => y <= AV_LEG.a ? y : y < AV_LEG.b ? AV_LEG.a + (y - AV_LEG.a) * AV_LEG.s : y - AV_LEG.dy;
+function avDims(L) { const b = L.build; return { shX: b === 'slim' ? 0.196 : b === 'big' ? 0.228 : 0.212, hipX: b === 'slim' ? 0.096 : b === 'big' ? 0.112 : 0.104, zs: b === 'big' ? 0.82 : b === 'slim' ? 0.72 : 0.75 }; }
 function avBonePos(n, D) {
-  const s = n.endsWith('L') ? -1 : 1, k = n.slice(0, 2);
-  if (n === 'root') return [0, 0, 0]; if (n === 'hips') return [0, 0.86, 0]; if (n === 'chest') return [0, 0.98, 0]; if (n === 'neck') return [0, 1.29, 0]; if (n === 'head') return [0, 1.37, 0];
-  if (k === 'sh' || k === 'el' || k === 'ha') return [s * D.shX, AV_Y[k], 0];
-  return [s * D.hipX, AV_Y[k], 0];
+  const s = n.endsWith('L') ? -1 : 1, k = n.slice(0, 2), dy = AV_LEG.dy;
+  if (n === 'root') return [0, 0, 0]; if (n === 'hips') return [0, 0.86 - dy, 0]; if (n === 'chest') return [0, 0.98 - dy, 0]; if (n === 'neck') return [0, 1.29 - dy, 0]; if (n === 'head') return [0, 1.37 - dy, 0];
+  if (k === 'sh' || k === 'el' || k === 'ha') return [s * D.shX, AV_Y[k] - dy, 0];
+  return [s * D.hipX, avLegY(AV_Y[k]), 0];
 }
 
 /* ---------- body ---------- */
-const AV_TORSO = [[0.75, 0], [0.752, 0.06], [0.765, 0.105], [0.79, 0.132], [0.83, 0.147], [0.865, 0.152], [0.905, 0.152], [0.96, 0.149], [1.03, 0.151], [1.1, 0.158], [1.17, 0.164], [1.215, 0.163], [1.25, 0.152], [1.28, 0.128], [1.3, 0.098], [1.312, 0.07], [1.316, 0]];
+const AV_TORSO = [[0.81, 0], [0.812, 0.07], [0.821, 0.112], [0.838, 0.138], [0.855, 0.148], [0.87, 0.152], [0.905, 0.152], [0.96, 0.149], [1.03, 0.151], [1.1, 0.158], [1.17, 0.164], [1.215, 0.163], [1.25, 0.152], [1.28, 0.128], [1.3, 0.098], [1.312, 0.07], [1.316, 0]];
 function avTorsoR(y, b) {
-  let r = avTable(AV_TORSO, y) * 1.07;
+  let r = avTable(AV_TORSO, y) * 1.11;
   if (b === 'slim') r *= 0.9; else if (b === 'big') r = r * 1.05 + 0.042 * Math.exp(-Math.pow((y - 1.0) / 0.11, 2)) * Math.min(1, r / 0.1);
   return r;
 }
@@ -206,23 +214,25 @@ function avBodyGeo(L) {
     avGbAdd(b, avSphere(7, 5), avM(x0 - s * 0.017, 0.712, -0.036, 0.017, 0.031, 0.018, 0.35, 0, s * 0.25), skin, [ha]);
   });
   // legs: trousers + chunky shoes
-  const legT = [[0.098, 0], [0.1, 0.06], [0.104, 0.075], [0.13, 0.072], [0.25, 0.069], [0.4, 0.074], [0.47, 0.077], [0.56, 0.08], [0.72, 0.086], [0.88, 0.09], [0.93, 0.05], [0.935, 0]];
+  const legT = [[0.098, 0], [0.1, 0.06], [0.104, 0.075], [0.13, 0.072], [0.25, 0.069], [0.4, 0.074], [0.47, 0.077], [0.56, 0.08], [0.72, 0.087], [0.85, 0.092], [0.93, 0.088], [0.95, 0.06], [0.955, 0]];
   const legY = avUniq(legT.map(p => p[0]).concat([0.36, 0.435, 0.515]));
   const sole = avCol(L.shoes === '#ebe6da' ? '#b9b2a3' : '#f1ece1'), shoeTop = avCol(L.shoes);
+  b.leg = true;
   [-1, 1].forEach(s => {
     const x0 = s * D.hipX, th = s < 0 ? AVBI.thL : AVBI.thR, kn = s < 0 ? AVBI.knL : AVBI.knR, ft = s < 0 ? AVBI.ftL : AVBI.ftR;
-    avGbAdd(b, avLathe(legY, y => avTable(legT, y) * (B === 'slim' ? 1.04 : B === 'big' ? 1.18 : 1.12), 10, 1, x0), null, pants, (x, y) => [th, kn, 1 - avSS(0.4, 0.55, y)]);
+    avGbAdd(b, avLathe(legY, y => avTable(legT, y) * (B === 'slim' ? 1.08 : B === 'big' ? 1.24 : 1.16), 10, 1, x0), null, pants, (x, y) => [th, kn, 1 - avSS(0.4, 0.55, y)]);
     const sg = avSphere(12, 7).clone(); sg.applyMatrix4(avM(x0, 0.052, -0.038, 0.074, 0.072, 0.138));
     const p = sg.attributes.position, nn = sg.attributes.normal;
     for (let k = 0; k < p.count; k++) if (p.getY(k) < 0.004) { p.setY(k, 0.004); nn.setXYZ(k, 0, -1, 0); }
     avGbAdd(b, sg, null, (x, y) => y < 0.024 ? sole : shoeTop, [ft]);
   });
+  b.leg = false;
   const g = avGbBuild(b); g.boundingSphere.center.set(0, 0.95, 0); g.boundingSphere.radius = 1.3;
   AV_BODY.set(key, g); return g;
 }
 
 /* ---------- head: egg with nose and ears (shared), face decal (shared), accessories (per look) ---------- */
-const AV_HD = { rx: 0.18, ry: 0.215, rz: 0.172, cy: 0.19, k: 1.12 };   // head-local units, scaled by k
+const AV_HD = { rx: 0.18, ry: 0.215, rz: 0.172, cy: 0.19, k: 1.27 };   // head-local units, scaled by k
 const avEgg = th => Math.pow(Math.max(0, Math.sin(th)), 0.82) * (1 - 0.075 * Math.cos(th));
 function avHeadPt(th, ph, off, o) { const k = avEgg(th), s = 1 + off / 0.19; o[0] = AV_HD.rx * k * Math.sin(ph) * s; o[1] = AV_HD.ry * Math.cos(th) * s; o[2] = AV_HD.rz * k * Math.cos(ph) * s; return o; }
 const AV_FACE_T0 = 0.6, AV_FACE_T1 = 2.9, AV_FACE_W = 2.6;
@@ -288,7 +298,7 @@ function avAccGeo(L, headset) {
     avGbAdd(b, avSphere(10, 8), avM(P[0], P[1], P[2], 0.034), avCol('#d6342c'));
     avGbAdd(b, avSphere(9, 8), avM(P[0], P[1] - 0.13, P[2] + 0.06, 0.05, 0.14, 0.05, -0.38, 0, 0), hc);
   } else if (h === 'mohawk') {
-    avGbAdd(b, avCap(0.006, 0.7, 1.5, 2.2), null, avMix(L.hairColor, L.skin, 0.62));
+    avGbAdd(b, avCap(0.006, 0.7, 1.5, 2.2), null, avMix(L.hairColor, L.skin, 0.8).multiplyScalar(0.9));
     avGbAdd(b, avCap(0.0, 0.62, 1.5, 1.9, (ph, d, v) => 0.15 * Math.exp(-Math.pow(Math.sin(ph) / 0.15, 2)) * (1 - avSS(0.7, 1, v))), null, hc);
   } else if (h === 'fringe') {
     avGbAdd(b, avShell({ p0: 0, p1: PI * 2, nu: 36, nv: 8, closed: true, t0: () => 1.05, t1: avEdge(1.25, 1.75, 2.0),
@@ -384,12 +394,12 @@ class AvFace {
         g.fillStyle = '#fff'; g.beginPath(); g.ellipse(ex, EY, 15, 17, 0, 0, 7); g.fill(); g.strokeStyle = ink; g.lineWidth = 3.4; g.stroke();
         g.lineWidth = 2.6; g.beginPath(); for (let a = 0; a < 15; a += 0.3) { const r = a * 0.85; g.lineTo(ex + Math.cos(a * s) * r, EY + Math.sin(a * s) * r); } g.stroke();
       } else {
-        const wide = eye === 'wide', rx = wide ? 16 : 14, ry = wide ? 20 : 17;
+        const wide = eye === 'wide', rx = wide ? 17 : 15, ry = wide ? 21 : 18.5;
         g.beginPath();
         if (eye === 'angry') { g.moveTo(ex - 22, EY - 13 + s * 7); g.lineTo(ex + 22, EY - 13 - s * 7); g.lineTo(ex + 22, EY + 30); g.lineTo(ex - 22, EY + 30); g.closePath(); g.clip(); }
         else if (eye === 'sad') { g.moveTo(ex - 22, EY - 11 - s * 6); g.lineTo(ex + 22, EY - 11 + s * 6); g.lineTo(ex + 22, EY + 30); g.lineTo(ex - 22, EY + 30); g.closePath(); g.clip(); }
         g.beginPath(); g.ellipse(ex, EY, rx, ry, 0, 0, 7); g.fillStyle = '#fffdf8'; g.fill(); g.strokeStyle = ink; g.lineWidth = 3.6; g.stroke();
-        const px = ex + look * 5 - s * 1.5, py = EY + (eye === 'sad' ? 4 : 2), pr = wide ? 6.5 : 8.5;
+        const px = ex + look * 5 - s * 1.5, py = EY + (eye === 'sad' ? 4 : 2), pr = wide ? 7 : 9;
         g.fillStyle = '#21160f'; g.beginPath(); g.arc(px, py, pr, 0, 7); g.fill();
         g.fillStyle = '#fff'; g.beginPath(); g.arc(px + 2.8, py - 3.5, pr * 0.36, 0, 7); g.fill();
         g.restore(); g.save();
@@ -523,7 +533,7 @@ const AV_ACT = {
 };
 
 /* ---------- the avatar ---------- */
-const _av3 = new THREE.Vector3();
+const _av3 = new THREE.Vector3(), AV_TAG_Y = 2.1;
 class AvatarRig {
   constructor(o) {
     o = o || {}; avMats(); avHeadGeos();
@@ -542,8 +552,8 @@ class AvatarRig {
     this.accMesh = new THREE.Mesh(undefined, AVM.acc);
     [this.headMesh, this.faceMesh, this.accMesh].forEach(m => { m.position.y = AV_HD.cy * AV_HD.k; m.scale.setScalar(AV_HD.k); this.head.add(m); });
     this.shadow = new THREE.Mesh(AVM.shadowGeo, AVM.shadow); this.shadow.position.y = 0.012; this.shadow.renderOrder = -1; this.group.add(this.shadow);
-    this.tag = makeLabelSprite(o.name || ''); if (o.boss) this.tag.material.depthTest = true; this.tag.position.y = 2.12; this.tag.visible = !!o.name; this.group.add(this.tag);
-    this.talk = new THREE.Sprite(AVM.talk); this.talk.scale.setScalar(0.2); this.talk.position.y = 2.36; this.talk.visible = false; this.talk.renderOrder = 21; this.group.add(this.talk);
+    this.tag = makeLabelSprite(o.name || ''); if (o.boss) this.tag.material.depthTest = true; this.tag.position.y = AV_TAG_Y; this.tag.visible = !!o.name; this.group.add(this.tag);
+    this.talk = new THREE.Sprite(AVM.talk); this.talk.scale.setScalar(0.2); this.talk.position.y = AV_TAG_Y + 0.27; this.talk.visible = false; this.talk.renderOrder = 21; this.group.add(this.talk);
     this.setLook(resolveLook(o));
   }
   /* rebuild the body for a new look (same group, bones and headMat, so outside references stay valid) */
@@ -622,7 +632,7 @@ class AvatarRig {
     this._pose(); this.faceUpdate(dt, t);
     // shadow, tag and stars follow the body
     this.shadow.position.set(0, 0.012 - y, c[AVC.rz] * 0.5); this.shadow.scale.setScalar(clamp(1 - y * 0.5, 0.5, 1) * (c[AVC.rrx] > 0.5 ? 1.5 : 1));
-    this.tag.position.y = 2.12 + c[AVC.ry] * (1 - Math.min(1, c[AVC.rrx])) - Math.min(1, c[AVC.rrx]) * 1.2; this.talk.position.y = this.tag.position.y + 0.27;
+    this.tag.position.y = AV_TAG_Y + c[AVC.ry] * (1 - Math.min(1, c[AVC.rrx])) - Math.min(1, c[AVC.rrx]) * 1.2; this.talk.position.y = this.tag.position.y + 0.27;
     if (this._stars || this.stars && this.stars.visible) this.starsUpdate(t, this._stars);
   }
   standPose(T, t, speed, dt) {
@@ -649,7 +659,7 @@ class AvatarRig {
   }
   sitPose(S, t, kind, dt) {
     const ph = this.phase; S.fill(0);
-    S[AVC.ry] = -0.27; S[AVC.rz] = kind === 'desk' ? -0.1 : -0.05;
+    S[AVC.ry] = -0.27 + AV_LEG.dy; S[AVC.rz] = kind === 'desk' ? -0.1 : -0.05;
     S[AVC.ltx] = S[AVC.rtx] = 1.45; S[AVC.lkx] = S[AVC.rkx] = 1.42; S[AVC.ltz] = S[AVC.rtz] = 0.08; S[AVC.lfx] = S[AVC.rfx] = 0.05; S[AVC.cx] = -0.08;
     if (kind === 'desk') {
       avArm(S, 'lr', AV_ARM.typing, 1); S[AVC.cx] = -0.13;
@@ -692,7 +702,7 @@ class AvatarRig {
   starsUpdate(t, on) {
     if (!this.stars) { this.stars = new THREE.Group(); for (let i = 0; i < 4; i++) { const s = new THREE.Sprite(AVM.star); s.scale.setScalar(0.15); this.stars.add(s); } this.group.add(this.stars); }
     const g = this.stars; g.visible = on; if (!on) return;
-    this.head.getWorldPosition(_av3); this.group.worldToLocal(_av3); g.position.set(_av3.x, _av3.y + 0.36, _av3.z);
+    this.head.getWorldPosition(_av3); this.group.worldToLocal(_av3); g.position.set(_av3.x, _av3.y + 0.42, _av3.z);
     g.children.forEach((s, i) => { const a = t * 4.2 + i * Math.PI / 2; s.position.set(Math.cos(a) * 0.27, Math.sin(t * 7 + i * 1.7) * 0.035, Math.sin(a) * 0.27); });
   }
 }

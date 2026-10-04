@@ -101,7 +101,7 @@ const Customize = {
     if (t - this.lastAct > 9 && !av.act) { this.lastAct = t; av.play(pick(['wave', 'nod', 'shrug', 'cheer', 'point'])); }
     this.zoom = lerp(this.zoom, this.zoomT, 0.12);
     const z = this.zoom, cam = this.camera;
-    cam.position.set(0, lerp(1.3, 1.64, z), lerp(5.7, 1.8, z)); cam.lookAt(0, lerp(1.1, 1.6, z), 0);
+    cam.position.set(0, lerp(1.3, 1.56, z), lerp(5.7, 1.9, z)); cam.lookAt(0, lerp(1.08, 1.5, z), 0);
     av.tag.visible = !!settings.name && z < 0.5;
     this.renderer.render(this.scene, cam);
     this.raf = requestAnimationFrame(() => this.frame());
