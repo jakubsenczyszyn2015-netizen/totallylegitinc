@@ -3,7 +3,7 @@
    Smooth acceleration, sprint (Shift), jump, footsteps, knockback + stun, a third-person camera (C) with a
    wall-aware boom, and the input for held items (click / F / Q / G / 1-6 / wheel, handled by props.js). */
 Object.assign(P, { vx: 0, vz: 0, kx: 0, kz: 0, stunT: 0, third: false, boom: 0, dip: 0, fovK: 0, roll: 0, stepN: 0 });
-const PC = { walk: 3.4, run: 5.8, accel: 30, decel: 22, air: 6, jump: 4.9, grav: 13.5, boom: 3.1 };
+const PC = { walk: 3.4, run: 5.8, accel: 30, decel: 22, air: 6, jump: 4.9, grav: 13.5, boom: 3.3 };
 try { P.third = Store.get('tli_third', false) === true; } catch (e) {}
 
 /* ---------- player ---------- */
@@ -98,7 +98,7 @@ function applyFov(cam, dt) {
 function thirdCam(cam, dt) {
   const cp = Math.cos(P.pitch), sp = Math.sin(P.pitch), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
   const hx = P.pos.x, hy = P.pos.y + 1.45, hz = P.pos.z;
-  let ox = sy * cp * PC.boom + cy * 0.42, oy = -sp * PC.boom + 0.35, oz = cy * cp * PC.boom - sy * 0.42;
+  let ox = sy * cp * PC.boom + cy * 0.55, oy = -sp * PC.boom + 0.75, oz = cy * cp * PC.boom - sy * 0.55;
   const len = Math.hypot(ox, oy, oz); ox /= len; oy /= len; oz /= len;
   const hit = Math.max(0.05, Space.ray(hx, hy, hz, ox, oy, oz, len, 0.2) - 0.08);
   P.boom = hit < P.boom ? hit : lerp(P.boom, hit, 1 - Math.exp(-dt * 4));

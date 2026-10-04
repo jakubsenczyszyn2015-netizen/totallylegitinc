@@ -345,39 +345,42 @@ const FX = (() => {
   }
   const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3();
 
-  /* ----- liquid streams (ribbon along ballistic nodes) ----- */
-  const SVS = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-  const SFS = `uniform vec3 color; varying vec2 vUv;
-    void main() { float e = abs(vUv.y * 2.0 - 1.0); vec3 c = color * (1.12 - e * e * 0.55); c += vec3(1.0, 0.95, 0.8) * smoothstep(0.22, 0.0, abs(vUv.y - 0.3)) * 0.45; gl_FragColor = vec4(c, 1.0); }`;
-  const SN = 110;
+  /* ----- liquid streams (a lit tube along ballistic nodes, so it reads from any angle) ----- */
+  const SVS = `varying vec3 vN; varying vec3 vV; void main() { vec4 mv = modelViewMatrix * vec4(position, 1.0); vN = normalize(normalMatrix * normal); vV = -mv.xyz; gl_Position = projectionMatrix * mv; }`;
+  const SFS = `uniform vec3 color; varying vec3 vN; varying vec3 vV;
+    void main() { vec3 n = normalize(vN), v = normalize(vV); float d = max(dot(n, normalize(vec3(-0.3, 0.8, 0.5))), 0.0); float rim = pow(1.0 - max(dot(n, v), 0.0), 2.0);
+      vec3 c = color * (0.86 + 0.32 * d) + vec3(1.0, 0.96, 0.85) * pow(max(dot(reflect(-normalize(vec3(-0.3, 0.8, 0.5)), n), v), 0.0), 10.0) * 0.5 - color * rim * 0.12; gl_FragColor = vec4(c, 1.0); }`;
+  const SN = 110, SR = 6;   // nodes per stream, sides of the tube
   function Stream(o) {
     o = o || {};
-    const s = { color: o.color || '#ff9418', w: o.width || 0.05, speed: o.speed || 7.5, rate: o.rate || 75, on: false, dead: false, life: o.life || 0,
+    const s = { color: o.color || '#ff9418', puddle: o.puddle, w: o.width || 0.042, speed: o.speed || 7.5, rate: o.rate || 75, on: false, dead: false, life: o.life || 0,
       pos: new THREE.Vector3(), dir: new THREE.Vector3(0, 0, -1), ppos: new THREE.Vector3(), has: false, acc: 0, test: o.test || null, onHit: o.onHit || null,
-      nx: new Float32Array(SN * 3), nv: new Float32Array(SN * 3), age: new Float32Array(SN), alive: new Uint8Array(SN), head: 0, cnt: 0, hitT: 0, snd: null, owner: o.owner };
-    // one independent quad per segment so a broken stream leaves real gaps
-    const geo = new THREE.BufferGeometry(), pos = new Float32Array(SN * 4 * 3), uv = new Float32Array(SN * 4 * 2), idx = [];
-    for (let i = 0; i < SN - 1; i++) { const a = i * 4; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
-    for (let i = 0; i < SN; i++) { uv.set([0, 0, 0, 1, 1, 0, 1, 1], i * 8); }
-    s.side = new Float32Array(SN * 6); s.ok = new Uint8Array(SN);
-    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3).setUsage(THREE.DynamicDrawUsage)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setIndex(idx); geo.setDrawRange(0, 0);
+      nx: new Float32Array(SN * 3), nv: new Float32Array(SN * 3), age: new Float32Array(SN), alive: new Uint8Array(SN), head: 0, cnt: 0, hitT: 0, decT: 0, wt: Math.random() * 9, snd: null, owner: o.owner };
+    // one independent tube section per segment so a broken stream leaves real gaps
+    const V = SR * 2, geo = new THREE.BufferGeometry(), idx = [];
+    for (let i = 0; i < SN - 1; i++) { const b0 = i * V; for (let k = 0; k < SR; k++) { const a0 = b0 + k, a1 = b0 + (k + 1) % SR, c0 = a0 + SR, c1 = a1 + SR; idx.push(a0, c0, a1, a1, c0, c1); } }
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(SN * V * 3), 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(SN * V * 3), 3).setUsage(THREE.DynamicDrawUsage));
+    geo.setIndex(idx); geo.setDrawRange(0, 0);
+    s.ring = new Float32Array(SN * SR * 6); s.ok = new Uint8Array(SN);
     const c = rgb(s.color);
-    s.mesh = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: { color: { value: new THREE.Vector3(c[0], c[1], c[2]) } }, vertexShader: SVS, fragmentShader: SFS, side: THREE.DoubleSide }));
+    s.mesh = new THREE.Mesh(geo, new THREE.ShaderMaterial({ uniforms: { color: { value: new THREE.Vector3(c[0], c[1], c[2]) } }, vertexShader: SVS, fragmentShader: SFS }));
     s.mesh.frustumCulled = false; s.mesh.renderOrder = 3; W.scene.add(s.mesh);
     /* set the nozzle position/direction every frame; on = emitting */
     s.set = (p, d, on) => { if (p) s.pos.set(p.x, p.y, p.z); if (d) s.dir.set(d.x, d.y, d.z).normalize(); if (on && !s.on) { s.has = false; } s.on = !!on; return s; };
     s.stop = () => { s.on = false; s.life = 0; s.ending = true; };
     streams.push(s); return s;
   }
+  /* nodes fly on exact parabolas from where they left the nozzle: p = p0 + v0 t - g t^2 / 2 (smooth at any frame rate) */
   function emitNode(s, x, y, z, pre) {
     const i = s.head; s.head = (i + 1) % SN; if (s.cnt < SN) s.cnt++;
-    const j = 0.025, sp = s.speed * rand(0.97, 1.03);
-    const vx = (s.dir.x + rand(-j, j)) * sp, vy = (s.dir.y + rand(-j, j)) * sp, vz = (s.dir.z + rand(-j, j)) * sp;
-    s.nv[i * 3] = vx; s.nv[i * 3 + 1] = vy; s.nv[i * 3 + 2] = vz;
-    s.nx[i * 3] = x + vx * pre; s.nx[i * 3 + 1] = y + vy * pre; s.nx[i * 3 + 2] = z + vz * pre; s.age[i] = pre; s.alive[i] = 1;
-    if (Math.random() < 0.22) {   // stray droplets breaking off the stream
+    const j = 0.003, sp = s.speed * (1 + Math.sin(s.wt * 9.3) * 0.025), wt = s.wt;   // smooth hose wobble, tiny per-node noise
+    const wx = Math.sin(wt * 7 + 1.3) * 0.012 + Math.sin(wt * 3.1) * 0.008, wy = Math.cos(wt * 5.3) * 0.01, wz = Math.sin(wt * 6.1 + 4) * 0.012;
+    const vx = (s.dir.x + wx + rand(-j, j)) * sp, vy = (s.dir.y + wy + rand(-j, j)) * sp, vz = (s.dir.z + wz + rand(-j, j)) * sp;
+    s.nv[i * 3] = vx; s.nv[i * 3 + 1] = vy; s.nv[i * 3 + 2] = vz; s.nx[i * 3] = x; s.nx[i * 3 + 1] = y; s.nx[i * 3 + 2] = z; s.age[i] = pre; s.alive[i] = 1;
+    if (Math.random() < 0.2) {   // stray droplets breaking off the stream
       p(x, y, z); Q.vx = vx * rand(0.8, 1.05) + rand(-0.5, 0.5); Q.vy = vy * rand(0.8, 1.05) + rand(-0.3, 0.6); Q.vz = vz * rand(0.8, 1.05) + rand(-0.5, 0.5);
-      Q.ttl = 2; Q.s0 = rand(0.03, 0.06); Q.s1 = Q.s0 * 0.8; Q.c0 = s.color; Q.grav = 1; Q.fl = SPLAT | WALL; Q.fr = FR.drop; add();
+      Q.ttl = 2; Q.s0 = rand(0.03, 0.055); Q.s1 = Q.s0 * 0.8; Q.c0 = s.color; Q.grav = 1; Q.fl = SPLAT | WALL; Q.fr = FR.drop; add();
     }
   }
   function splash(x, y, z, color, n, up) {
@@ -388,21 +391,21 @@ const FX = (() => {
   }
   function stepStream(s, dt) {
     if (s.life > 0) { s.life -= dt; if (s.life <= 0) s.on = false; }
+    for (let k = 0; k < s.cnt; k++) { const i = (s.head - 1 - k + SN) % SN; if (s.alive[i]) s.age[i] += dt; }
     if (s.on) {
       if (!s.has) { s.ppos.copy(s.pos); s.has = true; }
       s.acc += dt * s.rate; let n = Math.floor(s.acc); s.acc -= n; n = Math.min(n, 12);
-      for (let k = 0; k < n; k++) { const f = (k + 1) / n; emitNode(s, lerp(s.ppos.x, s.pos.x, f), lerp(s.ppos.y, s.pos.y, f), lerp(s.ppos.z, s.pos.z, f), dt * (1 - f)); }
+      for (let k = 0; k < n; k++) { const f = (k + 1) / n; s.wt += 1 / s.rate; emitNode(s, lerp(s.ppos.x, s.pos.x, f), lerp(s.ppos.y, s.pos.y, f), lerp(s.ppos.z, s.pos.z, f), dt * (1 - f)); }
       s.ppos.copy(s.pos);
       if (!s.snd) s.snd = FXSnd.loop(2600, 'highpass'); s.snd.set(0.07 * FXSnd.vol(s.pos));
     } else if (s.snd) { s.snd.stop(); s.snd = null; }
-    // simulate nodes
-    let alive = 0; const g = 9.8, t = now();
+    // where is every node now? (exact parabola) + collisions
+    let alive = 0; const t = now(), cp = s.cp || (s.cp = new Float32Array(SN * 3));
     for (let k = 0; k < s.cnt; k++) {
       const i = (s.head - 1 - k + SN) % SN; if (!s.alive[i]) continue;
-      const a = s.age[i] += dt; const i3 = i * 3;
-      s.nv[i3 + 1] -= g * dt; const x = s.nx[i3] += s.nv[i3] * dt, y = s.nx[i3 + 1] += s.nv[i3 + 1] * dt, z = s.nx[i3 + 2] += s.nv[i3 + 2] * dt;
+      const a = s.age[i], i3 = i * 3; if (a > 3) { s.alive[i] = 0; continue; }
+      const x = cp[i3] = s.nx[i3] + s.nv[i3] * a, y = cp[i3 + 1] = s.nx[i3 + 1] + s.nv[i3 + 1] * a - 4.9 * a * a, z = cp[i3 + 2] = s.nx[i3 + 2] + s.nv[i3 + 2] * a;
       let hit = false, gy = 0;
-      if (a > 3) { s.alive[i] = 0; continue; }
       if (y < 1.4) { gy = Space.ground(x, y + 0.15, z); if (y <= gy) hit = 'floor'; }
       if (!hit && Space.solid(x, y, z, 0)) hit = 'wall';
       if (!hit && s.test && a > 0.04 && s.test(x, y, z, s)) hit = 'body';
@@ -410,7 +413,7 @@ const FX = (() => {
         s.alive[i] = 0;
         if (t - s.hitT > 0.05) {
           s.hitT = t; splash(x, Math.max(y, gy), z, s.color, hit === 'floor' ? 3 : 2, hit === 'floor' ? 1 : 0.5);
-          if (hit === 'floor') decal(x + rand(-0.08, 0.08), gy, z + rand(-0.08, 0.08), rand(0.18, 0.34), s.color, 35);
+          if (hit === 'floor' && t - s.decT > 0.14) { s.decT = t; decal(x + rand(-0.06, 0.06), gy, z + rand(-0.06, 0.06), rand(0.32, 0.5), s.puddle || s.color, 40); }
           if (s.onHit) s.onHit(hit, x, y, z);
         }
         continue;
@@ -418,27 +421,31 @@ const FX = (() => {
       alive++;
     }
     if (!s.on && !alive && s.cnt) { s.cnt = 0; }
-    // build the ribbon (oldest -> newest): side vertices per node, then a quad per pair of live neighbours
-    const P = s.mesh.geometry.attributes.position, arr = P.array, cam = W.camera.position, sd = s.side;
+    // build the tube (oldest -> newest): a ring of vertices per live node, a section per pair of live neighbours
+    const G = s.mesh.geometry, PA = G.attributes.position, NA = G.attributes.normal, pa = PA.array, na = NA.array, rg = s.ring;
     let n = 0;
     for (let k = s.cnt - 1; k >= 0; k--, n++) {
-      const i = (s.head - 1 - k + SN) % SN, i3 = i * 3, o = n * 6;
+      const i = (s.head - 1 - k + SN) % SN, i3 = i * 3;
       s.ok[n] = s.alive[i]; if (!s.alive[i]) continue;
-      const x = s.nx[i3], y = s.nx[i3 + 1], z = s.nx[i3 + 2];
-      _v.set(s.nv[i3], s.nv[i3 + 1], s.nv[i3 + 2]); _v2.set(cam.x - x, cam.y - y, cam.z - z); _v3.crossVectors(_v, _v2);
-      const l = _v3.length() || 1, a = s.age[i];
-      const hw = s.w * 0.5 * Math.min(1, 0.35 + a * 7) * (1 + Math.sin(a * 38 + i) * 0.12) / l;
-      sd[o] = x + _v3.x * hw; sd[o + 1] = y + _v3.y * hw; sd[o + 2] = z + _v3.z * hw; sd[o + 3] = x - _v3.x * hw; sd[o + 4] = y - _v3.y * hw; sd[o + 5] = z - _v3.z * hw;
+      const a = s.age[i], x = s.cp[i3], y = s.cp[i3 + 1], z = s.cp[i3 + 2];
+      _v.set(s.nv[i3], s.nv[i3 + 1] - 9.8 * a, s.nv[i3 + 2]).normalize();             // tangent
+      if (Math.abs(_v.y) > 0.97) _v2.set(1, 0, 0); else _v2.set(0, 1, 0);
+      _v3.crossVectors(_v, _v2).normalize(); _v2.crossVectors(_v3, _v).normalize();      // side, up
+      const r = s.w * 0.5 * Math.min(1, 0.6 + a * 5) * (1 + Math.sin(a * 30 + i * 0.4) * 0.1);
+      for (let q = 0; q < SR; q++) {
+        const an = q / SR * 6.2832, cs = Math.cos(an), sn = Math.sin(an), o = (n * SR + q) * 6;
+        const ex = _v3.x * cs + _v2.x * sn, ey = _v3.y * cs + _v2.y * sn, ez = _v3.z * cs + _v2.z * sn;
+        rg[o] = x + ex * r; rg[o + 1] = y + ey * r; rg[o + 2] = z + ez * r; rg[o + 3] = ex; rg[o + 4] = ey; rg[o + 5] = ez;
+      }
     }
-    let q = 0;
+    let q = 0; const RV = SR * 6;
     for (let k = 0; k < n - 1; k++) {
       if (!s.ok[k] || !s.ok[k + 1]) continue;
-      const o = q * 12, a = k * 6, b = a + 6;
-      arr[o] = sd[a]; arr[o + 1] = sd[a + 1]; arr[o + 2] = sd[a + 2]; arr[o + 3] = sd[a + 3]; arr[o + 4] = sd[a + 4]; arr[o + 5] = sd[a + 5];
-      arr[o + 6] = sd[b]; arr[o + 7] = sd[b + 1]; arr[o + 8] = sd[b + 2]; arr[o + 9] = sd[b + 3]; arr[o + 10] = sd[b + 4]; arr[o + 11] = sd[b + 5];
+      const o = q * SR * 2 * 3, A = k * RV;
+      for (let j = 0; j < SR * 2; j++) { const src = A + j * 6, d = o + j * 3; pa[d] = rg[src]; pa[d + 1] = rg[src + 1]; pa[d + 2] = rg[src + 2]; na[d] = rg[src + 3]; na[d + 1] = rg[src + 4]; na[d + 2] = rg[src + 5]; }
       q++;
     }
-    P.updateRange.count = q * 12; P.needsUpdate = true; s.mesh.geometry.setDrawRange(0, q * 6);
+    PA.updateRange.count = NA.updateRange.count = q * SR * 6; PA.needsUpdate = NA.needsUpdate = true; G.setDrawRange(0, q * SR * 6);
     if (s.ending && !s.on && !alive) s.dead = true;
   }
 
@@ -471,7 +478,7 @@ const FX = (() => {
 
   /* ----- speech bubbles ----- */
   function bubble(target, text, secs) {
-    if (!ready) return; let b = bubbles.find(x => x.t >= x.dur) || (bubbles.length < 8 ? null : bubbles.reduce((a, c) => a.t > c.t ? a : c));
+    if (!ready) return; let b = bubbles.find(x => x.target === target && x.t < x.dur) || bubbles.find(x => x.t >= x.dur) || (bubbles.length < 8 ? null : bubbles.reduce((a, c) => a.t > c.t ? a : c));
     if (!b) {
       const c = document.createElement('canvas'); c.width = 512; c.height = 256; const tex = new THREE.CanvasTexture(c);
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); sp.renderOrder = 30; sp.visible = false; W.scene.add(sp);
@@ -489,7 +496,7 @@ const FX = (() => {
     for (const b of bubbles) {
       if (b.t >= b.dur) { b.sp.visible = false; continue; }
       b.t += dt; const tg = b.target;
-      if (tg && tg.group) { tg.group.getWorldPosition(_v); _v.y += 2.3 * (tg.group.scale.y || 1); } else if (tg) _v.set(tg.x, tg.y, tg.z);
+      if (tg && tg.head) { tg.head.getWorldPosition(_v); _v.y += 0.62 * (tg.group.scale.y || 1); } else if (tg && tg.group) { tg.group.getWorldPosition(_v); _v.y += 2.3 * (tg.group.scale.y || 1); } else if (tg) _v.set(tg.x, tg.y, tg.z);
       const k = Math.min(1, b.t / 0.18), pop = backOut(k), fade = Math.min(1, (b.dur - b.t) / 0.3);
       b.sp.position.set(_v.x, _v.y + b.t * 0.12, _v.z); b.sp.scale.set(1.0 * pop, 0.5 * pop, 1); b.sp.material.opacity = fade;
       if (b.t >= b.dur) b.sp.visible = false;
@@ -587,9 +594,11 @@ const FX = (() => {
     fire(c, o) { return Fire(c, o.scale || 1, o.dur == null ? 10 : o.dur, o); },
     explosion(c, o) {
       const sc = o.scale || 1;
-      p(c.x, c.y, c.z); Q.L = ADD; Q.ttl = 0.18; Q.s0 = 3.2 * sc; Q.s1 = 2 * sc; Q.c0 = '#fff4c0'; Q.a1 = 0; Q.fr = FR.soft; add();
+      p(c.x, c.y, c.z); Q.L = ADD; Q.ttl = 0.22; Q.s0 = 4 * sc; Q.s1 = 2.4 * sc; Q.c0 = '#fff4c0'; Q.a1 = 0; Q.fr = FR.soft; add();
+      p(c.x, c.y + 0.1, c.z); Q.L = ADD; Q.ttl = 0.32; Q.s0 = 0.4 * sc; Q.s1 = 4.5 * sc; Q.c0 = '#ffd890'; Q.a0 = 0.9; Q.a1 = 0; Q.fr = FR.ring; add();
+      for (let i = 0; i < 8; i++) { const a = Math.random() * 6.28, sp = rand(1, 2.5) * sc; p(c.x, c.y + 0.2 * sc, c.z); Q.L = ADD; Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(0.5, 2) * sc; Q.drag = 5; Q.ttl = rand(0.35, 0.55); Q.s0 = 0.8 * sc; Q.s1 = 2.8 * sc; Q.grow = 0.2; Q.c0 = '#ffe9a0'; Q.c1 = '#ff6a1a'; Q.a1 = 0; Q.fr = FR.fireball; add(); }
       for (let i = 0; i < 12; i++) { p(c.x + rand(-0.2, 0.2) * sc, c.y + rand(-0.1, 0.3) * sc, c.z + rand(-0.2, 0.2) * sc); Q.L = SOFT; const a = Math.random() * 6.28, sp = rand(1.5, 4) * sc; Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(0.5, 3) * sc; Q.drag = 4; Q.ttl = rand(0.5, 0.9); Q.s0 = 0.5 * sc; Q.s1 = rand(1.6, 2.4) * sc; Q.grow = 0.15; Q.c0 = '#fff8d0'; Q.c1 = '#ff4a12'; Q.a0 = 1; Q.a1 = 0; Q.fr = FR.fireball; add(); }
-      for (let i = 0; i < 12; i++) { const a = Math.random() * 6.28, sp = rand(2, 5) * sc; p(c.x, c.y + 0.1, c.z); Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(1, 4) * sc; Q.drag = 3.5; Q.ttl = rand(0.35, 0.6); Q.s0 = rand(0.5, 0.8) * sc; Q.s1 = 0.1; Q.grow = 0.2; Q.fl = FLICK; Q.fr = FR.flame; add(); }
+      for (let i = 0; i < 18; i++) { const a = Math.random() * 6.28, sp = rand(2, 6) * sc; p(c.x, c.y + 0.1, c.z); Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(1, 5) * sc; Q.drag = 3.5; Q.ttl = rand(0.4, 0.7); Q.s0 = rand(0.6, 1.0) * sc; Q.s1 = 0.1; Q.grow = 0.2; Q.fl = FLICK; Q.fr = FR.flame; add(); }
       for (let i = 0; i < 16; i++) { const a = Math.random() * 6.28, sp = rand(1, 3) * sc; p(c.x, c.y + rand(0, 0.5) * sc, c.z); Q.L = SOFT; Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(0.8, 2.2) * sc; Q.drag = 1.4; Q.grav = -0.05; Q.ttl = rand(2.5, 4); Q.delay = rand(0.05, 0.25); Q.s0 = 0.6 * sc; Q.s1 = rand(2.0, 2.8) * sc; Q.rv = rand(-0.5, 0.5); Q.c0 = '#3a3431'; Q.c1 = '#24201e'; Q.a0 = 0.85; Q.a1 = 0; Q.fr = FR.smoke; add(); }
       for (let i = 0; i < 16; i++) { const a = Math.random() * 6.28, sp = rand(3, 8) * sc; p(c.x, c.y + 0.2, c.z); Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(3, 7) * sc; Q.grav = 1; Q.ttl = rand(2, 3); Q.s0 = Q.s1 = rand(0.07, 0.15) * sc; Q.rv = rand(-12, 12); Q.c0 = pick(['#5a5048', '#3d3a38', '#8a7a68', '#c8b89c']); Q.fl = FLOOR | REST; Q.bounce = 0.35; Q.fr = FR.chunk; add(); }
       for (let i = 0; i < 26; i++) { const a = Math.random() * 6.28, sp = rand(6, 13) * sc; p(c.x, c.y + 0.2, c.z); Q.L = ADD; Q.vx = Math.cos(a) * sp; Q.vz = Math.sin(a) * sp; Q.vy = rand(1, 8) * sc; Q.grav = 0.7; Q.drag = 1.5; Q.ttl = rand(0.4, 0.9); Q.s0 = 0.06; Q.s1 = 0.02; Q.str = 0.05; Q.c0 = '#ffe08a'; Q.c1 = '#ff7a1a'; Q.a1 = 0.2; Q.fl = FLOOR; Q.bounce = 0.4; Q.fr = FR.spark; add(); }

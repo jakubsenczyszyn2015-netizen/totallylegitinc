@@ -53,6 +53,7 @@ const PropArt = (() => {
     const body = new THREE.Mesh(once('can' + k, () => new THREE.CylinderGeometry(r, r, hh, 16, 1, true)), mats['m' + k] || (mats['m' + k] = new THREE.MeshLambertMaterial({ map: label(k) })));
     const top = new THREE.Mesh(once('cantop' + k, () => new THREE.CylinderGeometry(r * 0.88, r, 0.01, 16)), lam('#cfd3d8'));
     const bot = new THREE.Mesh(once('canbot' + k, () => new THREE.CylinderGeometry(r, r * 0.88, 0.01, 16)), lam('#aeb3ba'));
+    body.rotation.y = k === 'beans' ? -Math.PI : -1.95;   // the brand name faces +z
     top.position.y = hh / 2 + 0.005; bot.position.y = -hh / 2 - 0.005; g.add(body, top, bot);
     if (k !== 'beans') { const tab = new THREE.Mesh(boxGeo(0.012, 0.003, 0.02), lam('#e2e5ea')); tab.position.set(0, hh / 2 + 0.011, 0.008); g.add(tab); }
     g.userData.nozzle = new THREE.Vector3(0, hh / 2 + 0.02, 0); return g;
@@ -76,11 +77,20 @@ const PropArt = (() => {
     const b = new THREE.Mesh(once('box', () => rbox(0.42, 0.3, 0.32, 0.015, 2)), m); g.add(b);
     const tape = new THREE.Mesh(boxGeo(0.425, 0.004, 0.07), lam('#b8925a')); tape.position.y = 0.151; g.add(tape); return g;
   }
-  function fist(skin) {
+  function fist(skin, shirt) {
     const g = new THREE.Group(), m = lam(skin);
     const f = new THREE.Mesh(once('fist', () => rbox(0.1, 0.09, 0.11, 0.038, 3)), m); g.add(f);
     const t = new THREE.Mesh(once('thumb', () => rbox(0.035, 0.035, 0.065, 0.016, 2)), m); t.position.set(-0.05, -0.015, -0.01); t.rotation.y = 0.3; g.add(t);
-    const cuff = new THREE.Mesh(once('cuff', () => new THREE.CylinderGeometry(0.045, 0.05, 0.09, 12)), lam('#f4f4f4')); cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.09; g.add(cuff);
+    const cuff = new THREE.Mesh(once('cuff', () => new THREE.CylinderGeometry(0.045, 0.05, 0.09, 12)), lam(shirt || '#f4f4f4')); cuff.rotation.x = Math.PI / 2; cuff.position.z = 0.09; g.add(cuff);
+    return g;
+  }
+  /* first-person hand gripping an item (palm behind, fingers wrapped in front, thumb, shirt cuff) */
+  function grip(skin, shirt) {
+    const g = new THREE.Group(), m = lam(skin), add = (geo, x, y, z, rx, ry, rz, mm) => { const o = new THREE.Mesh(geo, mm || m); o.position.set(x, y, z); o.rotation.set(rx || 0, ry || 0, rz || 0); g.add(o); return o; };
+    add(once('palm', () => rbox(0.05, 0.062, 0.04, 0.018, 3)), 0.026, -0.01, 0.024, 0, 0.5, 0.15);
+    add(once('fing', () => rbox(0.06, 0.03, 0.022, 0.01, 2)), 0.002, -0.008, -0.03, 0, -0.25, 0.08);
+    add(once('fing2', () => rbox(0.054, 0.027, 0.02, 0.009, 2)), 0.004, -0.036, -0.026, 0, -0.25, 0.12);
+    add(once('thmb', () => rbox(0.02, 0.04, 0.02, 0.009, 2)), -0.03, 0.012, -0.01, 0, 0, -0.5);
     return g;
   }
   function item(id) {
@@ -89,7 +99,7 @@ const PropArt = (() => {
     if (!m) { m = new THREE.Mesh(once('gen', () => rbox(0.1, 0.1, 0.1, 0.02, 2)), lam('#7c8db5')); }
     return m;
   }
-  return { rbox, lam, tex, paperGeo, paperMat, can, cushion, popper, cardbox, fist, item, beans: () => can('beans') };
+  return { rbox, lam, tex, paperGeo, paperMat, can, cushion, popper, cardbox, fist, grip, item, beans: () => can('beans') };
 })();
 
 /* ---------- item icons for the hotbar / shop (inline SVG, chunky outlines) ---------- */
@@ -216,7 +226,7 @@ const Props = {
     if (b.type !== 'paper' || b.vel.y >= 0) return false;
     const p = b.pos; if (p.y > 0.5 || p.y < 0.18) return false;
     for (const bin of W.bins) if (Math.hypot(p.x - bin.x, p.z - bin.z) < 0.19) {
-      if (b.local) { SFX.bin(); toast(pick(['Nice shot.', 'Nothing but bin.', 'Put that on your review.', 'Three points. Zero dollars.']), 'good'); Bus.emit('prop:bin', b); }
+      if (b.local) { SFX.bin(); if (now() - (Props._binT || 0) > 1.5) { Props._binT = now(); toast(pick(['Nice shot.', 'Nothing but bin.', 'Put that on your review.', 'Three points. Zero dollars.']), 'good'); } Bus.emit('prop:bin', b); }
       else SFX.bounce();
       FX.spawn('puff', [bin.x, 0.45, bin.z], { scale: 0.4, color: '#f4f0e4' });
       return true;
@@ -358,7 +368,7 @@ const Props = {
       this.launch(b.type, [b.pos.x, b.pos.y + 0.02, b.pos.z], [fx * 5.5 + rand(-0.5, 0.5), 2.5, fz * 5.5 + rand(-0.5, 0.5)], { id: b.id, item: b.item });
     }
     if (!best) return;
-    const hy = best.y1 - 0.25, hx = best.x - fx * 0.15, hz = best.z - fz * 0.15;
+    const hy = best.y1 + 0.02, hx = best.x - fx * 0.3, hz = best.z - fz * 0.3;
     (slap ? SFX.slap : SFX.punch)(); FX.shake(0.22, 0.18);
     FX.spawn('stars', [hx, hy, hz], { n: slap ? 5 : 7, scale: slap ? 0.8 : 1 });
     if (best.kind === 'player') {
@@ -373,13 +383,15 @@ const Props = {
   /* ----- hand / view helpers ----- */
   handPos() {
     const out = _pHand;
-    if (!P.third && this.vm && this.vm.root.visible) { this.vm.anchor.getWorldPosition(out); return out; }
+    if (!P.third && this.vm && this.vm.root.visible) {   // the view model is drawn at half size, half distance: use the full-size spot
+      this.vm.anchor.getWorldPosition(out); const c = W.camera.position, k = 1 / this.vm.root.scale.x; out.set(c.x + (out.x - c.x) * k, c.y + (out.y - c.y) * k, c.z + (out.z - c.z) * k); return out;
+    }
     const a = this.held.get('me'); if (P.third && a && a.obj && a.obj.parent) { a.obj.getWorldPosition(out); out.y += 0.05; return out; }
     const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
     out.set(P.pos.x - sy * 0.35 + cy * 0.22, P.pos.y + P.eye - 0.3, P.pos.z - cy * 0.35 - sy * 0.22); return out;
   }
 };
-const _pQ = new THREE.Quaternion(), _pAx = new THREE.Vector3(), _pE = new THREE.Euler(), _pHand = new THREE.Vector3(), _pAim = new THREE.Vector3(), _pEye = new THREE.Vector3(), _pV = new THREE.Vector3();
+const _vmBox = new THREE.Box3(), _pQ = new THREE.Quaternion(), _pAx = new THREE.Vector3(), _pE = new THREE.Euler(), _pHand = new THREE.Vector3(), _pAim = new THREE.Vector3(), _pEye = new THREE.Vector3(), _pV = new THREE.Vector3();
 function aimDir() { const cp = Math.cos(P.pitch); return _pAim.set(-Math.sin(P.yaw) * cp, Math.sin(P.pitch), -Math.cos(P.yaw) * cp); }
 function eyePos() { return _pEye.set(P.pos.x, P.pos.y + P.eye, P.pos.z); }
 
@@ -561,16 +573,25 @@ const VM = {
     return { root, sway, hold, anchor, fist, item: null, skin: null, fistObj: null, hand: null };
   },
   skin() { return (settings.look && settings.look.skin) || (typeof SKINS !== 'undefined' ? SKINS[hashStr(settings.name || 'me') % SKINS.length] : '#e9b98f'); },
+  model(key) {
+    if (key.startsWith('prop:')) { const pt = key.split(':'), def = PropTypes[pt[1]]; return def && def.inst ? new THREE.Mesh(PropArt.paperGeo(), PropArt.paperMat()) : def && def.model ? def.model() : PropArt.item(pt[2]); }
+    if (key === 'paper') return new THREE.Mesh(PropArt.paperGeo(), PropArt.paperMat());
+    return PropArt.item(key);
+  },
   setItem(v, key) {
-    if (v.item) v.hold.remove(v.item); v.item = null;
-    const sk = this.skin();
-    if (v.skin !== sk) { v.skin = sk; if (v.fistObj) v.fist.remove(v.fistObj); v.fistObj = PropArt.fist(sk); v.fist.add(v.fistObj); if (v.hand) v.hold.remove(v.hand); v.hand = PropArt.fist(sk); v.hand.position.set(0.015, -0.07, 0.03); v.hand.rotation.set(0.3, 0, 0.15); v.hold.add(v.hand); }
-    let m = null;
-    if (key.startsWith('prop:')) { const pt = key.split(':'), def = PropTypes[pt[1]]; m = def && def.inst ? new THREE.Mesh(PropArt.paperGeo(), PropArt.paperMat()) : def && def.model ? def.model() : PropArt.item(pt[2]); if (pt[1] === 'box') { m.scale.setScalar(0.6); m.position.set(-0.05, 0.02, -0.08); } }
-    else if (key === 'paper') m = new THREE.Mesh(PropArt.paperGeo(), PropArt.paperMat());
-    else m = PropArt.item(key);
-    m.position.y += 0.03; v.item = m; v.hold.add(m);
-    const nz = m.userData.nozzle; v.anchor.position.set(m.position.x, m.position.y + (nz ? nz.y : 0.06), m.position.z);
+    const sk = this.skin(), sh = settings.color || '#3b82f6';
+    if (v.skin !== sk + sh) {
+      v.skin = sk + sh; if (v.fistObj) v.fist.remove(v.fistObj); v.fistObj = PropArt.fist(sk, sh); v.fist.add(v.fistObj);
+      if (v.hand) v.hold.remove(v.hand); v.hand = PropArt.grip(sk, sh); v.hold.add(v.hand);
+    }
+    if (v.item) v.hold.remove(v.item);
+    const m = this.model(key), box = _vmBox.setFromObject(m), size = box.getSize(_pV), mx = Math.max(size.x, size.y, size.z);
+    const sc = mx > 0.16 ? 0.16 / mx : 1; m.scale.multiplyScalar(sc);
+    m.position.y = -box.min.y * sc - 0.045; m.position.x = -(box.min.x + box.max.x) / 2 * sc; m.position.z = -(box.min.z + box.max.z) / 2 * sc;
+    v.item = m; v.hold.add(m);
+    const top = m.position.y + box.max.y * sc, nz = m.userData.nozzle;
+    v.anchor.position.set(0, nz ? m.position.y + nz.y * sc : top, 0);
+    v.hand.position.set(0, 0, 0); v.hand.scale.setScalar(clamp(Math.max(size.x, size.z) * sc / 0.068, 0.9, 1.5));
   },
   update(dt, t) {
     const v = Props.vm || (Props.vm = this.build());
@@ -586,16 +607,16 @@ const VM = {
     Props.vmEquip = Math.min(1, (Props.vmEquip == null ? 1 : Props.vmEquip) + dt * 4); const eq = 1 - Math.pow(1 - Props.vmEquip, 3);
     Props.vmKick = Math.min(1, (Props.vmKick == null ? 1 : Props.vmKick) + dt * 3.5); const kk = Props.vmKick, kick = kk < 1 ? Math.sin(kk * Math.PI) : 0;
     const spraying = Props.useDown && ItemDefs[Props.useId] && ItemDefs[Props.useId].hold;
-    v.sway.position.set(0.3 + this.sx * 0.3 + Math.cos(bob) * 0.012 * sp, -0.3 - (1 - eq) * 0.35 + this.sy * 0.2 + Math.abs(Math.sin(bob)) * 0.02 * sp + (spraying ? Math.sin(t * 50) * 0.003 : 0), -0.55 + kick * -0.12);
-    v.sway.rotation.set(0.05 + kick * 0.9 + (spraying ? 0.35 : 0), -0.25 + this.sx, this.sx * 0.5);
+    v.sway.position.set(0.27 + this.sx * 0.3 + Math.cos(bob) * 0.012 * sp, -0.25 - (1 - eq) * 0.35 + this.sy * 0.2 + Math.abs(Math.sin(bob)) * 0.02 * sp + (spraying ? Math.sin(t * 50) * 0.003 : 0), -0.55 + kick * -0.12);
+    v.sway.rotation.set(0.12 + kick * 0.9 + (spraying ? -0.55 : 0), -0.35 + this.sx, 0.12 + this.sx * 0.5);
     v.hold.rotation.set(0, 0, 0);
     // punch / slap: the fist jabs in from the side
-    Props.vmPunch = Math.min(1, (Props.vmPunch == null ? 1 : Props.vmPunch) + dt * 3.6); const pp = Props.vmPunch;
+    Props.vmPunch = Math.min(1, (Props.vmPunch == null ? 1 : Props.vmPunch) + dt * 2.6); const pp = Props.vmPunch;
     v.fist.visible = pp < 1;
-    if (pp < 1) {
-      const e = pp < 0.3 ? pp / 0.3 : 1 - (pp - 0.3) / 0.7, s = e * e * (3 - 2 * e);
-      if (Props.vmSlap) { v.fist.position.set(0.35 - s * 0.55, -0.22 + s * 0.08, -0.5); v.fist.rotation.set(0, 0.5 - s, -1.2 + s * 0.6); }
-      else { v.fist.position.set(-0.22 + s * 0.16, -0.3 + s * 0.2, -0.35 - s * 0.35); v.fist.rotation.set(0.1, 0.25 - s * 0.25, 0); }
+    if (pp < 1) {   // quick jab out, short hold, slower pull back
+      const e = pp < 0.22 ? pp / 0.22 : pp < 0.45 ? 1 : 1 - (pp - 0.45) / 0.55, s = e * e * (3 - 2 * e);
+      if (Props.vmSlap) { v.fist.position.set(0.42 - s * 0.62, -0.3 + s * 0.16, -0.48 - s * 0.1); v.fist.rotation.set(0.2, 0.6 - s * 0.9, -1.3 + s * 0.5); }
+      else { v.fist.position.set(-0.3 + s * 0.22, -0.42 + s * 0.3, -0.3 - s * 0.36); v.fist.rotation.set(0.15 + s * 0.1, 0.3 - s * 0.3, 0.1); }
     }
   }
 };

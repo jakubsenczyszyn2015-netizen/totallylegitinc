@@ -25,10 +25,10 @@
 @media (max-width:900px),(max-height:560px){#keyhint{display:none}}
 
 /* the hotbar takes the bottom centre: lift the shift hint and the toasts above it */
-#hud-hint{bottom:6.6rem}
-body.hb-on #toasts{bottom:7rem}
+#hud-hint{bottom:7.6rem}
+body.hb-on #toasts{bottom:10rem}
 
 /* ---------- screen effects (FX.flash / FX.tint) ---------- */
-#fx-tint{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .45s;--tint:#ff2a1a;background:radial-gradient(ellipse at center,transparent 25%,var(--tint) 120%);mix-blend-mode:multiply}
-#fx-tint::after{content:'';position:absolute;inset:0;background:var(--tint);mix-blend-mode:color;opacity:.55}
+#fx-tint{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .45s;--tint:#ff5a2a;background:var(--tint);mix-blend-mode:multiply}
+#fx-tint::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(40,0,0,.45) 120%)}
 #fx-flash{position:fixed;inset:0;z-index:12;pointer-events:none;opacity:0;background:#fff}
