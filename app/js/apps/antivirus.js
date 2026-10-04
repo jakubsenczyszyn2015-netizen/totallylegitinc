@@ -110,14 +110,16 @@ const BugBuster = (() => {
     const sevs = s => h('span', { class: 'bb-sev s' + s }, h('i'), h('i'), h('i'));
     b.replaceChildren(
       h('div', { class: 'bb-banner' }, h('i', { html: OS.glyph('skull') }), h('div', {}, h('b', {}, found.length + ' threats found'), h('small', {}, pick(['Your computer is basically a petri dish.', 'Impressive. Most people need weeks to collect this many.', 'Have you been clicking free gifts?'])))),
-      h('div', { class: 'bb-list' }, found.map(t => h('label', { class: 'bb-t' }, h('input', { type: 'checkbox', checked: true }),
+      h('div', { class: 'bb-list' }, found.map(t => h('label', { class: 'bb-t' }, h('input', { type: 'checkbox', checked: true, onchange: e => { t.skip = !e.target.checked; } }),
         h('div', {}, h('b', {}, t.name, h('em', {}, t.type)), h('small', {}, t.desc), h('code', {}, t.path)), sevs(t.sev)))),
       h('div', { class: 'bb-btns' },
         h('button', { class: 'bb-ign', onclick: () => { toast('Ignoring threats. Bold strategy.'); view(w, 'home'); } }, 'Ignore'),
         h('button', { class: 'bb-q', onclick: () => quarantine(w) }, h('i', { html: OS.glyph('shield') }), 'Quarantine all')));
   }
   function quarantine(w) {
-    const found = w.found || [], n = found.length, pops = OS.clearPopups();
+    const found = (w.found || []).filter(t => !t.skip), n = found.length, storm = (w.found || []).find(t => t.pops);
+    if (!n) { toast('Nothing selected. The bugs thank you for your mercy.'); return; }
+    const pops = !storm || !storm.skip ? OS.clearPopups() : 0;
     const p = prog(); p.squashed += n; Game.saveProgress();
     until = now() + SHIELD; w.cleared = { n, pops }; w.found = null;
     SFX.pass(); Bus.emit('antivirus:clean', { threats: n, popups: pops });

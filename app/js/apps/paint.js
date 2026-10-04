@@ -11,7 +11,7 @@ const Paintings = (() => {
   function res() {
     if (R) return R;
     const wood = new THREE.MeshLambertMaterial({ color: '#5a3820' }), pine = new THREE.MeshLambertMaterial({ color: '#b07a42' });
-    R = { wood, pine, frame: new THREE.BoxGeometry(0.5, 0.385, 0.03), pic: new THREE.PlaneGeometry(0.46, 0.345), lip: new THREE.BoxGeometry(0.46, 0.022, 0.05),
+    R = { wood, pine, frame: new THREE.BoxGeometry(0.54, 0.415, 0.03), pic: new THREE.PlaneGeometry(0.5, 0.375),
       leg: new THREE.BoxGeometry(0.035, 1.5, 0.035), tray: new THREE.BoxGeometry(0.5, 0.03, 0.08) };
     return R;
   }
@@ -37,10 +37,10 @@ const Paintings = (() => {
     pic.position.z = 0.0155; art.add(fr, pic);
     if (d.desk >= 0 && W.desks[d.desk]) {
       const k = W.desks[d.desk]; grp.position.set(k.x, 0, k.z); grp.rotation.y = k.rot;
-      art.position.set(-0.63, 1.22, -0.428); art.rotation.z = ((hashStr(d.id) % 100) / 100 - 0.5) * 0.07;
+      art.position.set(-0.62, 1.25, -0.428);   // left of the monitor, clear of the side partition (inner face at x = -0.925) art.rotation.z = ((hashStr(d.id) % 100) / 100 - 0.5) * 0.07;
     } else {   // a little easel on the floor
       grp.position.set(d.pos[0], 0, d.pos[1]); grp.rotation.y = d.ry || 0;
-      art.position.set(0, 1.22, 0.02); art.rotation.x = -0.16;
+      art.position.set(0, 1.25, 0.02); art.rotation.x = -0.16;
       const tray = new THREE.Mesh(r.tray, r.pine); tray.position.set(0, 1.035, 0.07); tray.rotation.x = -0.16;
       const l1 = new THREE.Mesh(r.leg, r.pine), l2 = new THREE.Mesh(r.leg, r.pine), l3 = new THREE.Mesh(r.leg, r.pine);
       l1.position.set(-0.2, 0.74, 0.06); l1.rotation.set(-0.12, 0, -0.1); l2.position.set(0.2, 0.74, 0.06); l2.rotation.set(-0.12, 0, 0.1);

@@ -108,7 +108,7 @@ module.exports = async page => {
       const at = (x, y, z) => [d.x + x * c + z * s, y, d.z - x * s + z * c];
       T.W.camOverride = { pos: at(mx + 0.2, 1.62, 2.15), look: at(mx, 1.12, -0.43) };
       T.P.third = true; T.P.pos.x = 15; T.P.pos.z = 6;
-      ['hotbar', 'keyhint'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = 'hidden'; });
+      ['hotbar', 'keyhint', 'hud-hint', 'crosshair'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = 'hidden'; });
       return { nb: nb ? nb.i : -1, lx };
     }, r1.seat);
     await frames(5);
@@ -118,13 +118,14 @@ module.exports = async page => {
       const T = window.__tli; T.P.pos.x = 3.9; T.P.pos.z = 0; T.P.yaw = Math.PI / 2; T.P.pitch = 0;
       Paintings.hang(DoodlePro.jpeg(320, 0.8), { desk: -1, name: 'Easel Test', title: 'Sunset (abstract)' });
       const e = [...Paintings.list.values()].pop().data.pos;
-      T.W.camOverride = { pos: [e[0] + 1.25, 1.55, e[1] + 1.05], look: [e[0], 1.0, e[1]] }; return e;
+      T.P.pos.x = e[0] + 0.3; T.P.pos.z = e[1] + 0.8; T.P.yaw = -Math.PI / 2 - 0.5;   // the artist poses next to the easel
+      T.W.camOverride = { pos: [e[0] + 1.9, 1.6, e[1] + 0.75], look: [e[0], 1.05, e[1] + 0.35] }; return e;
     });
     await frames(5);
     const r3 = await page.eval(() => Paintings.list.size);
     ok(r3 === 3, 'easel + remote painting added: ' + r3);
     await page.shot('paint-04-easel');
-    await page.eval(() => { const T = window.__tli; T.W.camOverride = null; T.P.third = false; ['hotbar', 'keyhint'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = ''; }); return true; });
+    await page.eval(() => { const T = window.__tli; T.W.camOverride = null; T.P.third = false; ['hotbar', 'keyhint', 'hud-hint', 'crosshair'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = ''; }); return true; });
     await desk(r1.seat);
   }
 

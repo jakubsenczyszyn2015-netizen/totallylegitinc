@@ -157,6 +157,7 @@
 .bb-t b em{font-style:normal;font-size:.62rem;font-weight:900;color:#0e1b2c;background:#ffb347;padding:.08rem .4rem;border-radius:4px;text-transform:uppercase;letter-spacing:.05em}
 .bb-t small{display:block;font-size:.76rem;color:#c9d6e6;margin-top:.05rem}
 .bb-t code{display:block;font:400 .66rem ui-monospace,Consolas,monospace;color:#7083a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.1rem}
+.bb-t:has(input:not(:checked)){opacity:.45}
 .bb-sev{display:flex;gap:2px;flex:none}
 .bb-sev i{width:.4rem;height:1rem;border-radius:2px;background:rgba(255,255,255,.12)}
 .bb-sev.s1 i:nth-child(-n+1),.bb-sev.s2 i:nth-child(-n+2){background:#ffb347}
