@@ -135,7 +135,7 @@ const PropTypes = {
 const Props = {
   bodies: [], byId: new Map(), seq: 0, ver: 1, acc: 0, H: 1 / 120, MAX: 70,
   carry: null, sel: 0, slots: ['paper'], useDown: false, useT: 0, throwT: 0, punchT: 0, punchN: 0, sodaLeft: 0, _own: false,
-  inst: null, vm: null, held: new Map(), cushions: [], _targets: [], _lastShared: -1,
+  inst: null, vm: null, held: new Map(), cushions: [], _targets: [], _lastShared: -1, _taken: new Map(),
 
   newId() { return (Net.active ? String(Net.myId).slice(-4) : 'l') + '.' + (++this.seq).toString(36); },
   /* spawn a body. type: key of PropTypes. o/v: [x,y,z]. opts: {id, item, local, rest, spin, owner, ry} */
@@ -267,15 +267,21 @@ const Props = {
   /* host: the resting props, for late joiners and drift correction */
   shared() {
     const l = []; for (const b of this.bodies) if (b.rest && l.length < 60) { _pE.setFromQuaternion(b.m.quaternion, 'YXZ'); l.push([b.id, b.type, +b.pos.x.toFixed(2), +b.pos.y.toFixed(3), +b.pos.z.toFixed(2), +_pE.y.toFixed(2), b.item || 0]); }
-    return { v: this.ver, l };
+    return { v: this.ver, l, c: this.cushions.slice(0, 20).map(c => [c.id, +c.x.toFixed(2), +c.y.toFixed(2), +c.z.toFixed(2), c.desk]) };
   },
   applyShared(s) {
     if (!s || Net.isHost || s.v === this._lastShared || !Array.isArray(s.l)) return; this._lastShared = s.v;
-    const seen = new Set();
+    if (Array.isArray(s.c)) {   // whoopee cushions (late joiners)
+      const ids = new Set(s.c.map(c => String(c[0])));
+      for (const c of s.c) if (Array.isArray(c) && !this._taken.has(String(c[0]))) Cushions.add(String(c[0]), +c[1], +c[2], +c[3], c[4] == null ? -1 : c[4] | 0);
+      for (const c of [...this.cushions]) if (!ids.has(c.id) && W.t - c.t > 3) { W.scene.remove(c.m); this.cushions.splice(this.cushions.indexOf(c), 1); }
+    }
+    const seen = new Set(), tnow = now();
+    for (const [id, t] of this._taken) if (tnow - t > 4) this._taken.delete(id);
     for (const e of s.l) {
       if (!Array.isArray(e)) continue; const id = String(e[0]); seen.add(id); const b = this.byId.get(id);
       if (b) { if (b.rest && Math.hypot(b.pos.x - e[2], b.pos.z - e[4]) > 0.25) b.pos.set(e[2], e[3], e[4]); continue; }
-      if (this.carry && this.carry.id === id) continue;
+      if ((this.carry && this.carry.id === id) || this._taken.has(id)) continue;   // I just picked it up
       if (!PropTypes[e[1]]) continue;
       const nb = this.spawn(e[1], [e[2], e[3], e[4]], [0, 0, 0], { id, item: e[6] || null, rest: true, ry: e[5] });
       if (nb && !nb.def.inst) nb.m.rotation.set(0, e[5] || 0, 0);
@@ -286,7 +292,7 @@ const Props = {
   /* ----- picking up, carrying, throwing ----- */
   pickup(b) {
     if (!b || !Game.canControl() || this.carry) return;
-    this.remove(b); Net.emit('prop:take', { id: b.id }); SFX.click();
+    this.remove(b); this._taken.set(b.id, now()); Net.emit('prop:take', { id: b.id }); SFX.click();
     if (b.item && ItemDefs[b.item]) { Inv.give(b.item); const k = this.slots.indexOf(b.item); if (k >= 0) this.select(k); toast('Picked up: ' + ItemDefs[b.item].name, 'good'); return; }
     this.carry = { type: b.type, id: b.id, item: b.item }; this.vmKick = 0; this.refreshHeld();
   },
@@ -392,7 +398,13 @@ const Props = {
   }
 };
 const _vmBox = new THREE.Box3(), _pQ = new THREE.Quaternion(), _pAx = new THREE.Vector3(), _pE = new THREE.Euler(), _pHand = new THREE.Vector3(), _pAim = new THREE.Vector3(), _pEye = new THREE.Vector3(), _pV = new THREE.Vector3();
-function aimDir() { const cp = Math.cos(P.pitch); return _pAim.set(-Math.sin(P.yaw) * cp, Math.sin(P.pitch), -Math.cos(P.yaw) * cp); }
+function aimDir() {
+  const cp = Math.cos(P.pitch), fx = -Math.sin(P.yaw) * cp, fy = Math.sin(P.pitch), fz = -Math.cos(P.yaw) * cp;
+  if (!P.third || !W.camera) return _pAim.set(fx, fy, fz);
+  // third person: from the hand towards the point under the crosshair
+  const c = W.camera.position, d = Math.min(25, Space.ray(c.x, c.y, c.z, fx, fy, fz, 25, 0)), hp = Props.handPos();
+  return _pAim.set(c.x + fx * d - hp.x, c.y + fy * d - hp.y, c.z + fz * d - hp.z).normalize();
+}
 function eyePos() { return _pEye.set(P.pos.x, P.pos.y + P.eye, P.pos.z); }
 
 /* ---------- reactions ---------- */
@@ -430,7 +442,8 @@ function onHitMsg(m, from, mine) {
     if (!seated) { P.kx = (+d[0] || 0) * f; P.kz = (+d[1] || 0) * f; P.vy = Math.max(P.vy, 2.8); P.stunT = s; }
     if (W.me && W.me.stun) W.me.stun(s); if (W.me && W.me.play) W.me.play('hit');
     FX.shake(seated ? 0.4 : 0.7, 0.35); FX.flash('#ffffff', 0.18, 0.35); (m.sl ? SFX.slap : SFX.punch)();
-    FX.spawn('stars', [P.pos.x, P.pos.y + (seated ? 1.25 : 1.75), P.pos.z], { n: 0, orbit: s + 0.4, scale: 0.7 });
+    const sp = seated && W.me ? W.me.group.position : P.pos;
+    FX.spawn('stars', [sp.x, sp.y + (seated ? 1.45 : 1.75), sp.z], { n: 0, orbit: s + 0.4, scale: 0.7 });
     toast(pick(['Ow! Seeing stars.', 'You got bonked.', 'That will leave a mark.', 'Workplace incident logged.']), 'bad');
     return;
   }
@@ -455,17 +468,17 @@ Net.on('prop:throw', d => {
 });
 Net.on('prop:take', d => { if (d && d.id) Props.remove(Props.byId.get(String(d.id))); });
 Net.share('props', () => Props.shared(), s => Props.applyShared(s));
-Net.addMe('held', () => { const id = Props.heldId(); return id === 'paper' ? null : { i: id, u: Props.useDown ? 1 : 0, p: +P.pitch.toFixed(2) }; });
+Net.addMe('held', () => { const id = Props.heldId(); return id === 'paper' || P.seated || P.review >= 0 ? null : { i: id, u: Props.useDown ? 1 : 0, p: +P.pitch.toFixed(2) }; });
 
 /* ---------- whoopee cushions ---------- */
 const Cushions = {
   add(id, x, y, z, desk) {
     if (Props.cushions.find(c => c.id === id)) return;
     const m = PropArt.cushion(); m.position.set(x, y + 0.03, z); m.rotation.y = rand(6); W.scene.add(m);
-    Props.cushions.push({ id, x, y, z, desk: desk == null ? -1 : desk, m, t: W.t });
+    Props.cushions.push({ id, x, y, z, desk: desk == null ? -1 : desk, m, t: W.t }); Props.ver++;
   },
   pop(id, who) {
-    const i = Props.cushions.findIndex(c => c.id === id); if (i < 0) return; const c = Props.cushions[i]; Props.cushions.splice(i, 1); W.scene.remove(c.m);
+    Props._taken.set(id, now()); const i = Props.cushions.findIndex(c => c.id === id); if (i < 0) return; const c = Props.cushions[i]; Props.cushions.splice(i, 1); W.scene.remove(c.m); Props.ver++;
     _pV.set(c.x, c.y + 0.1, c.z); SFX.whoopee(_pV);
     FX.spawn('fart', [c.x, c.y + 0.1, c.z], { dir: [0, 0.3, 0], scale: 0.55, sound: false, prank: 1 }); FX.spawn('confetti', [c.x, c.y + 0.2, c.z], { n: 14, dir: [0, 1, 0], scale: 0.6, sound: false });
     const av = who === 'me' || who === Net.myId ? null : (typeof who === 'number' ? npcAv(who) : avatarOf(who));
