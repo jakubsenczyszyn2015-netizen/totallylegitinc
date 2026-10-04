@@ -2,3 +2,4 @@ node_modules/
 dist/
 app/vendor/
 *.zip
+tools/out/

@@ -1,0 +1,31 @@
+/* PERFORMANCE REVIEW + end screens */
+/* ---------- review ---------- */
+#review{position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;justify-content:center;padding:1rem;background:linear-gradient(0deg,rgba(10,13,22,.85),rgba(10,13,22,0) 70%);pointer-events:none}
+.rv{pointer-events:auto;width:min(46rem,100%);background:var(--manila);color:var(--manila-ink);border:3px solid var(--ink);border-radius:14px;box-shadow:8px 8px 0 rgba(0,0,0,.5);padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.6rem;position:relative}
+.rv h2{font-family:var(--font-d);font-weight:400;font-size:1.5rem}
+.rv .lines p{margin:.25rem 0;font-size:1.05rem;line-height:1.35;font-weight:700}
+.rv .lines p::before{content:"“"} .rv .lines p::after{content:"”"}
+.rv table{width:100%;border-collapse:collapse}
+.rv td{padding:.2rem .3rem;border-bottom:1.5px dashed var(--manila-edge);font-weight:700}
+.rv td:last-child{text-align:right}
+.rv .verdict{position:absolute;right:1.2rem;top:.8rem;font-family:var(--font-d);font-size:2rem;border:4px solid;border-radius:8px;padding:0 .4em;transform:rotate(8deg) scale(0);transition:transform .25s cubic-bezier(.3,1.6,.5,1)}
+.rv .verdict.on{transform:rotate(8deg) scale(1)}
+.rv .verdict.pass{color:#0d8a52}.rv .verdict.fail{color:var(--red)}
+.rv .btn{color:var(--text)} .rv .btn.primary{color:var(--ink)}
+
+@media (max-width:640px){
+  .cards{grid-template-columns:1fr}
+  #hud-hint{white-space:normal;text-align:center;width:90vw}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+.formbox{display:flex;flex-direction:column;gap:.5rem;border:2px solid var(--ink);border-radius:10px;padding:.6rem;background:#fff}
+.formbox label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem;font-weight:800}
+.formbox input:disabled{background:#d8f6e6;color:#0b6b40}
+
+.upg{display:flex;gap:.6rem;align-items:center;border:2px solid var(--ink);border-radius:10px;padding:.5rem .6rem;background:#fff}
+.upg i{font-style:normal;font-size:1.6rem}
+.upg .pips{letter-spacing:.12em;color:#9333ea}
+.upg p{font-size:.82rem}

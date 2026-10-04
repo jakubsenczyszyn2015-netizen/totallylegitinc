@@ -1,0 +1,39 @@
+/* DESKTOP OS shell — windows, taskbar, icons, popups */
+/* ---------- desktop OS ---------- */
+#os{position:fixed;inset:0;z-index:10;background:#f3a25c;color:var(--ink);overflow:hidden;animation:osin .25s ease-out}
+@keyframes osin{from{opacity:0;transform:scale(1.03)}to{opacity:1;transform:none}}
+#os-wall{position:absolute;inset:0 0 3.6rem 0}
+#os-wall svg{width:100%;height:100%;display:block}
+#os-icons{position:absolute;inset:.8rem .8rem 4.4rem .8rem;display:flex;flex-direction:column;flex-wrap:wrap;align-content:flex-start;gap:.5rem .6rem}
+.icon{width:5.6rem;display:flex;flex-direction:column;align-items:center;gap:.25rem;background:none;border:2px solid transparent;border-radius:10px;padding:.35rem .2rem;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.8),0 0 6px rgba(0,0,0,.5);font-weight:700;font-size:.78rem;line-height:1.1;text-align:center}
+.icon:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5)}
+.icon i{width:3rem;height:3rem;border-radius:12px;border:2.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:1.55rem;box-shadow:0 3px 0 var(--ink);text-shadow:none}
+#os-wins{position:absolute;inset:0 0 3.6rem 0;pointer-events:none}
+.win{position:absolute;display:flex;flex-direction:column;background:var(--paper);border:3px solid var(--ink);border-radius:12px;box-shadow:6px 6px 0 rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-width:14rem;max-width:calc(100vw - 8px);max-height:calc(100vh - 3.6rem - 44px)}
+.win.min{display:none}
+.win .tb{display:flex;align-items:center;gap:.5rem;padding:.35rem .4rem .35rem .7rem;font-weight:800;color:#fff;cursor:grab;user-select:none;border-bottom:3px solid var(--ink);touch-action:none}
+.win .tb .t{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 0 rgba(0,0,0,.35)}
+.win .tb button{width:1.7rem;height:1.5rem;border:2px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);font-weight:800;line-height:1;display:grid;place-items:center;padding:0}
+.win .tb button.x{background:#ff6a61}
+.win .wb{flex:1;overflow:auto;padding:.8rem;display:flex;flex-direction:column;gap:.6rem;min-height:0}
+.win .btn{color:var(--text)} .win .btn.primary,.win .btn.good{color:var(--ink)}
+.win h3{font-size:1.1rem;font-weight:800}
+.win p{line-height:1.4}
+.win .muted{color:#6b6453;font-size:.88rem}
+.win .inp{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+#taskbar{position:absolute;left:0;right:0;bottom:0;height:3.6rem;background:var(--ink);display:flex;align-items:center;gap:.4rem;padding:0 .6rem;color:var(--text)}
+#taskbar .tbtn{width:2.6rem;height:2.6rem;border-radius:10px;border:2px solid #000;display:grid;place-items:center;font-size:1.25rem;background:var(--navy2);position:relative}
+#taskbar .tbtn.open::after{content:"";position:absolute;bottom:-5px;left:25%;right:25%;height:3px;border-radius:2px;background:var(--yellow)}
+#taskbar .tbtn.alert{animation:pulse .6s infinite alternate}
+@keyframes pulse{to{background:var(--green)}}
+#tb-power{background:var(--red)!important;color:#fff}
+#tb-run{display:flex;gap:.35rem;overflow:hidden;flex:1;min-width:0}
+#tb-stats{margin-left:auto;text-align:right;font-weight:800;font-size:.82rem;line-height:1.25;white-space:nowrap}
+#tb-stats .g{color:var(--green)} #tb-stats .q{color:var(--yellow)} #tb-stats .r{color:#ff8b84}
+#tb-clock{text-align:center;font-weight:700;font-size:.9rem;line-height:1.25;padding:0 .6rem;border-left:2px solid var(--navy3);white-space:nowrap}
+#powermenu{position:absolute;left:.6rem;bottom:4rem;background:var(--navy);border:3px solid var(--ink);border-radius:12px;padding:.5rem;display:flex;flex-direction:column;gap:.4rem;z-index:9000;box-shadow:5px 5px 0 rgba(0,0,0,.4);min-width:13rem}
+#powermenu .btn{justify-content:flex-start}
+#os-fx{position:absolute;inset:0;pointer-events:none;z-index:9500;display:grid;place-items:center}
+.cashfx{font-family:var(--font-d);font-size:clamp(4rem,16vw,11rem);color:#2bff7a;text-shadow:6px 6px 0 var(--ink),-2px -2px 0 var(--ink),2px -2px 0 var(--ink),-2px 2px 0 var(--ink);animation:cash 1.7s ease-out forwards}
+.cashfx.bad{color:#ff5148}
+@keyframes cash{0%{transform:scale(.3) rotate(-8deg);opacity:0}15%{transform:scale(1.15) rotate(-5deg);opacity:1}70%{transform:scale(1) rotate(-5deg);opacity:1}100%{transform:scale(1.05) translateY(-40px) rotate(-5deg);opacity:0}}

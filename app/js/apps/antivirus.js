@@ -1,0 +1,2 @@
+'use strict';
+/* ANTIVIRUS app. */
