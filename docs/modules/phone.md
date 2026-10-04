@@ -53,7 +53,7 @@ asks for the customer PIN, which sits in one of `caller.files` (there is also a 
 `scientist` (Dr., goggles), `regular` (random look). Each type maps to a persona and adds a nickname pool,
 greeting lines, quirks with their own lines, a voice tweak, a look and a file for their desktop.
 
-Caller fields: `first`, `last`, `name` (`first last`, unchanged), `nick`, `title`, **`full`** (`COMMANDER MILES "ORBIT" VEGA`
+Caller fields: `first`, `last`, `name` (`first last`, unchanged), `nick`, `title`, **`full`** (`COMMANDER ROSA "MOONBOOTS" VALDEZ`
 style, use it for display), `type`, `typeLabel`, `about`, `persona` (`PERSONAS` entry; new persona `dramatic`),
 `L` (persona lines merged with the type's), `quirk`, `quirkL`, `pet` (`{name, kind}`), `age`, `baiter`, `pitch`, `rate`,
 `seed`, `files` (`{n, c, kind: 'txt'|'img'|'xls'|'dir'}`), `pin`, `nosy`, the form details (`card exp cvc gift giftpin acct

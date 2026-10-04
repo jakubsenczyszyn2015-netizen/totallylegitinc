@@ -221,7 +221,7 @@ const SCHEMES = [
 const schemeById = id => SCHEMES.find(s => s.id === id);
 
 const FIRST = ['Dorothy', 'Walter', 'Agnes', 'Raymond', 'Mildred', 'Stanley', 'Priya', 'Kenji', 'Olga', 'Tomasz', 'Fatima', 'Luis', 'Ingrid', 'Darnell', 'Mei', 'Henrik', 'Zofia', 'Marcus', 'Yusuf', 'Bernadette', 'Chidi', 'Siobhan', 'Arjun', 'Gwen', 'Pablo', 'Noor', 'Clive', 'Harriet', 'Otis', 'Beatrix'];
-const LAST = ['Mayfield', 'Pruitt', 'Okafor', 'Lindqvist', 'Nowak', 'Tanaka', 'Haddad', 'Fernandez', 'Bloom', 'Castellano', 'Whitlock', 'Abernathy', 'Kowalski', 'Singh', 'Grimsby', 'Delacroix', 'Petrov', 'Oyelaran', 'Hargreaves', 'Yamamoto', 'Finch', 'Murphy', 'Sandoval', 'Brandt', 'Achebe', 'Thistlewood', 'Vega', 'Summers', 'Puddlesworth', 'Quill', 'Marchetti', 'Osei'];
+const LAST = ['Maplethorpe', 'Pruitt', 'Okafor', 'Lindqvist', 'Nowak', 'Tanaka', 'Haddad', 'Fernandez', 'Bloom', 'Castellano', 'Whitlock', 'Abernathy', 'Kowalski', 'Singh', 'Grimsby', 'Delacroix', 'Petrov', 'Oyelaran', 'Hargreaves', 'Yamamoto', 'Finch', 'Murphy', 'Sandoval', 'Brandt', 'Achebe', 'Thistlewood', 'Valdez', 'Featherstone', 'Puddlesworth', 'Quill', 'Marchetti', 'Osei'];
 const QUIRKS = ['keeps mentioning their cat', 'is eating something crunchy', 'has a very loud bird in the background', 'thinks every company is "the internet people"', 'is watching a quiz show and occasionally shouts answers', 'calls everyone "chief"', 'is convinced they have won something', 'keeps putting you on speaker for their spouse', 'is in the bath', 'collects decorative spoons and brings it up'];
 
 const PERSONAS = [
@@ -337,7 +337,7 @@ const PET_MID = ['Bartholomew', 'Fluffington', 'Archibald', 'Jellybean', 'Montgo
 const NICKS = ['Sunshine', 'Two Phones', 'Coupon', 'Mumbles', 'Nine Lives', 'Small Print', 'Snooze Button', 'Lucky Socks', 'Big Spender', 'Hold Music'];
 const CALLER_TYPES = [
   { id: 'granny', label: 'Wizard granny', persona: 'sweet', age: [74, 92], hat: 'wizard',
-    first: ['Mildred', 'Dorothy', 'Agnes', 'Edna', 'Gertrude', 'Bernadette', 'Harriet', 'Beatrix', 'Marjorie', 'Zofia', 'Olga', 'Eleanor'],
+    first: ['Mildred', 'Dorothy', 'Agnes', 'Edna', 'Gertrude', 'Bernadette', 'Harriet', 'Beatrix', 'Marjorie', 'Zofia', 'Olga', 'Winifred'],
     nick: ['Motor Mouth', 'Biscuits', 'Nana Turbo', 'Hocus Pocus', 'Bingo Queen'],
     hair: ['puffs'], hairCol: GREYS, glasses: ['round', 'round', 'none'], beard: ['none'], wrinkles: 1, lashes: 1, outfit: 'cardigan', colors: ['#8e5bd1', '#d0507a', '#3f8f7a', '#4f6fd0'], pearls: 1, face: ['round', 'oval', 'heart'],
     about: 'a sweet grandmother who wears a sparkly wizard hat "for luck" and plays online bingo every night',
@@ -346,8 +346,8 @@ const CALLER_TYPES = [
     L: { greet: ['Oh hello, dear! I put my lucky hat on for this call.', 'Hello? Is this the nice young person from the leaflet? I have my reading glasses on.'] },
     pitch: 0.2, rate: -0.05, file: { n: 'bingo_numbers.txt', c: 'Lucky numbers:\n7, 14, 22, 49\nNEVER play 13' } },
   { id: 'astro', label: 'Retired astronaut', persona: 'auditor', age: [56, 79], hat: 'helmet', title: 'Commander',
-    first: ['Miles', 'Rosa', 'Dmitri', 'Grace', 'Hank', 'Leona', 'Tobias', 'Ama', 'Bruno', 'Ingrid'],
-    nick: ['Orbit', 'Moonboots', 'Countdown', 'Zero-G', 'Liftoff'],
+    first: ['Buzz', 'Rosa', 'Dmitri', 'Grace', 'Hank', 'Leona', 'Tobias', 'Ama', 'Bruno', 'Ingrid'],
+    nick: ['Rocket', 'Moonboots', 'Countdown', 'Zero-G', 'Liftoff'],
     hair: ['buzz', 'short', 'bald'], beard: ['none', 'none', 'stache'], outfit: 'suit', colors: ['#eef1f5'], face: ['oval', 'square', 'round'],
     about: 'a retired astronaut who still wears the space helmet at home and does everything strictly "by the book"',
     quirks: [{ q: 'counts down from five before answering big questions', L: ['Five, four, three, two, one... Affirmative.', 'Countdown initiated. Three, two, one. Proceed.'] },
@@ -364,8 +364,8 @@ const CALLER_TYPES = [
     L: { greet: ['Yo, my guy. Talk fast, the market is moving.', 'Sup. Is this about an opportunity? I only take opportunity calls.'] },
     pitch: 0, file: { n: 'moon_plan.txt', c: 'step 1: buy DuckCoin\nstep 2: ???\nstep 3: yacht' } },
   { id: 'influencer', label: 'Influencer', persona: 'dramatic', age: [19, 31], ringlight: 1,
-    first: ['Brittany', 'Kayla', 'Jade', 'Priya', 'Zara', 'Luna', 'Amara', 'Sienna', 'Mei', 'Alexis'],
-    nick: ['Lexi', 'Viral', 'Hashtag', 'Selfie', 'Like & Subscribe'],
+    first: ['Kendall', 'Kayla', 'Jade', 'Priya', 'Zara', 'Luna', 'Amara', 'Sienna', 'Mei', 'Alexis'],
+    nick: ['Trending', 'Viral', 'Hashtag', 'Selfie', 'Like & Subscribe'],
     hair: ['wavy', 'long', 'pony'], earrings: 1, lashes: 1, lips: ['#e0457b', '#c2185b', '#ff6f91', '#b5413f'], outfit: 'blouse', colors: ['#ffb3c7', '#b8e1ff', '#ffe08a', '#c9b6ff'], beard: ['none'], face: ['heart', 'oval'],
     about: 'an influencer filming this call "for content" under a ring light',
     quirks: [{ q: 'asks you to say things again "for the video"', L: ['Wait, say that again but for the video?', 'Ooh, that was a good clip. Keep going.'] },
