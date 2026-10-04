@@ -96,26 +96,35 @@ module.exports = async page => {
     ok(r2.n === 1 && r2.mesh && r2.desk === r1.seat, 'painting hung on the desk partition: ' + JSON.stringify(r2));
     await page.shot('paint-02-hung-btn');
     await clean();
-    // look at it in the office
+    // look at it in the office: a neighbour's painting arrives over the network, then a camera in the aisle
+    // (third person + far-away player so the first-person hand and the HUD stay out of the shot)
     await page.stand();
-    await page.eval(seat => {
-      const T = window.__tli, d = T.W.desks[seat], s = Math.sin(d.rot), c = Math.cos(d.rot);
-      const at = (lx, ly, lz) => [d.x + lx * Math.cos(d.rot) + lz * Math.sin(d.rot), ly, d.z - lx * Math.sin(d.rot) + lz * Math.cos(d.rot)];
-      T.W.camOverride = { pos: at(-0.25, 1.45, 0.75), look: at(-0.55, 1.15, -0.45) }; return [s, c];
+    const view = await page.eval(seat => {
+      const T = window.__tli, d = T.W.desks[seat], c = Math.cos(d.rot), s = Math.sin(d.rot);
+      const loc = (wx, wz) => [(wx - d.x) * c - (wz - d.z) * s, (wx - d.x) * s + (wz - d.z) * c];
+      const nb = T.W.desks.find(k => k !== d && !k.npc && Math.abs(k.rot - d.rot) < 0.01 && Math.abs(loc(k.x, k.z)[1]) < 0.1 && Math.abs(Math.abs(loc(k.x, k.z)[0]) - 1.9) < 0.3);
+      T.Net.handlers.get('paint:hang')({ id: 'p2:x', img: DoodlePro.jpeg(320, 0.8), name: 'Kim', title: 'Self portrait', desk: nb ? nb.i : seat + 1 }, 'p2');
+      const lx = nb ? loc(nb.x, nb.z)[0] : 0, mx = lx / 2 - 0.63;
+      const at = (x, y, z) => [d.x + x * c + z * s, y, d.z - x * s + z * c];
+      T.W.camOverride = { pos: at(mx + 0.2, 1.62, 2.15), look: at(mx, 1.12, -0.43) };
+      T.P.third = true; T.P.pos.x = 15; T.P.pos.z = 6;
+      ['hotbar', 'keyhint'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = 'hidden'; });
+      return { nb: nb ? nb.i : -1, lx };
     }, r1.seat);
-    await frames(4);
+    await frames(5);
     await page.shot('paint-03-office');
-    // a remote player's painting arrives over the network + an easel in front of us
-    await page.eval(seat => {
-      const T = window.__tli, d = T.W.desks[seat];
-      T.W.camOverride = null; T.P.pos.x = d.stand.x; T.P.pos.z = d.stand.z + 0.0; T.P.yaw = d.rot + Math.PI; T.P.pitch = -0.12;
-      const img = DoodlePro.jpeg(160, 0.7); Paintings.hang(img, { desk: -1, name: 'Easel Test' });
-      T.Net.handlers.get('paint:hang')({ id: 'p2:x', img, name: 'Kim', desk: seat + 1 }, 'p2'); return true;
-    }, r1.seat);
-    await frames(4);
+    // an easel in front of a player standing in the cross aisle, seen from the side
+    await page.eval(() => {
+      const T = window.__tli; T.P.pos.x = 3.9; T.P.pos.z = 0; T.P.yaw = Math.PI / 2; T.P.pitch = 0;
+      Paintings.hang(DoodlePro.jpeg(320, 0.8), { desk: -1, name: 'Easel Test', title: 'Sunset (abstract)' });
+      const e = [...Paintings.list.values()].pop().data.pos;
+      T.W.camOverride = { pos: [e[0] + 1.25, 1.55, e[1] + 1.05], look: [e[0], 1.0, e[1]] }; return e;
+    });
+    await frames(5);
     const r3 = await page.eval(() => Paintings.list.size);
     ok(r3 === 3, 'easel + remote painting added: ' + r3);
     await page.shot('paint-04-easel');
+    await page.eval(() => { const T = window.__tli; T.W.camOverride = null; T.P.third = false; ['hotbar', 'keyhint'].forEach(id => { const e = document.getElementById(id); if (e) e.style.visibility = ''; }); return true; });
     await desk(r1.seat);
   }
 
@@ -144,6 +153,8 @@ module.exports = async page => {
     ok(r0.shop && !r0.avail, 'BugBuster is a locked shop item: ' + JSON.stringify(r0));
     await page.eval(() => { const T = window.__tli; T.Shop.get('app_antivirus').buy(); T.OS.virus(3); return true; });
     await page.wait(1300);
+    // keep the storm on the left so the BugBuster window stays readable in the shots
+    await page.eval(() => { document.querySelectorAll('#os-wins .popup').forEach((p, i) => { p.style.left = (120 + i * 70) + 'px'; p.style.top = (60 + i * 120) + 'px'; }); return true; });
     await page.eval(() => { window.__tli.OS.launch('antivirus', true); return true; });
     await page.wait(400);
     await page.shot('av-01-risk');

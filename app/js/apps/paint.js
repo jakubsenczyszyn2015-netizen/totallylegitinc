@@ -16,20 +16,23 @@ const Paintings = (() => {
     return R;
   }
   /* picture texture: cream mat, the painting, a little brass plaque with the artist's name */
-  function compose(img, name) {
+  function compose(img, name, title) {
     const c = document.createElement('canvas'); c.width = 320; c.height = 240; const g = c.getContext('2d');
     g.fillStyle = '#f3eee2'; g.fillRect(0, 0, 320, 240);
     g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(13, 12, 296, 186);
     g.drawImage(img, 14, 12, 292, 182);
     g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1; g.strokeRect(14.5, 12.5, 291, 181);
-    const t = String(name || 'Anonymous').slice(0, 20), pw = Math.min(200, 60 + t.length * 7.2), gr = g.createLinearGradient(0, 205, 0, 229);
+    const by = 'by ' + (String(name || '').slice(0, 20) || 'Anonymous'), tt = String(title || '').trim().slice(0, 28), t = tt ? '\u201c' + tt + '\u201d ' + by : by;
+    let fs = 13; g.font = '700 ' + fs + 'px Roboto, Arial, sans-serif';
+    while (fs > 9 && g.measureText(t).width > 250) g.font = '700 ' + (--fs) + 'px Roboto, Arial, sans-serif';
+    const pw = Math.min(270, g.measureText(t).width + 26), gr = g.createLinearGradient(0, 205, 0, 229);
     gr.addColorStop(0, '#f1d27a'); gr.addColorStop(0.5, '#c9a24a'); gr.addColorStop(1, '#9c7a2c');
     g.fillStyle = gr; g.beginPath(); g.roundRect ? g.roundRect(160 - pw / 2, 205, pw, 24, 4) : g.rect(160 - pw / 2, 205, pw, 24); g.fill();
-    g.fillStyle = '#3a2a10'; g.font = '700 13px Roboto, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('by ' + t, 160, 217.5);
+    g.fillStyle = '#3a2a10'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, 160, 217.5);
     const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 4; return tex;
   }
   function build(d, tex) {
-    const r = res(), grp = new THREE.Group(), mat = new THREE.MeshLambertMaterial({ map: tex, emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.22 });
+    const r = res(), grp = new THREE.Group(), mat = new THREE.MeshLambertMaterial({ map: tex, color: '#ececec', emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: 0.12 });
     const art = new THREE.Group(), fr = new THREE.Mesh(r.frame, r.wood), pic = new THREE.Mesh(r.pic, mat);
     pic.position.z = 0.0155; art.add(fr, pic);
     if (d.desk >= 0 && W.desks[d.desk]) {
@@ -56,7 +59,7 @@ const Paintings = (() => {
   }
   function add(d) {
     if (!valid(d) || list.has(d.id)) return;
-    d = { id: d.id, img: d.img, name: String(d.name || '').slice(0, 20), desk: Number.isInteger(d.desk) ? d.desk : -1, pos: d.pos, ry: +d.ry || 0, by: d.by };
+    d = { id: d.id, img: d.img, name: String(d.name || '').slice(0, 20), title: String(d.title || '').slice(0, 28), desk: Number.isInteger(d.desk) ? d.desk : -1, pos: d.pos, ry: +d.ry || 0, by: d.by };
     d.key = d.desk >= 0 ? 'desk' + d.desk : d.id;
     for (const [id, p] of list) if (p.data.key === d.key) remove(id);   // one painting per desk: the new one replaces it
     while (list.size >= MAX) remove(list.keys().next().value);
@@ -64,7 +67,7 @@ const Paintings = (() => {
     const img = new Image();
     img.onload = () => {
       if (list.get(d.id) !== p || !W.scene) return;
-      p.tex = compose(img, d.name); p.group = build(d, p.tex); W.scene.add(p.group);
+      p.tex = compose(img, d.name, d.title); p.group = build(d, p.tex); W.scene.add(p.group);
       Bus.emit('paint:hung', d);
     };
     img.src = d.img;
@@ -73,7 +76,7 @@ const Paintings = (() => {
   function hang(img, opts) {
     opts = opts || {};
     const desk = opts.desk != null ? opts.desk : P.seated && P.seat >= 0 ? P.seat : -1;
-    const d = { id: (Net.myId || 'me') + ':' + Date.now().toString(36), img, name: opts.name || settings.name, desk, by: Net.myId };
+    const d = { id: (Net.myId || 'me') + ':' + Date.now().toString(36), img, name: opts.name || settings.name, title: opts.title || '', desk, by: Net.myId };
     if (desk < 0) {   // an easel up to 1.3 m in front of you, clear of walls and desks
       const sy = Math.sin(P.yaw), cy = Math.cos(P.yaw), free = typeof Space !== 'undefined' ? Space.ray(P.pos.x, 0.9, P.pos.z, -sy, 0, -cy, 2, 0.1) : 2, k = clamp(free - 0.6, 0.5, 1.3);
       d.pos = [+(P.pos.x - sy * k).toFixed(2), +(P.pos.z - cy * k).toFixed(2)]; d.ry = +P.yaw.toFixed(3);
@@ -160,7 +163,7 @@ const DoodlePro = (() => {
   /* a small JPEG of the canvas, for hanging (sent over the network) */
   function jpeg(w, q) { const c = document.createElement('canvas'); c.width = w || 320; c.height = Math.round((w || 320) * CH / CW); const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(canvas(), 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', q || 0.82); }
   function hang(btn) {
-    const d = Paintings.hang(jpeg(320, 0.82));
+    const d = Paintings.hang(jpeg(320, 0.82), { title: S.title === 'Untitled masterpiece' ? '' : S.title });
     SFX.pass(); toast(d.desk >= 0 ? 'Your masterpiece now hangs in your cubicle. Stand up and admire it.' : 'Your masterpiece is on an easel in front of you.', 'good');
     if (btn) { btn.classList.add('done'); btn.lastChild.textContent = 'Hung!'; setTimeout(() => { btn.classList.remove('done'); btn.lastChild.textContent = 'Hang it up!'; }, 1800); }
     Bus.emit('paint:hang', d);

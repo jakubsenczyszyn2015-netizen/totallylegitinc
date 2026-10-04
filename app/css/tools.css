@@ -249,7 +249,7 @@
 .bw-tab.on{background:#fff;box-shadow:0 -1px 3px rgba(0,0,0,.08)}
 .bw-tab:not(.on)+.bw-tab:not(.on)::before{content:"";position:absolute;left:-2px;top:.55rem;bottom:.55rem;width:1px;background:#a9b0ba}
 .bw-tab span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bw-tab.load .bw-fav{animation:bwspin .5s linear infinite}
+.bw-tab.load .bw-fav{animation:bwspin .45s ease-out 1}
 @keyframes bwspin{to{transform:rotate(360deg)}}
 .bw-x{width:1.25rem;height:1.25rem;flex:none;border:0;border-radius:50%;background:none;display:grid;place-items:center;padding:0;color:#5f6368;cursor:pointer}
 .bw-x svg{width:.62rem;height:.62rem}

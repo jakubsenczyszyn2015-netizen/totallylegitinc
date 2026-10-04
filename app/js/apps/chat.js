@@ -156,7 +156,7 @@ const Chat = (() => {
     const m = thread(cid).find(x => x.id === id && x.me && x.gift); if (!m || m.claimed) return;
     m.claimed = true; const who = nameOf(cid);
     push(cid, { sys: true, text: who + ' clicked your Chatterbox Gold. Their screen is now 80% pop-ups.' }, true);
-    toast(who + ' fell for your Chatterbox Gold!', 'good'); SFX.cash();
+    toast(h('span', { class: 'cbx-toast' }, h('i', { html: faceOf(cid) }), h('span', {}, h('b', {}, 'Chatterbox Gold'), who + ' fell for your free gift! Their screen is a pop-up storm.')), 'good'); SFX.cash();
     Bus.emit('chat:prank', { to: cid });
   }
 
