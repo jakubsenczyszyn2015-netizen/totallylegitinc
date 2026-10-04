@@ -1,1 +1,34 @@
-/* hud */
+/* hud — hotbar, key hints, screen-effect overlays (props / fx modules) */
+
+/* ---------- hotbar (bottom centre) ---------- */
+#hotbar{position:absolute;left:50%;bottom:.9rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.35rem;pointer-events:none;user-select:none}
+#hotbar .hb-slots{display:flex;gap:.42rem;align-items:flex-end;padding:.38rem .45rem;background:rgba(15,19,29,.55);border:3px solid rgba(15,19,29,.9);border-radius:18px;box-shadow:0 5px 0 rgba(15,19,29,.55)}
+.hb-slot{position:relative;width:3.6rem;height:3.6rem;border-radius:13px;background:linear-gradient(#34405e,#232b42);border:3px solid var(--ink);box-shadow:inset 0 3px 0 rgba(255,255,255,.12),0 3px 0 var(--ink);display:grid;place-items:center;transition:transform .12s ease-out,background .12s}
+.hb-slot.empty{background:rgba(35,43,66,.55);box-shadow:inset 0 2px 0 rgba(255,255,255,.05)}
+.hb-slot.sel{transform:translateY(-6px) scale(1.12);background:linear-gradient(#ffe97a,#f6b81e);box-shadow:inset 0 3px 0 rgba(255,255,255,.55),0 5px 0 var(--ink),0 0 0 3px rgba(255,225,74,.35)}
+.hb-slot.carry{background:linear-gradient(#9be7ff,#3bb4e6)}
+.hb-slot i{position:absolute;left:.28rem;top:.08rem;font-style:normal;font-family:'Lilita One',var(--font-d);font-size:.82rem;color:rgba(255,255,255,.75);text-shadow:0 2px 0 var(--ink)}
+.hb-slot.sel i{color:var(--ink);text-shadow:none}
+.hb-ic{width:2.45rem;height:2.45rem;display:grid;place-items:center;filter:drop-shadow(0 3px 0 rgba(15,19,29,.45))}
+.hb-ic svg{width:100%;height:100%;display:block}
+.hb-emoji{font-size:1.8rem;line-height:1;font-family:'Lilita One',var(--font-d);color:#fff;text-shadow:0 2px 0 var(--ink)}
+.hb-slot b{position:absolute;right:.2rem;bottom:.02rem;font-family:'Lilita One',var(--font-d);font-weight:400;font-size:1.02rem;color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;line-height:1.1}
+.hb-bar{position:absolute;left:.3rem;bottom:.3rem;height:.32rem;border-radius:9px;background:#ff8a12;box-shadow:0 0 0 2px var(--ink);text-decoration:none;max-width:calc(100% - 2.2rem)}
+.hb-name{min-height:1.6rem;display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s}
+.hb-name.on{opacity:1;transform:none}
+.hb-name b{font-family:'Lilita One',var(--font-d);font-weight:400;font-size:1.35rem;color:#fff;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;letter-spacing:.02em}
+.hb-name small{font-weight:800;font-size:.82rem;color:var(--yellow);text-shadow:0 2px 0 var(--ink),0 0 6px rgba(0,0,0,.6)}
+
+/* ---------- key hints (bottom right) ---------- */
+#keyhint{position:absolute;right:1rem;bottom:1rem;display:flex;flex-direction:column;align-items:flex-end;gap:.18rem;font-size:.78rem;font-weight:800;color:rgba(238,241,247,.86);text-shadow:0 1px 2px rgba(0,0,0,.8);pointer-events:none}
+#keyhint kbd,#hud-hint kbd{display:inline-block;min-width:1.5em;padding:.05em .4em;border-radius:6px;background:rgba(15,19,29,.82);border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);font-family:'Lilita One',var(--font-d);font-weight:400;font-size:.85em;color:var(--yellow);text-align:center;text-shadow:none}
+@media (max-width:900px),(max-height:560px){#keyhint{display:none}}
+
+/* the hotbar takes the bottom centre: lift the shift hint and the toasts above it */
+#hud-hint{bottom:7.6rem}
+body.hb-on #toasts{bottom:10rem}
+
+/* ---------- screen effects (FX.flash / FX.tint) ---------- */
+#fx-tint{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .45s;--tint:#ff5a2a;background:var(--tint);mix-blend-mode:multiply}
+#fx-tint::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(40,0,0,.45) 120%)}
+#fx-flash{position:fixed;inset:0;z-index:12;pointer-events:none;opacity:0;background:#fff}
