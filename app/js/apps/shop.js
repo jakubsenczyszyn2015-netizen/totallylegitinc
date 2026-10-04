@@ -482,7 +482,7 @@ const ChaosArt = {
     const g = new THREE.Group();
     for (let k = 0; k < 2; k++) { const b = this.pizzaBox(false); b.position.y = k * 0.047; b.rotation.y = k * 0.16 - 0.08; g.add(b); }
     const top = this.pizzaBox(true); top.position.y = 0.094; top.rotation.y = 0.1; g.add(top);
-    g.userData.thumb = { ry: -0.3, rx: 0.62, zoom: 1.08 };
+    g.userData.thumb = { ry: -0.3, rx: 0.62, zoom: 0.86 };
     return g;
   },
   missile(label, col) {

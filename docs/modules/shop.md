@@ -86,21 +86,24 @@ and the memo all pick them up). Normally unlocked schemes show `INCLUDED` in "Al
 ### Physical goods tab, section "Chaos"
 | id | price | effect (everyone sees it) |
 |---|---|---|
-| `chaos_rival` | $2,500 | "Airstrike the Rival Call Centre": hazard banner, siren, six distant mushroom explosions on the skyline outside the west/south windows, rumbles + screen shake; the buyer earns +$1,000 team money (`Game.earn`). Repeatable. |
-| `chaos_strike` | $1,500 | "Airstrike Yourselves": banner + siren + red tint, then ~13 explosions across the office (one near every player) with incoming whistles, flying paper sheets, small fires, scorch marks and paper-ball props (host launches them); anyone within 3.4 m is knocked back and stunned (players fall over), coworkers and the boss react. Repeatable. |
+| `chaos_rival` | $2,500 | "Airstrike the Rival Call Centre": blue hazard banner, siren, then six distant cartoon blasts (flash, fireball, smoke mushroom, sparks) at street level across the road, lined up with the windows whose blinds are most open, each with a delayed rumble + screen shake. A **BonkNews live broadcast** (`BMNews`) slides in at the top right for everyone, over the desktop and the 3D view: a 2D cartoon of the rival tower ("Even More Legit LLC") taking missile hits in sync with the blasts (comic "KA-BONK!" words, fires, smoke, the roof sign tipping over), LIVE pill, lower third and a joke ticker. The buyer earns +$1,000 team money (`Game.earn`) and gets a cash pop. Repeatable. |
+| `chaos_strike` | $1,500 | "Airstrike Yourselves": banner + siren + red tint, then 15-24 hits in volleys of 4-5 (around every player: one close call that knocks you over and three within sight, the rest anywhere in the office). Each hit: a cartoon "OOPS" missile punches through the ceiling tiles, then a big explosion with flying paper sheets, paper-ball props (host launches them), scorch marks and some small fires; anyone within 3.4 m is knocked back and stunned (players fall over), coworkers and the boss react with speech bubbles. Repeatable. |
 | `chaos_pizza` | $250 | "Pizza Party": stacked + open pizza boxes on the break-room table for 150 s, confetti, everyone's `P.boost` (walk faster); press E at the table for one free slice (another boost). Repeatable (blocked while a party is on). |
 | `chaos_boss` | $800 | "Inflatable Boss": a 3 m shiny vinyl boss with flailing tube-man arms in the lobby (NE corner, visible through the glass front doors). Saved in the buyer's `G.prog.shop.boss`. One-time. |
-| `chaos_stapler` | $1,200 | "Gold-Plated Stapler": a gold stapler on a red velvet cushion on your desk (the desk you sit at / last sat at), glinting; others see it on your desk. `G.prog.shop.stapler`. One-time. |
+| `chaos_stapler` | $1,200 | "Gold-Plated Stapler": a gold stapler on a red velvet cushion on a little wooden plinth with an "EMPLOYEE OF THE MONTH" brass plate, on your desk (the desk you sit at / last sat at), glinting; others see it on your desk. `G.prog.shop.stapler`. One-time. |
 
 `Chaos` (global) runs these: `Chaos.order(k)` (buyer: run locally + broadcast), `Chaos.run(d)`, `Chaos.busy()`
 (an airstrike is in the air), `Chaos.st` (`{boss, pizza}`), `Chaos.banner(title, sub, 'blue'?)` (the hazard banner,
-reusable for raids etc.), `Chaos.after(sec, fn)` (game-time scheduler). `ChaosArt` builds the models
-(`stapler()`, `pizzaBox(open)`, `missile(label, colour)`, `balloonBoss()`), sharing geometry and materials.
+reusable for raids etc.), `Chaos.after(sec, fn)` (game-time scheduler, `Chaos.t` is its clock), `Chaos.last`
+(`{t0, pts}` of the latest strike: hit times are `t0 + pts[i][2]`). `ChaosArt` builds the models
+(`stapler()`, `pizzaBox(open)`, `pizzaStack()`, `missile(label, colour)`, `balloonBoss()`), sharing geometry and materials.
+`BMNews.show(pts, t0)` / `BMNews.hide()` / `BMNews.on`: the live broadcast overlay (`#bm-news`, a 480x270 canvas redrawn
+every frame while it is up, ~8 s).
 
 ## Net
 - `Net 'shop:chaos'` `{k: 'strike' | 'rival' | 'pizza' | 'boss', by: name, pts?: [[x, z, t], …]}` — the buyer runs the
-  effect and broadcasts it; every client plays it (the airstrike plan, with times, is computed by the buyer so all
-  screens match). The host alone launches the paper-ball props (they sync through `prop:throw`).
+  effect and broadcasts it; every client plays it (the strike / rival plans, with times, are computed by the buyer so all
+  screens match; receivers clamp them). The host alone launches the paper-ball props (they sync through `prop:throw`).
 - `Net.share('chaos')` `{b: 0|1, p: pizzaSecondsLeft}` — late joiners get the inflatable boss and running pizza party.
 - `Net.addMe('stapler')` — `deskIndex + 1` of your stapler (0 = none); everyone draws it on that desk.
 
@@ -112,4 +115,13 @@ reusable for raids etc.), `Chaos.after(sec, fn)` (game-time scheduler). `ChaosAr
 ## DOM / CSS
 `.win.bonkmart` window; `.bm-head`, `.bm-tabs`/`.bm-tab.on`, `.bm-scroll`, `.bm-sec`, `.bm-grid`, `.bm-card`
 (`.bm-pic`, `.bm-name`, `.bm-desc`, `.bm-price`, `.bm-btn.buy|need|owned|blocked|bought|hold`), `.bm-pop`;
-`#bm-alert` (the airstrike banner, `position: fixed`, z-index 9800, above the desktop and the 3D view).
+`#bm-alert` (the airstrike banner, `position: fixed`, z-index 9800, above the desktop and the 3D view), `#bm-news`
+(the BonkNews broadcast, fixed top right, z-index 9750, `.on` / `.off` slide animations).
+
+## Testing
+`tools/scenarios/shop.js` (`SHOP_ONLY=tabs,hold,licence,badge,strike,rival,pizza,boss,stapler` runs some parts): every tab
+(normal + maximised), a hold-to-buy caught half-way (`s07`), the purchase pop (`s08`), OWNED / NEED states (`s09`),
+licences (`s10`), the desktop badge (`s11`), the self-airstrike from the desk, in third person and from a high
+ceiling-less overview (`s12`-`s15b`), the rival strike with the BonkNews broadcast over the desktop and through the
+windows (`s16`, `s16b`), pizza party, inflatable boss and the stapler. Waits are in game time; `Chaos.last` lets a
+scenario time a screenshot on a given hit. The purchasable apps of other modules get stand-ins if they are missing.
