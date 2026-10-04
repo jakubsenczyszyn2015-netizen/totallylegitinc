@@ -4,7 +4,6 @@
    wall-aware boom, and the input for held items (click / F / Q / G / 1-6 / wheel, handled by props.js). */
 Object.assign(P, { vx: 0, vz: 0, kx: 0, kz: 0, stunT: 0, third: false, boom: 0, dip: 0, fovK: 0, roll: 0, stepN: 0 });
 const PC = { walk: 3.4, run: 5.8, accel: 30, decel: 22, air: 6, jump: 4.9, grav: 13.5, boom: 3.3 };
-try { P.third = Store.get('tli_third', false) === true; } catch (e) {}
 
 /* ---------- player ---------- */
 function blocked(x, z) {
@@ -57,7 +56,7 @@ function resetPlayer() {
   if (s) { const f = freeSpot(s.x + rand(-0.15, 0.15), s.z + rand(-0.15, 0.15)); P.pos.x = f[0]; P.pos.z = f[1]; P.yaw = s.yaw != null ? s.yaw : Math.PI / 2; }
   else { P.pos.x = 8 + rand(-0.8, 0.8); P.pos.z = rand(-1, 1); P.yaw = Math.PI / 2; }
   P.pos.y = 0; P.pitch = 0; P.seated = false; P.seat = -1; P.review = -1; P.cam = null; P.boost = 0;
-  P.vx = P.vz = P.kx = P.kz = P.vy = 0; P.stunT = 0; P.boom = 0;
+  P.vx = P.vz = P.kx = P.kz = P.vy = 0; P.stunT = 0; P.boom = 0; P.third = false;
 }
 
 /* left click while the pointer is locked (world.js calls this). The press itself is handled on mousedown
@@ -66,7 +65,7 @@ function tryThrow() { if (Props._own) { Props._own = false; return; } Props.thro
 /* compat: Net's old 'throw' message spawns a paper ball */
 function spawnBall(o, v, local) { return Props.spawn('paper', o, v, { local: !!local }); }
 function setThird(on) {
-  P.third = !!on; P.boom = 0.3; try { Store.set('tli_third', P.third); } catch (e) {}
+  P.third = !!on; P.boom = 0.3;
   toast(P.third ? 'Third-person camera. Press C to go back.' : 'First-person camera.');
 }
 
