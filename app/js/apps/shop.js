@@ -292,7 +292,8 @@ const BonkMart = {
       if (up && G.wallet >= this.badgeAt) { if (!this.visible()) OS.badge('shop', true); this.calcBadge(); }
       else if (!up) this.calcBadge();
     }
-    if (this.visible()) {
+    if (this.visible() && this.win) {
+      if (OS.badges.has('shop')) OS.badge('shop', false);
       const body = this.win.body, secs = this.sections(this.tab), sig = this.tab + '|' + secs.map(s => s.name + ':' + s.items.map(i => i.id).join(',')).join('/');
       if (sig !== this.sig && now() > this.popUntil && !this.anyHold()) this.build(body, true); else this.update(body);
     }
@@ -407,7 +408,7 @@ Loop.add((() => { let last = 0; return () => {
    Net: 'shop:chaos' {k: 'strike'|'rival'|'pizza'|'boss', by, pts?}; share 'chaos' {b, p}; addMe 'stapler'
    ===================================================================== */
 const RIVAL = 'Even More Legit LLC', RIVAL_BONUS = 1000;
-const BOSS_SPOT = { x: 23.35, z: 1.55, ry: -Math.PI / 2 - 0.45 };   // lobby, NE corner, facing the glass doors
+const BOSS_SPOT = { x: 23.35, z: 1.55, ry: 1.14 };   // lobby, NE corner, facing the glass doors
 const PIZZA_SPOT = { x: 13.4, z: 5.0, y: 0.82 };                       // the break-room table (on the old box)
 
 /* ----- models (shared geometry/materials, all built lazily) ----- */
@@ -419,17 +420,19 @@ const ChaosArt = {
   gold() { return this.m('gold', () => new THREE.MeshPhongMaterial({ color: '#e9a92a', specular: '#fff0b8', shininess: 85, emissive: '#3a2400' })); },
 
   stapler() {
-    const g = new THREE.Group(), gold = this.gold(), dark = this.phong('#2b2622'), velvet = this.phong('#a3182f', { shininess: 6 });
-    const geo = (k, f) => this.m('g' + k, f);
-    const cush = new THREE.Mesh(geo('cush', () => rboxGeo(0.27, 0.03, 0.12, 0.012, 2)), velvet); cush.position.y = 0.015; g.add(cush);
-    const base = new THREE.Mesh(geo('sb', () => rboxGeo(0.2, 0.02, 0.055, 0.008, 2)), gold); base.position.set(0, 0.04, 0); g.add(base);
-    const arm = new THREE.Group(); arm.position.set(0.085, 0.052, 0); arm.rotation.z = 0.07; g.add(arm);
-    const top = new THREE.Mesh(geo('st', () => rboxGeo(0.19, 0.034, 0.046, 0.014, 3)), gold); top.position.set(-0.088, 0.02, 0); arm.add(top);
-    const nose = new THREE.Mesh(geo('sn', () => rboxGeo(0.03, 0.012, 0.04, 0.005, 1)), dark); nose.position.set(-0.17, 0.0, 0); arm.add(nose);
-    const hinge = new THREE.Mesh(geo('sh', () => new THREE.CylinderGeometry(0.014, 0.014, 0.06, 12)), dark); hinge.rotation.x = Math.PI / 2; hinge.position.set(0.09, 0.055, 0); g.add(hinge);
-    const plate = new THREE.Mesh(geo('sp', () => new THREE.PlaneGeometry(0.07, 0.022)), this.m('platem', () => new THREE.MeshBasicMaterial({ map: this.tex('plate', 128, 40, (c, w, hh) => { c.fillStyle = '#d9a72a'; c.fillRect(0, 0, w, hh); c.fillStyle = '#4a3000'; c.font = 'bold 20px Roboto, sans-serif'; c.textAlign = 'center'; c.fillText('EMPLOYEE', w / 2, 18); c.fillText('OF THE MONTH', w / 2, 36); }) })));
-    plate.position.set(0, 0.016, 0.0605); g.add(plate);
-    g.userData.thumb = { ry: -0.5, rx: 0.35, zoom: 1.15 };
+    const g = new THREE.Group(), gold = this.gold(), dark = this.phong('#2b2622'), velvet = this.phong('#a3182f', { shininess: 6 }), geo = (k, f) => this.m('g' + k, f);
+    const side = (k, pts, depth, bev) => geo(k, () => { const sh = new THREE.Shape(); sh.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) { const p = pts[i]; if (p.length === 4) sh.quadraticCurveTo(p[0], p[1], p[2], p[3]); else sh.lineTo(p[0], p[1]); } sh.closePath(); const e = new THREE.ExtrudeGeometry(sh, { depth, bevelEnabled: true, bevelThickness: bev, bevelSize: bev, bevelSegments: 3, curveSegments: 8 }); e.translate(0, 0, -depth / 2); return e; });
+    const cush = new THREE.Mesh(geo('cush', () => rboxGeo(0.29, 0.03, 0.13, 0.013, 2)), velvet); cush.position.y = 0.015; g.add(cush);
+    // base plate with a raised anvil at the front, the arm (stapler silhouette) hinged at the back
+    const base = new THREE.Mesh(side('sb2', [[0.11, 0], [-0.115, 0], [-0.125, 0.006, -0.115, 0.012], [0.11, 0.012]], 0.046, 0.004), gold); base.position.y = 0.034; g.add(base);
+    const anvil = new THREE.Mesh(geo('sa', () => rboxGeo(0.03, 0.006, 0.026, 0.002, 1)), dark); anvil.position.set(-0.098, 0.049, 0); g.add(anvil);
+    const arm = new THREE.Mesh(side('sarm', [[0.1, 0], [-0.105, 0], [-0.122, 0.01, -0.11, 0.022], [0.055, 0.04], [0.108, 0.043, 0.108, 0.018], [0.108, 0.006, 0.1, 0]], 0.04, 0.007), gold);
+    arm.position.set(0, 0.058, 0); arm.rotation.z = -0.05; g.add(arm);
+    const mag = new THREE.Mesh(geo('smag', () => new THREE.BoxGeometry(0.19, 0.008, 0.036)), dark); mag.position.set(0.0, 0.054, 0); g.add(mag);
+    const hinge = new THREE.Mesh(geo('sh2', () => new THREE.CylinderGeometry(0.012, 0.012, 0.062, 12)), gold); hinge.rotation.x = Math.PI / 2; hinge.position.set(0.098, 0.056, 0); g.add(hinge);
+    const plate = new THREE.Mesh(geo('sp', () => new THREE.PlaneGeometry(0.075, 0.022)), this.m('platem', () => new THREE.MeshBasicMaterial({ map: this.tex('plate', 128, 40, (c, w, hh) => { c.fillStyle = '#d9a72a'; c.fillRect(0, 0, w, hh); c.fillStyle = '#4a3000'; c.font = 'bold 20px Roboto, sans-serif'; c.textAlign = 'center'; c.fillText('EMPLOYEE', w / 2, 18); c.fillText('OF THE MONTH', w / 2, 36); }) })));
+    plate.position.set(0, 0.016, 0.0655); g.add(plate);
+    g.userData.thumb = { ry: -0.3, rx: 0.3, zoom: 1.12 };
     return g;
   },
   pizzaTex() {
@@ -485,10 +488,10 @@ const ChaosArt = {
   },
   /* the inflatable boss: shiny vinyl, a body that sways, tube-man arms. Feet at y 0, faces -Z, ~2.9 m */
   balloonBoss() {
-    const g = new THREE.Group(), geo = (k, f) => this.m('g' + k, f), vinyl = o => new THREE.MeshPhongMaterial(Object.assign({ shininess: 70, specular: 0x555555 }, o));
+    const g = new THREE.Group(), geo = (k, f) => this.m('g' + k, f), vinyl = o => new THREE.MeshPhongMaterial(Object.assign({ shininess: 70, specular: 0x555555, emissive: 0xffffff, emissiveIntensity: 0.16 }, o, o.map ? { emissiveMap: o.map } : { emissive: o.color, emissiveIntensity: 0.16 }));
     const bodyTex = this.tex('bbody', 512, 256, (c, w, hh) => {
-      c.fillStyle = '#2b3245'; c.fillRect(0, 0, w, hh);
-      c.fillStyle = '#4a5068'; c.fillRect(0, hh * 0.62, w, hh);   // trousers
+      c.fillStyle = '#2f4f9a'; c.fillRect(0, 0, w, hh);
+      c.fillStyle = '#6b7186'; c.fillRect(0, hh * 0.62, w, hh);   // trousers
       c.fillStyle = '#1c2130'; c.fillRect(0, hh * 0.6, w, 8);      // belt
       c.fillStyle = '#d4a62a'; c.fillRect(w / 2 - 10, hh * 0.6 - 2, 20, 12);
       const cx = w / 2;   // u = 0.5 faces -Z (front)
@@ -520,7 +523,7 @@ const ChaosArt = {
     const baseM = this.phong('#2a2b30', { shininess: 20 });
     const base = new THREE.Mesh(geo('bbase', () => new THREE.CylinderGeometry(0.42, 0.48, 0.3, 24)), baseM); base.position.y = 0.15;
     const grill = new THREE.Mesh(geo('bgr', () => new THREE.CylinderGeometry(0.3, 0.3, 0.02, 20)), this.phong('#55575e')); grill.position.y = 0.31;
-    const sleeve = vinyl({ color: '#2b3245' }), hand = vinyl({ color: '#f0b48a' });
+    const sleeve = vinyl({ color: '#2f4f9a' }), hand = vinyl({ color: '#f0b48a' });
     const arm = s => {
       const p = new THREE.Group(); p.position.set(s * 0.46, 0.3 + 1.62, 0);
       const tube = new THREE.Mesh(geo('ba', () => { const t = new THREE.CylinderGeometry(0.12, 0.15, 0.95, 14); t.translate(0, -0.475, 0); return t; }), sleeve); p.add(tube);
@@ -539,7 +542,7 @@ function canvasTexLocal(w, hh, draw) { const cv = h('canvas', { width: w, height
 
 /* ----- the effects ----- */
 const Chaos = {
-  st: { boss: false, pizza: 0 }, t: 0, sched: [], busyUntil: 0, noDouble: false, localT: -9,
+  st: { boss: false, pizza: 0 }, t: 0, sched: [], anims: [], busyUntil: 0, noDouble: false, localT: -9,
   bossObj: null, bossT: 0, boxes: null, inter: null, slice: false, staplers: new Map(), lastDesk: -1, stT: 0, glintT: 0,
   after(sec, fn) { this.sched.push({ t: this.t + sec, fn }); },
   busy() { return this.t < this.busyUntil; },
@@ -589,9 +592,18 @@ const Chaos = {
     this.siren(3, 0.045); FX.tint('#ff3b2a', 0.12, end + 1.5);
     pts.forEach((p, i) => {
       this.after(Math.max(0, p[2] - 0.75), () => FXSnd.tone(2100, 420, 0.75, 'sine', 0.07 * FXSnd.vol({ x: p[0], y: 1, z: p[1] }) + 0.01));
+      this.after(Math.max(0, p[2] - 0.42), () => this.drop(p[0], p[1], 0.42));
       this.after(p[2], () => this.boom(p[0], p[1], i));
     });
     this.after(end + 1.6, () => { toast(pick(['Airstrike complete. HR is drafting an email.', 'All clear. Someone sweep up the paperwork.', 'Workplace incident report #4,021 filed.']), 'good'); });
+  },
+  /* a cartoon missile punches through the ceiling tiles and falls onto the spot */
+  drop(x, z, dur) {
+    if (!W.scene) return;
+    const m = ChaosArt.missile('OOPS', '#f08c00'); m.children[0].rotation.z = Math.PI; m.scale.setScalar(1.5); m.position.set(x, 3.4, z); W.scene.add(m);
+    this.anims.push({ m, t: 0, dur, y0: 3.4, y1: Space.ground(x, 2.6, z) + 0.55 });
+    for (let k = 0; k < 9; k++) FX.particle({ layer: 'cut', pos: [x + rand(-0.35, 0.35), 3.12, z + rand(-0.35, 0.35)], vel: [rand(-1.2, 1.2), rand(-1.5, 0.6), rand(-1.2, 1.2)], ttl: rand(1.2, 2), size: rand(0.08, 0.17), color: pick(['#d9d0c0', '#c4baa8', '#8f8574']), frame: 'chunk', gravity: 1, floor: true });
+    FX.particle({ layer: 'soft', pos: [x, 3.1, z], vel: [0, -0.3, 0], ttl: 1.2, size: [0.4, 1.4], color: '#d8d0c4', alpha: [0.8, 0], frame: 'puff', drag: 1 });
   },
   boom(x, z, i) {
     const y = Space.ground(x, 2.6, z) + 0.2;
@@ -707,9 +719,14 @@ const Chaos = {
     this.t += dt;
     if (this.sched.length) { const due = this.sched.filter(s => s.t <= this.t); if (due.length) { this.sched = this.sched.filter(s => s.t > this.t); for (const s of due) { try { s.fn(); } catch (e) { console.error('BonkMart chaos', e); } } } }
     if (this.st.pizza > 0) { this.st.pizza -= dt; if (this.st.pizza <= 0) { this.st.pizza = 0; this.boxesOn(false); } }
+    for (let i = this.anims.length - 1; i >= 0; i--) {
+      const a = this.anims[i], k = Math.min(1, (a.t += dt) / a.dur); a.m.position.y = a.y0 + (a.y1 - a.y0) * k * k;
+      FX.particle({ layer: 'soft', pos: [a.m.position.x, a.m.position.y + 0.6, a.m.position.z], vel: [rand(-0.2, 0.2), 0.3, rand(-0.2, 0.2)], ttl: 0.9, size: [0.15, 0.5], color: '#efe9e0', alpha: [0.75, 0], frame: 'puff', drag: 1.5 });
+      if (k >= 1) { W.scene.remove(a.m); this.anims.splice(i, 1); }
+    }
     this.bossAnim(dt, t); this.staplerTick(dt);
   },
-  reset() { this.sched = []; this.busyUntil = 0; this.st.pizza = 0; this.boxesOn(false); this.boss(false); for (const m of this.staplers.values()) if (W.scene) W.scene.remove(m); this.staplers.clear(); this.lastDesk = -1; }
+  reset() { for (const a of this.anims) if (W.scene) W.scene.remove(a.m); this.anims = []; this.sched = []; this.busyUntil = 0; this.st.pizza = 0; this.boxesOn(false); this.boss(false); for (const m of this.staplers.values()) if (W.scene) W.scene.remove(m); this.staplers.clear(); this.lastDesk = -1; }
 };
 Loop.add((dt, t) => Chaos.tick(dt, t));
 Net.on('shop:chaos', (d, from) => { if (d && typeof d.k === 'string') Chaos.run(Object.assign({}, d, { by: typeof d.by === 'string' ? d.by.slice(0, 24) : '' }), false); });

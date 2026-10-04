@@ -115,11 +115,12 @@ module.exports = async page => {
     await ev(() => { const T = window.__tli; T.P.stunT = 0; window.__hold = T.Loop.add(() => { if (Chaos.busy()) { const P = T.P; P.kx = P.kz = 0; P.pos.x = 9.2; P.pos.z = -0.4; P.pos.y = 0; } }); return true; });
     await gw(3.7);
     await page.shot('s13-strike-1');
+    await ev(() => { setThird(true); return true; });
     await gw(1.3);
     await page.shot('s14-strike-2');
     await gw(1.6);
     await page.shot('s15-strike-3');
-    await ev(() => { window.__tli.Loop.remove(window.__hold); return true; });
+    await ev(() => { window.__tli.Loop.remove(window.__hold); setThird(false); return true; });
     check('airstrike ordered', ok, ok);
     await gw(2.5);
   }
