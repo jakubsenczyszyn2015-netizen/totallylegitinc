@@ -33,14 +33,16 @@ module.exports = async page => {
       { skin: '#8f5c36', hair: 'curly', hairColor: '#3a281c', facial: 'stubble', glasses: 'none', shirt: '#ef4444', pants: '#39415a', shoes: '#2b4c8c', build: 'avg' },
       { skin: '#f08a3c', hair: 'mohawk', hairColor: '#3f6fd6', facial: 'mustache', glasses: 'none', shirt: '#eab308', pants: '#2f4a3a', shoes: '#ebe6da', build: 'avg' }];
     const names = ['Dmitri', 'Kezia', 'Priya', 'Bjorn', 'Marcus', 'Hana', 'Tomas', 'Zed'];
-    window.__avs = looks.map((l, i) => { const a = buildAvatar({ look: l, name: names[i] }); a.group.position.set(7.0, 0, -3.5 + i * 1.0); a.group.rotation.y = -Math.PI / 2; W.scene.add(a.group); a.sit = false; a.speed = 0; return a; });
+    window.__avs = looks.map((l, i) => { const a = buildAvatar({ look: l, name: names[i] }); a.group.position.set(7.0, 0, -3.6 + i * 0.95); a.group.rotation.y = -Math.PI / 2; W.scene.add(a.group); a.sit = false; a.speed = 0; return a; });
+    // the local player's own body (W.me, follows P) stands at the end of the line
+    P.pos.x = 7.0; P.pos.z = 4.05; P.pos.y = 0; P.yaw = -Math.PI / 2; W.me.group.visible = true; W.me.setName(settings.name);
     Loop.add((dt, t) => window.__avs.forEach(a => { if (a.walk) { a.walk.a += dt * a.walk.s / a.walk.r; a.group.position.set(a.walk.x + Math.cos(a.walk.a) * a.walk.r, 0, a.walk.z + Math.sin(a.walk.a) * a.walk.r); a.group.rotation.y = -a.walk.a; } poseAvatar(a, a.sit, t, a.walk ? a.walk.s : 0); }));
     return true;
   });
   const poses = async list => page.eval(list => { list.forEach((p, i) => { const a = window.__avs[i]; a.act = null; a.stunT = 0; a.setMood(p.mood || 'neutral'); if (p.act) a.play(p.act, { hold: p.hold, loop: p.loop }); if (p.stun) a.stun(30); }); return true; }, list);
   if (want('line')) {
     await poses([{}, { act: 'wave', hold: 0.5 }, { act: 'cheer', loop: true }, { act: 'facepalm', hold: 0.5 }, { act: 'point', hold: 0.5 }, { stun: true }, { act: 'dance', loop: true }, { act: 'fart', hold: 0.45 }]);
-    await page.eval(() => { window.__cam(11.0, 1.5, 0.3, Math.PI / 2, -0.1); return true; });
+    await page.eval(() => { W.me.play('drink', { hold: 0.5 }); window.__cam(11.2, 1.5, 0.25, Math.PI / 2, -0.1); return true; });
     await page.wait(1600);
     await page.shot('av-10-lineup');
     await page.eval(() => { window.__cam(9.0, 1.55, -2.0, Math.PI / 2, -0.06); return true; });
@@ -90,6 +92,7 @@ module.exports = async page => {
     await page.eval(() => { window.__gal.forEach(a => { a.group.visible = false; }); window.__avs.forEach(a => { a.group.visible = true; }); return true; });
   }
   if (want('walk')) {
+    await page.eval(() => { W.me.group.visible = false; W.me.setName(''); return true; });
     await page.eval(() => { window.__avs.forEach((a, i) => { a.act = null; a.stunT = 0; a.walk = i < 4 ? { x: 7, z: -1.5, r: 1.8, a: i * 1.57, s: i % 2 ? 5.2 : 3.2 } : null; if (!a.walk) a.group.position.y = i === 5 ? 0.5 : 0; }); window.__cam(11.2, 2.0, -1.0, Math.PI / 2, -0.2); return true; });
     await page.wait(1200);
     await page.shot('av-20-walk');

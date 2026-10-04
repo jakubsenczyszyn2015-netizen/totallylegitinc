@@ -154,10 +154,11 @@ function avTorsoR(y, b) {
   return r;
 }
 const AV_TORSO_Y = avUniq(AV_TORSO.map(p => p[0]).concat(avRange(0.92, 1.14, 0.045)));
-const AV_BODY = new Map();
+/* geometry caches shared by avatars with the same look; unused entries are freed once the cache grows */
+function avUse(map, key, make) { let e = map.get(key); if (!e) { e = { g: make(), n: 0 }; map.set(key, e); } e.n++; return e.g; }
+function avFree(map, key) { const e = map.get(key); if (e) e.n--; if (map.size > 12) for (const [k, v] of map) if (v.n <= 0) { if (v.g) v.g.dispose(); map.delete(k); } }
+const AV_BODY = new Map(), avBodyKey = L => packLook(L) + (L.boss ? '|boss' : '');
 function avBodyGeo(L) {
-  const key = packLook(L) + (L.boss ? '|boss' : '');
-  if (AV_BODY.has(key)) return AV_BODY.get(key);
   const b = avGbNew(true), D = avDims(L), B = L.build, zs = D.zs, boss = L.boss;
   const shirt = avCol(L.shirt), skin = avCol(L.skin), pants = avCol(L.pants), shoes = avCol(L.shoes), belt = avCol('#2a2220');
   const jacket = boss ? avCol(L.pants, 1.05) : null, top = boss ? jacket : shirt;
@@ -228,7 +229,7 @@ function avBodyGeo(L) {
   });
   b.leg = false;
   const g = avGbBuild(b); g.boundingSphere.center.set(0, 0.95, 0); g.boundingSphere.radius = 1.3;
-  AV_BODY.set(key, g); return g;
+  return g;
 }
 
 /* ---------- head: egg with nose and ears (shared), face decal (shared), accessories (per look) ---------- */
@@ -294,10 +295,8 @@ function avHairCol(hex) {
   const base = new THREE.Color(hex), c = new THREE.Color(), w = new THREE.Color(1, 0.96, 0.9);
   return (x, y) => { const t = avSS(-0.14, 0.24, y); return c.copy(base).multiplyScalar(0.78 + 0.3 * t).lerp(w, 0.05 * t); };
 }
-const AV_ACC = new Map();
+const AV_ACC = new Map(), avAccKey = (L, headset) => [L.hair, L.hairColor, L.facial, L.glasses, L.skin, headset ? 1 : 0].join('|');
 function avAccGeo(L, headset) {
-  const key = [L.hair, L.hairColor, L.facial, L.glasses, L.skin, headset ? 1 : 0].join('|');
-  if (AV_ACC.has(key)) return AV_ACC.get(key);
   const b = avGbNew(false), hc = avHairCol(L.hairColor), P = [0, 0, 0], PI = Math.PI, h = L.hair;
   // hair
   if (h === 'buzz') avGbAdd(b, avCap(0.007, 0.72, 1.48, 2.2), null, avMix(L.hairColor, L.skin, 0.35));
@@ -361,7 +360,7 @@ function avAccGeo(L, headset) {
     avGbAdd(b, new THREE.TubeGeometry(boom, 10, 0.0065, 4, false), null, dk);
     avGbAdd(b, avSphere(7, 5), avM(P[0] + 0.006, P[1] - 0.01, P[2] - 0.014, 0.022, 0.016, 0.016, 0, -0.5, 0), avCol('#111216'));
   }
-  const g = b.p.length ? avGbBuild(b) : null; AV_ACC.set(key, g); return g;
+  return b.p.length ? avGbBuild(b) : null;
 }
 
 /* ---------- face (per avatar canvas, redrawn only when the expression changes) ---------- */
@@ -579,10 +578,12 @@ class AvatarRig {
     const D = avDims(L);
     AV_BONES.forEach((n, i) => { const p = avBonePos(n, D), pp = AV_PAR[n] ? avBonePos(AV_PAR[n], D) : [0, 0, 0]; this.bones[i].position.set(p[0] - pp[0], p[1] - pp[1], p[2] - pp[2]); this.bones[i].rotation.set(0, 0, 0); });
     if (this.mesh) { this.mesh.remove(this.bones[0]); this.group.remove(this.mesh); }
-    this.mesh = new THREE.SkinnedMesh(avBodyGeo(L), AVM.body); this.mesh.add(this.bones[0]);
-    this.group.add(this.mesh); this.mesh.bind(new THREE.Skeleton(this.bones));
+    const bk = avBodyKey(L), ak = avAccKey(L, this.headset), oldB = this._bk, oldA = this._ak; this._bk = bk; this._ak = ak;
+    this.mesh = new THREE.SkinnedMesh(avUse(AV_BODY, bk, () => avBodyGeo(L)), AVM.body); this.mesh.add(this.bones[0]);
+    this.group.add(this.mesh); this.mesh.bind(this.skel || (this.skel = new THREE.Skeleton(this.bones)));
     this.headMat.color.set(L.skin);
-    const acc = avAccGeo(L, this.headset); this.accMesh.geometry = acc || AV_EMPTY(); this.accMesh.visible = !!acc;
+    const acc = avUse(AV_ACC, ak, () => avAccGeo(L, this.headset)); this.accMesh.geometry = acc || AV_EMPTY(); this.accMesh.visible = !!acc;
+    if (oldB) avFree(AV_BODY, oldB); if (oldA) avFree(AV_ACC, oldA);
     this.face.setLook(L); this._pose();
   }
   get shirt() { const self = this; return { color: { set(c) { self.setLook(Object.assign({}, self.look, { shirt: '#' + new THREE.Color(c).getHexString() })); } } }; }
@@ -598,7 +599,10 @@ class AvatarRig {
   /* mood: 'neutral','happy','angry','sad','surprised' (also 'grumpy','joy','dizzy'…). With sec, it reverts afterwards. */
   setMood(m, sec) { if (!AV_FACES[m]) m = 'neutral'; if (sec) { this.tmood = m; this.moodT = sec; } else { this.mood = m; this.tmood = null; } }
   setName(n) { this.tag.userData.set(n || ''); this.tag.visible = !!n; }
-  dispose() { if (this.group.parent) this.group.parent.remove(this.group); this.face.dispose(); this.headMat.dispose(); this.tag.material.map.dispose(); this.tag.material.dispose(); _avTags.delete(this.tag); }
+  dispose() {
+    if (this.group.parent) this.group.parent.remove(this.group); this.face.dispose(); this.headMat.dispose(); this.tag.material.map.dispose(); this.tag.material.dispose(); _avTags.delete(this.tag);
+    if (this._bk) avFree(AV_BODY, this._bk); if (this._ak) avFree(AV_ACC, this._ak); this._bk = this._ak = null; if (this.skel && this.skel.dispose) this.skel.dispose();
+  }
 
   /* ----- animation ----- */
   pose(sit, t, speed) {

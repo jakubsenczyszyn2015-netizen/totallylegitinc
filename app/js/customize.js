@@ -121,9 +121,17 @@ const Customize = {
   }
 };
 
-Bus.on('boot', () => {
-  const home = $('#menu .home-btns');
-  if (home) { const btns = $$('.btn', home); const b = h('button', { class: 'btn cz-open', onclick: () => Customize.show() }, h('span', { class: 'cz-ic', 'aria-hidden': 'true' }), 'Character'); home.insertBefore(b, btns[2] || null); }
-  const pause = $('#pause .body');
-  if (pause) { const btns = $$('.btn', pause); pause.insertBefore(h('button', { class: 'btn', onclick: () => Customize.show() }, 'Character'), btns[1] || null); }
-});
+/* "Character" buttons on the main menu and the pause menu: inserted before their Settings button (re-checked
+   whenever those menus are shown, so a menu that re-renders keeps the button) */
+function czButtons() {
+  const add = (root, cls, withIcon) => {
+    if (!root || $('.' + cls, root)) return;
+    const set = $$('button', root).find(b => /settings/i.test(b.textContent));
+    const b = h('button', { class: 'btn ' + cls, onclick: () => Customize.show() }, withIcon ? h('span', { class: 'cz-ic', 'aria-hidden': 'true' }) : null, 'Character');
+    if (set) set.parentNode.insertBefore(b, set); else { const box = $('.home-btns', root) || $('.body', root); if (box) box.append(b); }
+  };
+  add($('#menu'), 'cz-open', true); add($('#pause'), 'cz-open-p', false);
+}
+Bus.on('boot', czButtons);
+if (typeof UI !== 'undefined' && UI.menu) { const _menu = UI.menu; UI.menu = function (name) { const r = _menu.apply(this, arguments); if (name === 'home') try { czButtons(); } catch (e) {} return r; }; }
+if (typeof Game !== 'undefined' && Game.pause) { const _pause = Game.pause; Game.pause = function (on) { const r = _pause.apply(this, arguments); if (on) try { czButtons(); } catch (e) {} return r; }; }
