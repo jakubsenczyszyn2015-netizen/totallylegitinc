@@ -133,3 +133,6 @@ Shop.add({
   },
   buy() { (G.prog.apps = G.prog.apps || {})[CCTV.ID] = true; Game.saveProgress(); if (OS.open) OS.buildIcons(); toast('CCTV installed. Check your desktop.', 'good'); }
 });
+/* police raids (raid module): flash the entrance feed */
+Bus.on('raid:start', () => CCTV.alert('lobby', 'POLICE AT THE DOOR', 15));
+Bus.on('game:begin', () => { CCTV.alerts = {}; CCTV.mode = 'grid'; CCTV.auto = false; });

@@ -110,5 +110,16 @@ module.exports = async page => {
     await gw(0.6);
     await page.shot('c26-photo-held');
   }
+  if (want('photo')) {   // a photo from a fake remote player through the real Net handlers
+    const r = await ev(() => {
+      const H = Net.handlers, url = Photos.get([...Photos.map.keys()][0]).cv.toDataURL('image/jpeg', 0.7);
+      H.get('cam:photo')({ id: 'peer.9', img: url, by: 'Remote Rita', cap: 'Hello', p: [8, 1.3, 0] }, 'peer');
+      H.get('prop:throw')({ id: 'peer.9', t: 'photo', o: [8, 1.3, 0.5], v: [0.5, 1, 0], s: [0, 0, 0] }, 'peer');
+      const b = Props.byId.get('peer.9'), p = Photos.get('peer.9');
+      return { body: !!b, dressed: !!(b && p && b.m.children[0].material[2].map === p.tex), by: p && p.by, shop: [!!Shop.get('polaroid'), !!Shop.get('app_cctv')], item: !!ItemDefs.polaroid };
+    });
+    console.log('remote photo: ' + JSON.stringify(r));
+    if (!r.body || !r.dressed) throw new Error('remote photo did not arrive');
+  }
   await ev(() => { if (window.__matePose) Loop.remove(window.__matePose); return true; });
 };

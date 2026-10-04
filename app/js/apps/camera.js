@@ -4,7 +4,7 @@
    effects. Rendering goes through Cams (cams.js, loaded later: only used lazily). */
 const CamApp = {
   cam: null, win: null, cv: null, g: null, tiny: null, bgs: {}, fxT: 0, freeze: 0, sparks: null, _p: {}, _q: {}, _v: null,
-  W: 480, H: 270, POS: [-0.012, 1.46, -0.36], LOOK: [0, 0.98, 0.8], FOV: 70, NEAR: 0.2,
+  W: 480, H: 270, POS: [-0.012, 1.46, -0.36], LOOK: [0, 0.98, 0.8], FOV: 66, NEAR: 0.2,
   FX: [
     { id: 'none', name: 'No effect', svg: '<circle cx="24" cy="24" r="14" fill="none" stroke="#fff" stroke-width="4"/><path d="M14 34L34 14" stroke="#fff" stroke-width="4" stroke-linecap="round"/>' },
     { id: 'pro', name: 'Professional background', svg: '<rect x="7" y="9" width="34" height="30" rx="3" fill="#8a5a3a"/><rect x="10" y="12" width="28" height="7" fill="#d9a066"/><rect x="11" y="13" width="4" height="6" fill="#e5383b"/><rect x="16" y="13" width="3" height="6" fill="#2f7cf6"/><rect x="20" y="14" width="5" height="5" fill="#ffd23b"/><rect x="10" y="22" width="28" height="7" fill="#d9a066"/><circle cx="31" cy="26" r="3" fill="#3fa34d"/><rect x="12" y="23" width="9" height="6" fill="#fff"/><circle cx="24" cy="36" r="7" fill="#f2c4a0"/>' },
@@ -170,7 +170,7 @@ const CamApp = {
 };
 OS.apps.camera = {
   desktop: true, order: 15, available: () => true, title: 'Camera', icon: 'camera', emoji: '📷', color: '#1f2329',
-  w: 520, x: 0.585, y: 0.03, cls: 'camwin',
+  w: 560, x: 0.555, y: 0.03, cls: 'camwin',
   render: (b, w) => CamApp.render(b, w), onClose: w => CamApp.close(w)
 };
 if (!OS.pinned.includes('camera')) OS.pinned.push('camera');

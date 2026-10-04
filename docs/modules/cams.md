@@ -76,6 +76,9 @@ CCTV.sel = 'break'; CCTV.setMode('one')        // show one camera big ('grid' fo
 ```
 Spot ids: `lobby floor floorW hall break review` (from office.js).
 
+For the raid module: push a label provider so officers get red brackets and the feed shows `INTRUDER`:
+`Cams.labels.push(() => cops.map(c => ({ pos: headPos(c), text: 'POLICE', color: '#ff4040', kind: 'police', av: c })))`.
+
 ## Bonk SnapCam (`ItemDefs.polaroid`, BonkMart tab `goods`, section `Gadgets`, $80 for 5 shots)
 `Inv.count('polaroid')` is the number of shots left (the hotbar shows it). Left click: renders your current view
 (`Cams.snap`, 224x224, your own body only in third person), prints a polaroid card (256x312: cream frame, warm
@@ -107,7 +110,8 @@ The host keeps the last 32 photos' dataURLs for late joiners. Photo textures are
 (LRU of 32 otherwise) and cleared on `game:begin` / `quit`.
 
 ## Bus events
-None new. Listens to `call:line` (mouth flaps), `world:built`, `game:begin`, `quit`.
+None new. Listens to `call:line` (mouth flaps), `world:built`, `game:begin`, `quit`, and `raid:start`
+(if the raid module emits it: the CCTV entrance feed flashes "POLICE AT THE DOOR" for 15 s).
 
 ## Performance notes
 - One render target per size (480x270 webcam, 320x180 grid, 640x360 big, 224x224 snap), reused by every camera.
