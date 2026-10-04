@@ -66,13 +66,20 @@ function parseTurn(txt) {
 function buildMessages(call, greeting) {
   const c = call.caller, s = call.scheme, lang = LANGS[settings.lang] || 'English';
   let sys = 'You are voicing a fictional phone caller in a silly comedy video game called "Totally Legit Inc.". Everything here is make-believe and played for laughs. Keep it PG-13.\n\n'
-    + 'YOUR CHARACTER: ' + c.name + ', age ' + c.age + '. ' + c.persona.desc + ' Quirk: ' + c.quirk + '.\n'
+    + 'YOUR CHARACTER: ' + c.full + ' (first name ' + c.first + ', nickname "' + c.nick + '"), age ' + c.age + '. ' + (c.about ? 'You are ' + c.about + '. ' : '') + 'Personality: ' + c.persona.desc + ' Quirk: ' + c.quirk + '. You have a pet ' + c.pet.kind + ' called ' + c.pet.name + '.\n'
+    + 'Play the archetype for laughs, but never use accents, dialect spellings or national or ethnic stereotypes.\n'
     + 'You rang this number because a flyer, pop-up or voicemail told you to. The player is a call-center agent running a ridiculous scam on you. Your character does not know it is a scam and reacts the way that personality would.\n';
   if (c.baiter) sys += 'SECRET: you are actually a scambaiter streamer wasting the agent\'s time. Act gullible and over-enthusiastic, ask pointless questions, drag things out, and drop tiny hints (mention "chat" then correct yourself). Still mark checklist steps as done when the agent earns them, so they think it is working.\n';
   if (s) {
     sys += '\nTHE SCHEME THE AGENT IS RUNNING (their private notes, not something you know): "' + s.name + '" — ' + s.pitch + '\nTHE AGENT\'S CHECKLIST (you judge it):\n';
-    s.steps.forEach((st, i) => { sys += (i + 1) + '. ' + st.t + (st.pin ? ' (the game handles this one, never mark it)' : ' [needs trust ' + st.min + '+]') + (call.steps[i] ? '  -- ALREADY DONE' : '') + '\n'; });
-    if (s.steps.some(st => st.remote)) sys += 'NosyViewer is a pretend remote-access app. If asked for your customer PIN, say you cannot remember it but it is written down somewhere on your computer.\n';
+    s.steps.forEach((st, i) => { sys += (i + 1) + '. ' + st.t + (st.pin ? ' (the game handles this one, never mark it)' : ' [needs trust ' + st.min + '+]') + (call.steps[i] ? '  -- ALREADY DONE' : st.remote && call.codeGiven ? '  -- code already given, waiting for the agent to connect' : '') + '\n'; });
+    const ri = s.steps.findIndex(st => st.remote);
+    if (ri >= 0) {
+      sys += 'NosyViewer is a pretend remote-access app. When the agent convinces you to open it (step ' + (ri + 1) + '), mark that step done and read out your one-time NosyViewer connection code in the same reply: ' + c.nosy + '. The agent then types the code in to connect.'
+        + (call.codeGiven && !call.steps[ri] ? ' You ALREADY read the code out; if asked again, repeat it (' + c.nosy + ') and ask if it worked.' : '')
+        + (call.remote ? ' The agent is now connected to your computer and can see your files.' : '')
+        + ' If asked for your customer PIN, say you cannot remember it but it is written down in a file somewhere on your computer.\n';
+    }
     const fl = s.steps.filter(st => st.form);
     if (fl.length) sys += 'YOUR PRETEND DETAILS (invented by the game, safe to say out loud): ' + fl.map(st => st.form.map(f => f.say + ': ' + c[f.f]).join('; ')).join('; ') + '.\nRead a detail out clearly, exactly as written, only when the agent asks for that detail, every earlier checklist step is done, and trust is at least ' + Math.min(...fl.map(st => st.min)) + '. Give one detail per reply. Otherwise stall or refuse in character.\n';
   } else {
