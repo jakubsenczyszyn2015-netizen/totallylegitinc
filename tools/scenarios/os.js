@@ -7,9 +7,10 @@ module.exports = async page => {
   await page.eval(() => { const T = window.__tli; T.G.timeLeft = 246; return true; });
   // sit down: the boot screen shows first
   await page.eval(() => { const T = window.__tli; const d = T.W.desks.filter(x => !x.npc)[0]; sitAt(d.i); return true; });
-  await page.wait(650);
+  for (let i = 0; i < 40 && !(await page.eval(() => window.__tli.OS.open)); i++) await page.wait(50);
+  await page.wait(350);
   if (want('boot')) await page.shot('os-01-boot');
-  await page.wait(1600);
+  await page.wait(1800);
   const ms = await page.eval(() => Wallpapers.lastMs);
   console.log('wallpaper render ms: ' + ms);
   if (want('desk')) {

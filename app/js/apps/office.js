@@ -34,7 +34,7 @@ const OS_BOSS_FACE = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg
   + '<path d="M22 40 Q32 35 42 40 Q32 43 22 40Z" fill="#6b5a4a" stroke="#11151f" stroke-width="1.8"/><path d="M27 44 Q32 42 37 44" fill="none" stroke="#11151f" stroke-width="2" stroke-linecap="round"/></svg>';
 
 OS.apps.memo = {
-  desktop: true, order: 60, title: 'Memo from the Boss', emoji: '✉️', icon: 'envelope', color: '#c2410c', w: 420, x: 0.04, y: 0.06, cls: 'memo',
+  desktop: true, order: 60, title: 'Memo from the Boss', emoji: '✉️', icon: 'envelope', color: '#c2410c', w: 380, x: 0.03, y: 0.06, cls: 'memo',
   render(b) {
     const un = Game.unlocked(), week = G.mode === 'week', fresh = week ? un.filter(s => s.unlock === Math.min(G.day, 5)) : [];
     const day = week ? DAYS[(G.day - 1) % 5] : 'Overtime';

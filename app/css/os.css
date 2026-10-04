@@ -237,7 +237,7 @@
 .memo-sign{font:400 1.3rem 'Lilita One',sans-serif;color:#1d2433;margin-top:.3rem}
 .memo-role{font-size:.78rem;color:#8a8f99;margin-top:-.55rem}
 .memo-ps{margin:.5rem 1.1rem 1rem;padding:.55rem .7rem;border-radius:4px;background:#eef4fb;border-left:3px solid #4d8fe0;font-size:.8rem;color:#45526a;line-height:1.4}
-.memo-stamp{position:absolute;right:1rem;top:.6rem;padding:.12rem .5rem;border:3px solid rgba(214,52,44,.75);border-radius:5px;color:rgba(214,52,44,.8);font:400 1rem 'Alfa Slab One',serif;letter-spacing:.06em;transform:rotate(9deg);pointer-events:none}
+.memo-stamp{position:absolute;right:.9rem;top:-1.1rem;padding:.1rem .45rem;border:3px solid rgba(214,52,44,.75);border-radius:5px;color:rgba(214,52,44,.85);background:rgba(255,253,248,.85);font:400 .85rem 'Alfa Slab One',serif;letter-spacing:.06em;transform:rotate(9deg);pointer-events:none}
 .win.payroll .wb{gap:.75rem;background:#f5f7fa}
 .pay-hero{padding:.85rem .95rem;border-radius:6px;background:linear-gradient(135deg,#0f8f55,#0a6b40);color:#fff;box-shadow:0 3px 10px rgba(10,107,64,.25)}
 .pay-lab{font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
