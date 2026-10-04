@@ -354,7 +354,7 @@ const FX = (() => {
   function Stream(o) {
     o = o || {};
     const s = { color: o.color || '#ff9418', puddle: o.puddle, w: o.width || 0.042, speed: o.speed || 7.5, rate: o.rate || 75, on: false, dead: false, life: o.life || 0,
-      pos: new THREE.Vector3(), dir: new THREE.Vector3(0, 0, -1), ppos: new THREE.Vector3(), has: false, acc: 0, test: o.test || null, onHit: o.onHit || null,
+      pos: new THREE.Vector3(), dir: new THREE.Vector3(0, 0, -1), ppos: new THREE.Vector3(), pdir: new THREE.Vector3(0, 0, -1), has: false, acc: 0, test: o.test || null, onHit: o.onHit || null,
       nx: new Float32Array(SN * 3), nv: new Float32Array(SN * 3), age: new Float32Array(SN), alive: new Uint8Array(SN), head: 0, cnt: 0, hitT: 0, decT: 0, wt: Math.random() * 9, snd: null, owner: o.owner };
     // one independent tube section per segment so a broken stream leaves real gaps
     const V = SR * 2, geo = new THREE.BufferGeometry(), idx = [];
@@ -372,11 +372,12 @@ const FX = (() => {
     streams.push(s); return s;
   }
   /* nodes fly on exact parabolas from where they left the nozzle: p = p0 + v0 t - g t^2 / 2 (smooth at any frame rate) */
-  function emitNode(s, x, y, z, pre) {
+  function emitNode(s, x, y, z, pre, f) {
     const i = s.head; s.head = (i + 1) % SN; if (s.cnt < SN) s.cnt++;
+    _v.copy(s.pdir).lerp(s.dir, f).normalize();   // the aim turns smoothly within the frame too
     const j = 0.003, sp = s.speed * (1 + Math.sin(s.wt * 9.3) * 0.025), wt = s.wt;   // smooth hose wobble, tiny per-node noise
-    const wx = Math.sin(wt * 7 + 1.3) * 0.012 + Math.sin(wt * 3.1) * 0.008, wy = Math.cos(wt * 5.3) * 0.01, wz = Math.sin(wt * 6.1 + 4) * 0.012;
-    const vx = (s.dir.x + wx + rand(-j, j)) * sp, vy = (s.dir.y + wy + rand(-j, j)) * sp, vz = (s.dir.z + wz + rand(-j, j)) * sp;
+    const wx = Math.sin(wt * 7 + 1.3) * 0.006 + Math.sin(wt * 3.1) * 0.006, wy = Math.cos(wt * 5.3) * 0.006, wz = Math.sin(wt * 6.1 + 4) * 0.006;
+    const vx = (_v.x + wx + rand(-j, j)) * sp, vy = (_v.y + wy + rand(-j, j)) * sp, vz = (_v.z + wz + rand(-j, j)) * sp;
     s.nv[i * 3] = vx; s.nv[i * 3 + 1] = vy; s.nv[i * 3 + 2] = vz; s.nx[i * 3] = x; s.nx[i * 3 + 1] = y; s.nx[i * 3 + 2] = z; s.age[i] = pre; s.alive[i] = 1;
     if (Math.random() < 0.2) {   // stray droplets breaking off the stream
       p(x, y, z); Q.vx = vx * rand(0.8, 1.05) + rand(-0.5, 0.5); Q.vy = vy * rand(0.8, 1.05) + rand(-0.3, 0.6); Q.vz = vz * rand(0.8, 1.05) + rand(-0.5, 0.5);
@@ -393,10 +394,10 @@ const FX = (() => {
     if (s.life > 0) { s.life -= dt; if (s.life <= 0) s.on = false; }
     for (let k = 0; k < s.cnt; k++) { const i = (s.head - 1 - k + SN) % SN; if (s.alive[i]) s.age[i] += dt; }
     if (s.on) {
-      if (!s.has) { s.ppos.copy(s.pos); s.has = true; }
+      if (!s.has) { s.ppos.copy(s.pos); s.pdir.copy(s.dir); s.has = true; }
       s.acc += dt * s.rate; let n = Math.floor(s.acc); s.acc -= n; n = Math.min(n, 12);
-      for (let k = 0; k < n; k++) { const f = (k + 1) / n; s.wt += 1 / s.rate; emitNode(s, lerp(s.ppos.x, s.pos.x, f), lerp(s.ppos.y, s.pos.y, f), lerp(s.ppos.z, s.pos.z, f), dt * (1 - f)); }
-      s.ppos.copy(s.pos);
+      for (let k = 0; k < n; k++) { const f = (k + 1) / n; s.wt += 1 / s.rate; emitNode(s, lerp(s.ppos.x, s.pos.x, f), lerp(s.ppos.y, s.pos.y, f), lerp(s.ppos.z, s.pos.z, f), dt * (1 - f), f); }
+      s.ppos.copy(s.pos); s.pdir.copy(s.dir);
       if (!s.snd) s.snd = FXSnd.loop(2600, 'highpass'); s.snd.set(0.07 * FXSnd.vol(s.pos));
     } else if (s.snd) { s.snd.stop(); s.snd = null; }
     // where is every node now? (exact parabola) + collisions

@@ -497,7 +497,7 @@ ItemDefs.paper = { name: 'Paper ball', icon: PropIcons.paper, desc: 'An endless 
 ItemDefs.soda = {
   name: 'Bonk Soda', icon: PropIcons.soda, desc: 'Orange fizz. Shake well, point at a coworker, squeeze.', hint: 'Hold click to spray', hold: true, fx: 'spray', prop: 'soda',
   model: () => PropArt.can('soda'),
-  use() { if (Props.sodaLeft <= 0) Props.sodaLeft = SODA_SECS; Props.act('spray'); if (W.me && W.me.play) W.me.play('spray', { hold: 0.5 }); },
+  use() { if (Props.sodaLeft <= 0) Props.sodaLeft = SODA_SECS; if (W.me && W.me.play) W.me.play('spray', { hold: 0.5 }); },   // others start their 'spray' pose from held.u
   useHold(dt) {
     Props.sodaLeft -= dt;
     if (Props.sodaLeft <= 0) {   // can empty: drop it
@@ -531,7 +531,7 @@ ItemDefs.whoopee = {
     }
     const id = Props.newId(); Inv.take('whoopee'); SFX.click();
     if (best) {
-      const npc = best.npc ? W.npcs.findIndex(n => Math.hypot(n.group.position.x - best.seat.x, n.group.position.z - best.seat.z) < 0.6) : -2;
+      const npc = best.npc ? W.npcs.findIndex(n => n.desk === best.i || Math.hypot(n.group.position.x - best.seat.x, n.group.position.z - best.seat.z) < 0.6) : -2;
       const p = [+best.seat.x.toFixed(2), 0.5, +best.seat.z.toFixed(2)];
       Cushions.add(id, p[0], p[1], p[2], best.i); Net.emit('whoopee', { id, p, d: best.i });
       if (npc >= 0 || best.npc) {   // someone is already sitting there: instant result
@@ -689,14 +689,16 @@ const MySpray = {
 };
 
 /* ---------- targets (players, NPCs, boss) rebuilt each frame for hit tests ---------- */
+const _tPool = [];
+function tgt(i, kind, id, n, x, z, y0, y1, r, me) { const o = _tPool[i] || (_tPool[i] = {}); o.kind = kind; o.id = id; o.n = n; o.x = x; o.z = z; o.y0 = y0; o.y1 = y1; o.r = r; o.me = me; Props._targets.push(o); }
 function buildTargets() {
-  const T = Props._targets; T.length = 0;
-  if (Net.active) for (const [id, a] of W.avatars) { const g = a.av.group, sit = a.seat >= 0 || a.seat <= -10; T.push({ kind: 'player', id, x: g.position.x, z: g.position.z, y0: g.position.y + 0.2, y1: g.position.y + (sit ? 1.5 : 1.85), r: 0.34 }); }
-  W.npcs.forEach((n, i) => { if (!n.group.visible) return; const g = n.group.position; T.push({ kind: 'npc', n: i, x: g.x, z: g.z, y0: 0.2, y1: 1.5, r: 0.34 }); });
-  if (W.boss) { const g = W.boss.group.position, s = W.boss.group.scale.y || 1; T.push({ kind: 'npc', n: -1, x: g.x, z: g.z, y0: 0.2, y1: 1.85 * s, r: 0.38 }); }
+  const T = Props._targets; T.length = 0; let i = 0;
+  if (Net.active) for (const [id, a] of W.avatars) { const g = a.av.group.position, sit = a.seat >= 0 || a.seat <= -10; tgt(i++, 'player', id, 0, g.x, g.z, g.y + 0.2, g.y + (sit ? 1.5 : 1.85), 0.34, false); }
+  for (let k = 0; k < W.npcs.length; k++) { const n = W.npcs[k]; if (!n.group.visible) continue; const g = n.group.position; tgt(i++, 'npc', null, k, g.x, g.z, 0.2, 1.5, 0.34, false); }
+  if (W.boss) { const g = W.boss.group.position, s = W.boss.group.scale.y || 1; tgt(i++, 'npc', null, -1, g.x, g.z, 0.2, 1.85 * s, 0.38, false); }
   const sit = P.seated || P.review >= 0; let mx = P.pos.x, mz = P.pos.z;
   if (W.me && sit) { mx = W.me.group.position.x; mz = W.me.group.position.z; }
-  T.push({ kind: 'player', me: true, id: Net.myId, x: mx, z: mz, y0: P.pos.y + 0.2, y1: P.pos.y + (sit ? 1.5 : 1.85), r: 0.34 });
+  tgt(i++, 'player', Net.myId, 0, mx, mz, P.pos.y + 0.2, P.pos.y + (sit ? 1.5 : 1.85), 0.34, true);
 }
 
 /* ---------- farts make people cough ---------- */
@@ -741,8 +743,8 @@ const HUDBar = {
     nm.innerHTML = '<b>' + t + '</b>' + (sub ? '<small>' + sub + '</small>' : '');
   },
   flashName() { if (!this.el) return; this.nameHTML(); const nm = this.el.querySelector('.hb-name'); nm.classList.remove('on'); void nm.offsetWidth; nm.classList.add('on'); clearTimeout(this._nt); this._nt = setTimeout(() => nm.classList.remove('on'), 2200); },
-  tick() {
-    if (!this.el) return;
+  tick(dt) {
+    if (!this.el) return; this._t = (this._t || 0) + dt; if (this._t < 0.1) return; this._t = 0;
     const vis = G.phase !== 'menu' && !P.seated && P.review < 0 && !G.paused && G.phase !== 'review';
     this.el.classList.toggle('hidden', !vis); this.keys.classList.toggle('hidden', !vis);
     document.body.classList.toggle('hb-on', vis);
@@ -789,5 +791,5 @@ Loop.add((dt, t) => {
   Props.tickUse(dt); Props.update(dt, t);
   VM.update(dt, t); HeldSync.update(); MySpray.update();
   if (G.phase !== 'menu') Cushions.check();
-  HUDBar.tick();
+  HUDBar.tick(dt);
 });

@@ -77,6 +77,7 @@ window.addEventListener('keydown', e => {
   else if (e.code === 'KeyQ') Props.punch();
   else if (e.code === 'KeyC' && !e.repeat) setThird(!P.third);
   else if (e.code === 'KeyG' && !e.repeat) Props.drop();
+  else if (e.code === 'KeyF' && !e.repeat && Props.heldId() !== 'paper') Props.throwSel();   // items: once per press
 });
 window.addEventListener('wheel', e => { if (G.phase === 'menu' || !Game.canControl() || now() - _wheelT < 0.09 || !e.deltaY) return; _wheelT = now(); Props.cycle(e.deltaY > 0 ? 1 : -1); }, { passive: true });
 window.addEventListener('mouseup', e => { if (e.button === 0) Props.endUse(); });
@@ -147,7 +148,7 @@ function updateWorld(dt, t) {
     P.pos.x = clamp(P.pos.x, B.x0, B.x1); P.pos.z = clamp(P.pos.z, B.z0, B.z1);
     P.speed = Math.hypot(P.vx, P.vz);
     if (ctl && Keys.Space && ground && !stunned) { P.vy = PC.jump; FXSnd.noise(0.1, 0.05, 0, 500, 900, 'bandpass', 1); }
-    if (ctl && Keys.KeyF) Props.throwSel();
+    if (ctl && Keys.KeyF && Props.heldId() === 'paper') Props.throwSel();   // paper balls auto-fire while F is held
     P.vy -= PC.grav * dt; P.pos.y += P.vy * dt;
     if (P.pos.y <= 0) { if (P.vy < -4) { SFX.land(); P.dip = Math.min(0.12, -P.vy * 0.016); } P.pos.y = 0; P.vy = 0; }
     if (P.boost > 0) P.boost -= dt;
