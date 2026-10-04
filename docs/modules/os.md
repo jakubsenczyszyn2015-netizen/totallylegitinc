@@ -88,7 +88,8 @@ the last 30 s). Endless mode: `TEAM $x` and `OVERTIME`. A Bonk Pay pill on the l
 ## Boot screen
 
 `OS.show()` shows a black monitor boot screen with the LegitOS logo and a loading bar: 1.2 s the first time
-you sit down in a shift (key: mode, slot, day), 0.3 s after that. The wallpaper is painted while it is up.
+you sit down in a shift (key: mode, slot, day), 0.3 s after that. The wallpaper is painted while it is up
+(the boot waits for it, at most 4 s).
 
 **Test scenarios:** `page.sit()` waits ~0.9 s, so a screenshot taken right after it shows the boot screen.
 Either wait ~1.8 s more, or run `window.__tli.OS.fastBoot = true` before sitting down.
@@ -103,14 +104,17 @@ red decline (`Call.decline()`) and green answer (`Call.answer()` + `OS.launch('p
 
 `Wallpapers` (global, apps/wallpapers.js):
 - `Wallpapers.list` — scenes `{ id, name }`: `canyon` (default), `alpine`, `ocean`, `forest`, `city`, `logo`.
-- `Wallpapers.set(id)` — saves `settings.wallpaper` (`saveSettings()`), repaints the desktop, emits `Bus 'wallpaper'` (id).
-- `Wallpapers.current()` — the selected id. `Wallpapers.render(id, w, h)` — a `<canvas>`/`<svg>` element
-  (full-screen renders are cached; pass `w, h` for a thumbnail).
+- `Wallpapers.set(id)` — saves `settings.wallpaper` (`saveSettings()`), emits `Bus 'wallpaper'` (id) and repaints
+  the desktop; returns a Promise that resolves when the new wallpaper is on screen.
+- `Wallpapers.current()` — the selected id.
+- `Wallpapers.renderAsync(id)` — Promise of the full-screen element, painted in ~10 ms slices so the game keeps running (cached, max 3).
+- `Wallpapers.render(id, w, h)` — synchronous `<canvas>`/`<svg>` element; pass `w, h` for a thumbnail.
+- `OS.setWallpaper(id)` returns the same kind of Promise.
 
 Each landscape is painted procedurally (no image files): sky gradient + sun glow, a lit perspective cloud
 layer, a heightfield terrain raycaster with sun light, cast shadows, haze and per-pixel cliff strata,
 physically mirrored water with ripples and sun glitter, then vignette and film grain. A full-screen
-render takes ~0.3-0.7 s, which is hidden behind the boot screen.
+render takes ~0.3-1 s of time-sliced work, done while the boot screen is up (the boot waits for it: min 1.2 s, max 4 s).
 
 The **Wallpapers** app (`OS.apps.wallpapers`) shows thumbnails; also reachable from the start menu and
 by right-clicking the desktop.
