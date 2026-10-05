@@ -3,7 +3,7 @@
    GAME — state, day cycle, saves
    ===================================================================== */
 const G = { phase: 'menu', mode: 'week', slot: 0, day: 1, quota: 0, team: 0, personal: 0, bank: 0, timeLeft: 0, dayLen: 300, paused: false,
-  stats: { calls: 0, scams: 0, baited: 0, hung: 0 }, clips: 0, clipBots: 0, result: null, startedAt: 0, wallet: 0, up: {},
+  stats: { calls: 0, scams: 0, baited: 0, hung: 0 }, result: null, startedAt: 0, wallet: 0, up: {},
   /* prog: free-form per-save progress any module can use (owned apps, cookie counts, wallpaper…). Saved with the slot. */
   prog: {} };
 
@@ -55,7 +55,7 @@ const Game = {
   begin(mode, slot) {
     resetPlayer(); OS.reset(); OS.hide(); Call.reset();
     G.mode = mode; G.slot = slot | 0; G.paused = false; G.personal = 0; G.team = 0; G.bank = 0; G.day = 1; G.quota = 0; G.timeLeft = 0;
-    G.clips = 0; G.clipBots = 0; G.wallet = 0; G.up = {}; G.prog = {}; Inv.load({}); G.stats = { calls: 0, scams: 0, baited: 0, hung: 0 }; G.result = null; G.startedAt = now();
+    G.wallet = 0; G.up = {}; G.prog = {}; Inv.load({}); G.stats = { calls: 0, scams: 0, baited: 0, hung: 0 }; G.result = null; G.startedAt = now();
     $('#menu').classList.add('hidden'); $('#hud').classList.remove('hidden'); $('#review').classList.add('hidden'); $('#pause').classList.add('hidden');
     AudioSys.resume(); Bus.emit('game:begin', { mode, slot: G.slot });
   },
@@ -171,7 +171,6 @@ const Game = {
       else G.timeLeft = Math.max(0, G.timeLeft - dt);
     }
     if (!(G.paused && !Net.active)) Call.tick(dt);
-    G.clips += G.clipBots * dt;
   },
   pause(on) {
     if (G.phase === 'menu') return;

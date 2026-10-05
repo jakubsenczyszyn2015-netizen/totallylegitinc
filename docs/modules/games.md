@@ -7,7 +7,7 @@ or a bare `.win` class inside a window (that is the OS window class).
 
 ## Cosmic Cookie (`OS.apps.cookie`, $150)
 
-An idle clicker. It replaces the old Paperclip Empire app (`OS.apps.clips` is gone; `G.clips` in game.js is now unused).
+An idle clicker. It replaces the old Paperclip Empire app (`OS.apps.clips` and the old `G.clips` state are gone).
 
 - Big chunky SVG cookie that squishes on click, with `+N` floating numbers and crumbs. Rotating sunburst, star field,
   cookie rain whose density follows production.
