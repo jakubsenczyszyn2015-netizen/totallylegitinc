@@ -8,7 +8,7 @@
     "vendor": "node scripts/vendor.js",
     "start": "npm run vendor && electron .",
     "dist:win": "npm run vendor && electron-builder --win portable nsis --publish never",
-    "pack:win": "npm run vendor && electron-packager . \"Totally Legit Inc\" --platform=win32 --arch=x64 --out=dist --overwrite --ignore=^/dist"
+    "pack:win": "npm run vendor && electron-packager . \"Totally Legit Inc\" --platform=win32 --arch=x64 --out=dist --overwrite --icon=build/icon.ico --ignore=^/dist"
   },
   "build": {
     "appId": "inc.totallylegit.game",
@@ -21,7 +21,17 @@
       "target": [
         "portable",
         "nsis"
-      ]
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "shortcutName": "Totally Legit Inc"
+    },
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
     }
   },
   "devDependencies": {
@@ -35,5 +45,6 @@
     "peer": "^1.0.2",
     "peerjs": "1.5.4",
     "three": "0.128.0"
-  }
+  },
+  "author": "Totally Legit Inc."
 }
