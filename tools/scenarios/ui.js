@@ -44,12 +44,14 @@ module.exports = async page => {
     const st = await ev(() => ({ prompt: !document.getElementById('hud-prompt').classList.contains('hidden'), hint: document.getElementById('hud-hint').className, keyhint: getComputedStyle(document.getElementById('keyhint') || document.body).display }));
     await shot('ui-12-hud-walk');
     check('prompt + full controls panel, props keyhint folded in', st.prompt && !/mini|hidden/.test(st.hint) && st.keyhint === 'none', st);
-    await ev(() => { const T = window.__tli; T.UI.hintUntil = 0; T.G.timeLeft = 42; setTimeout(() => T.UI.hud(), 50); toast('Motivational posters: +$10 synergy bonus.', 'good'); toast('Agent Kim closed a scam: +$250', 'good'); toast('You got baited: -$120', 'bad'); toast('Room code copied.'); T.Call.ring(false); return true; });
+    // toasts expire on real time and a harness frame can take a second: stretch their timers for the shot
+    await ev(() => { const T = window.__tli; T.UI.hintUntil = 0; T.G.timeLeft = 42; T.UI.hud(); const st = window.setTimeout; window.setTimeout = (f, ms, ...a) => st(f, ms > 3000 ? ms * 100 : ms, ...a);
+      try { toast('Motivational posters: +$10 synergy bonus.', 'good'); toast('Agent Kim closed a scam: +$250', 'good'); toast('You got baited: -$120', 'bad'); toast('Room code copied.'); } finally { window.setTimeout = st; } T.Call.ring(false); return true; });
     await page.wait(700);
     const mini = await ev(() => document.getElementById('hud-hint').className);
     await shot('ui-13-hud-mini-toasts');
     check('controls panel collapses to the H tab', /mini/.test(mini), { mini });
-    await ev(() => { window.__tli.Call.decline(); return true; });
+    await ev(() => { window.__tli.Call.decline(); document.querySelectorAll('#toasts .toast').forEach(t => t.remove()); return true; });
     // H opens it again
     await ev(() => { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyH' })); return true; });
     const reopened = await ev(() => document.getElementById('hud-hint').className);
