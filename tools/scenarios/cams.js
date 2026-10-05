@@ -15,7 +15,8 @@ module.exports = async page => {
   const frames = (which, n) => ev((w, n) => new Promise(res => { const c = w === 'web' ? CamApp.cam : w === 'big' ? CCTV.big : CCTV.grid[0]; const f0 = c ? c.frames : 0, t0 = W.t; const f = () => ((c && c.frames >= f0 + n) || W.t - t0 > 6 ? res(c ? c.frames : -1) : setTimeout(f, 40)); f(); }), which, n);
 
   await page.startSolo('week');
-  await ev(() => { const T = window.__tli; T.OS.fastBoot = true; T.Call.state = 'idle'; T.Call.wait = 1e9; return true; });
+  await ev(() => { const T = window.__tli; T.OS.fastBoot = true; T.Call.state = 'idle'; T.Call.wait = 1e9;
+    settings.look = Object.assign(lookFromSeed(12), { skin: '#f3d2b3', hair: 'short', hairColor: '#2a1c14', facial: 'mustache', glasses: 'none', shirt: '#f59e0b' }); Avatars.refreshMe(); return true; });   // a fixed look for comparable shots
   const desk = await ev(() => { const T = window.__tli; const d = T.W.desks.filter(x => !x.npc && !T.Game.deskTaken(x.i))[2]; sitAt(d.i); return d.i; });
   await gw(1.2);
   await ev(() => { const T = window.__tli; T.OS.close('memo', true); const ph = T.OS.wins.get('phone'); if (ph) T.OS.minimise('phone'); settings.camFx = 'none'; return true; });
@@ -36,7 +37,7 @@ module.exports = async page => {
     const info = await ev(() => ({ frames: CamApp.cam.frames, fx: CamApp.fx(), vis: CamApp.visible() }));
     console.log('webcam: ' + JSON.stringify(info));
     // teammate leaning in behind your right shoulder, waving
-    await ev(() => { const m = __mate, p = __mateL(0.42, 1.05); m.group.visible = true; m.group.position.set(p[0], 0, p[1]); m.group.rotation.y = __mateD.rot + 0.35; m.play('wave', { loop: true }); m.setMood('happy'); return true; });
+    await ev(() => { const m = __mate, p = __mateL(0.5, 1.02); m.group.visible = true; m.group.position.set(p[0], 0, p[1]); m.group.rotation.y = __mateD.rot + 0.35; m.play('wave', { loop: true }); m.setMood('happy'); return true; });
     await ev(() => { Cams.talkUntil = W.t + 5; return true; });
     await gw(0.6); await frames('web', 2);
     await page.shot('c02-webcam-mate');

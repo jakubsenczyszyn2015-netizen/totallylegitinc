@@ -109,7 +109,7 @@ const CamApp = {
         [L, R].forEach(p => { g.beginPath(); g.ellipse(p.x, p.y, r * 1.3, r * 0.8, 0, 0, 7); g.fill(); }); g.restore();
         g.save(); g.font = Math.round(r * 2.2) + 'px sans-serif'; g.textAlign = 'center';
         const side = R.x < L.x ? -1 : 1;   // hearts float up beside the head (the webcam sees you mirrored)
-        for (let i = 0; i < 3; i++) { const k = (t * 0.35 + i / 3) % 1; g.globalAlpha = Math.sin(k * Math.PI); g.fillStyle = '#ff4f8f'; this.heart(g, R.x + side * r * (5 + Math.sin(t * 2 + i)), R.y - k * r * 9, r * 0.9); }
+        for (let i = 0; i < 3; i++) { const k = (t * 0.35 + i / 3) % 1; g.globalAlpha = Math.sin(k * Math.PI); g.fillStyle = '#ff4f8f'; this.heart(g, R.x + side * r * (4.2 + Math.sin(t * 2 + i)), R.y - k * r * 9, r * 0.9); }
         g.restore();
       }
     }
