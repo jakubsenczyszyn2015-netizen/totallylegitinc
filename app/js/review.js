@@ -361,7 +361,7 @@ const Review = (() => {
     P.yaw = R.yaw0 = Math.atan2(-Math.cos(c), -Math.sin(c)); P.pitch = Math.atan2(SCR.y - 1.35, Math.hypot(dx, SCR.z0 / 2 + SCR.z1 / 2 - P.pos.z)) * 0.75;
   }
   function verdict() {
-    const res = R.res; showSlide('verdict', 1.2);
+    const res = R.res; showSlide('verdict', 1.2); Bus.emit('review:verdict', res);
     const last = (res.lines || [])[res.lines ? res.lines.length - 1 : 0]; if (last) later(0.5, () => say(last));
     if (res.pass) {
       SFX.pass();

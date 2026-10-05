@@ -75,7 +75,9 @@ tilts back), `spray` (right arm held out), `fart` (squat and lean, strained face
 * `avatarOf(id)` — the avatar of any player id (`'me'` or `Net.myId` = `W.me`), or null.
 * `W.avatars` — Map id -> `{av, ...}` of remote players, managed by `syncAvatars` / `updateAvatars`.
 * Looks sync through `Net.addMe('look', ...)` as a packed string (`p.ext.look`); remote avatars
-  rebuild when it changes. Mood syncs through `p.ext.mood`.
+  rebuild when it changes. Mood syncs through `p.ext.mood`. Automatic moods: joy on `scam:paid`, sad on
+  `scam:baited`, angry when the caller hangs up, happy on `call:answer`, and happy / surprised on
+  `review:verdict` (only when the verdict slide shows, so faces do not give the result away early).
 * Actions sync with net messages:
 
 ```js

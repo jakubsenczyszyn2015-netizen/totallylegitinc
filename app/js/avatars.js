@@ -843,7 +843,7 @@ Bus.on('scam:paid', () => { Avatars.setMood('joy', 4); Avatars.act('cheer'); });
 Bus.on('scam:baited', () => { Avatars.setMood('sad', 5); Avatars.act('facepalm'); });
 Bus.on('call:end', e => { if (e && (e.result === 'hung' || e.result === 'timeout')) Avatars.setMood('angry', 3); });
 Bus.on('call:answer', () => Avatars.setMood('happy', 2));
-Bus.on('review', res => Avatars.setMood(res && res.pass ? 'happy' : 'surprised', 6));
+Bus.on('review:verdict', res => Avatars.setMood(res && res.pass ? 'happy' : 'surprised', 6));   // not on 'review': that gives the verdict away
 Bus.on('world:built', () => {
   W.me = buildAvatar({ look: avMyLook(), name: '' });
   W.me.group.visible = false; W.scene.add(W.me.group);

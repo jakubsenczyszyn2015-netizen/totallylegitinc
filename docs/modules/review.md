@@ -99,6 +99,7 @@ Review.scoreLine(text)   // the quote score
 | event | args | when |
 |---|---|---|
 | `review:slide` | `name, res` | a slide is shown (`title`, `calls`, `chart`, `verdict`) |
+| `review:verdict` | `res` | the verdict slide is shown (react to the result here, not on `review`, which would give it away) |
 | `review:fire` | `res` | the review room bursts into flames (fired) |
 | `review:report` | `res, kind` | the report sheet is shown (`fired`, `eval`, `promo`) |
 | `review:end` | | the review was cleaned up (next day, retry or quit) |
