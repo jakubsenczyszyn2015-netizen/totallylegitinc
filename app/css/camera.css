@@ -7,7 +7,7 @@
 .cam-cv{position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;filter:saturate(1.12) contrast(1.05)}
 .win.camwin[data-fx=night] .cam-cv{filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(3.2) brightness(1.05) contrast(1.3)}
 .win.camwin[data-fx=beauty] .cam-cv{filter:saturate(1.3) brightness(1.08) contrast(.9) blur(.5px)}
-.win.camwin[data-fx=potato] .cam-cv{filter:saturate(1.7) contrast(1.35);image-rendering:pixelated}
+.win.camwin[data-fx=potato] .cam-cv{filter:saturate(1.35) contrast(1.2);image-rendering:pixelated}
 .win.camwin[data-fx=boss] .cam-cv{filter:saturate(1.15) contrast(1.06)}
 .cam-live{position:absolute;left:.55rem;top:.5rem;display:flex;align-items:center;gap:.3rem;padding:.12rem .45rem .12rem .38rem;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font:700 .62rem/1 Roboto,sans-serif;letter-spacing:.08em;pointer-events:none}
 .cam-live i{width:.45rem;height:.45rem;border-radius:50%;background:#ff3b3b;box-shadow:0 0 6px #ff3b3b;animation:camblink 1.6s steps(2) infinite}
