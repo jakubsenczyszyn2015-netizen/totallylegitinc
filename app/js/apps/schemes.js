@@ -39,7 +39,7 @@ function schemeApp(s) {
       w.sig = sig;
       /* keep what is being typed (and the caret) across rebuilds */
       const act = document.activeElement, focusF = act && b.contains(act) && act.dataset ? act.dataset.f : null, caret = focusF ? act.selectionStart : 0;
-      const done = mine ? c.steps.filter(Boolean).length : 0, paid = mine && st === 'ended' && c.result === 'paid';
+      const done = mine ? c.steps.filter(Boolean).length : 0, paid = mine && (st === 'ended' || live) && c.result === 'paid';   // from the cash pop-up on, not only once the call has ended
       const kids = [
         h('div', { class: 'sx-head', style: { borderBottomColor: s.color } },
           h('div', { class: 'sx-seal', style: { background: s.color }, html: sealSVG(s) }),
@@ -48,7 +48,7 @@ function schemeApp(s) {
           h('div', {}, h('small', {}, s.brand || 'TOTALLY LEGIT INC.'), h('b', {}, s.name)), h('div', { class: 'sx-art', html: schemeArt(s) })),
         h('div', { class: 'sx-reward' }, h('span', {}, 'Reward: ', h('b', {}, money(s.reward))), h('span', { class: 'sx-pill' + (paid ? ' ok' : '') }, done + ' / ' + s.steps.length + ' done'))
       ];
-      if (mine && st === 'ended' && c.result === 'baited') kids.push(h('div', { class: 'sx-banner bad' }, 'That was a scambaiter. You got played.'));
+      if (mine && (st === 'ended' || live) && c.result === 'baited') kids.push(h('div', { class: 'sx-banner bad' }, 'That was a scambaiter. You got played.'));
       else if (paid && !s.steps.some(x => x.form)) kids.push(h('div', { class: 'sx-banner ok' }, 'Scam complete — ' + money(c.paid) + ' earned.'));
       kids.push(h('ol', { class: 'sx-steps' }, s.steps.map((x, i) => {
         const ok = mine && c.steps[i], cur = mine && i === next && live;
