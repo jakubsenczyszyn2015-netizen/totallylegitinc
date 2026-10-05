@@ -16,7 +16,7 @@ body.rv-on #hud-stats,body.rv-on #hud-prompt,body.rv-on #crosshair{display:none!
 .rv-top.gone,.rv-skip.gone,.rv-hint.gone{opacity:0;pointer-events:none}
 
 /* subtitles under the screen */
-.rv-sub{position:absolute;left:50%;bottom:9vh;transform:translate(-50%,12px);max-width:min(54rem,90vw);padding:.65rem 1.2rem .75rem;border-radius:14px;background:rgba(12,8,6,.8);border:2px solid rgba(255,214,120,.22);box-shadow:0 10px 30px rgba(0,0,0,.4);color:#fff;text-align:center;opacity:0;transition:opacity .25s,transform .25s}
+.rv-sub{position:absolute;left:50%;bottom:5.5vh;transform:translate(-50%,12px);max-width:min(54rem,90vw);padding:.65rem 1.2rem .75rem;border-radius:14px;background:rgba(12,8,6,.8);border:2px solid rgba(255,214,120,.22);box-shadow:0 10px 30px rgba(0,0,0,.4);color:#fff;text-align:center;opacity:0;transition:opacity .25s,transform .25s}
 .rv-sub.on{opacity:1;transform:translate(-50%,0)}
 .rv-sub .who{display:block;font-family:'Lilita One',var(--font-d);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;color:#ffcf5a;margin-bottom:.15rem}
 .rv-sub .txt{font-weight:800;font-size:clamp(1.05rem,1.8vw,1.4rem);line-height:1.3;text-shadow:0 2px 0 rgba(0,0,0,.5)}
@@ -27,7 +27,7 @@ body.rv-on #hud-stats,body.rv-on #hud-prompt,body.rv-on #crosshair{display:none!
 
 /* fired: foreground flames */
 .rv-flames{position:absolute;left:0;right:0;bottom:0;height:40vh;overflow:hidden;mix-blend-mode:screen;opacity:0;animation:rvIn .8s ease forwards;background:linear-gradient(0deg,rgba(255,90,20,.55),rgba(255,60,10,.18) 45%,rgba(255,60,10,0))}
-.rv-flames i{position:absolute;bottom:-4vh;transform-origin:50% 100%;filter:blur(5px);opacity:.85;animation:rvFlick .7s ease-in-out infinite alternate}
+.rv-flames i{position:absolute;bottom:-5vh;transform-origin:50% 100%;filter:blur(9px);animation:rvFlick .7s ease-in-out infinite alternate}
 .rv-flames svg{width:100%;height:100%;display:block}
 @keyframes rvFlick{0%{transform:scale(1,1) skewX(0)}35%{transform:scale(1.08,.86) skewX(4deg)}70%{transform:scale(.92,1.12) skewX(-5deg)}100%{transform:scale(1.04,.94) skewX(2deg)}}
 @keyframes rvIn{to{opacity:1}}
@@ -83,7 +83,7 @@ body.rv-on #hud-stats,body.rv-on #hud-prompt,body.rv-on #crosshair{display:none!
 .rv-sheet .wait{display:flex;align-items:center;gap:.5rem;font-weight:800;color:#7a4a2a}
 .rv-sheet .spin{width:16px;height:16px;border-radius:50%;border:3px solid #e6cf9a;border-top-color:var(--rv-red);animation:rvSpin .8s linear infinite}
 @keyframes rvSpin{to{transform:rotate(360deg)}}
-.rv-sheet .stamp{position:absolute;right:13rem;top:1.6rem;transform:rotate(-12deg) scale(2);opacity:0;font-family:var(--font-d);font-size:1.7rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(200,30,20,.78);border:4px solid rgba(200,30,20,.7);border-radius:8px;padding:.05em .45em;animation:rvStamp .3s ease-in .9s forwards;pointer-events:none;mix-blend-mode:multiply}
+.rv-sheet .stamp{position:absolute;right:10.5rem;top:2.7rem;transform:rotate(-12deg) scale(2);opacity:0;font-family:var(--font-d);font-size:1.35rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(200,30,20,.78);border:4px solid rgba(200,30,20,.7);border-radius:8px;padding:.05em .45em;animation:rvStamp .3s ease-in .9s forwards;pointer-events:none;mix-blend-mode:multiply}
 @keyframes rvStamp{to{transform:rotate(-12deg) scale(1);opacity:1}}
 .rv-sheet .seal{position:absolute;right:-28px;top:-34px;width:118px;height:118px;transform:rotate(12deg);filter:drop-shadow(0 6px 8px rgba(0,0,0,.3));animation:rvSeal .5s cubic-bezier(.2,1.6,.4,1) .7s both}
 @keyframes rvSeal{from{transform:rotate(-40deg) scale(0)}to{transform:rotate(12deg) scale(1)}}

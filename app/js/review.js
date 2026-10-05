@@ -7,8 +7,8 @@
    quotes and career records to the review result by wrapping reviewLines (called by Game.endDay).
    API: see docs/modules/review.md. */
 const Review = (() => {
-  const SEAT_PREF = [4, 5, 6, 7, 2, 3, 0, 1];            // middle seats first: closest view of the screen without heads in the way
-  const AIM = { x: 19.55, y: 1.62, z: -6.05 };          // between the projector screen and The Boss
+  const SEAT_PREF = [6, 7, 4, 5, 2, 3, 0, 1];            // front seats first: a clear view of the screen (no chair backs in the way)
+  const AIM = { x: 19.85, y: 1.68, z: -5.95 };          // the projector screen, nudged towards The Boss
   const BOSS_VOICE = { seed: 11, pitch: 0.55, rate: 0.92 };
   const PAL = ['#3b82f6', '#e8590c', '#2f9e44', '#c2255c', '#7048e8', '#f08c00', '#0c8599', '#5c940d'];
   const FIRE_SPOTS = [[14.2, 0.8, -5.2, 0.75], [15.9, 0.8, -5.65, 0.85], [17.15, 0.8, -5.05, 0.7], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
@@ -133,6 +133,8 @@ const Review = (() => {
     for (const k of [-1, 1]) { g.beginPath(); g.moveTo(k * s * 0.56, -s * (angry ? 0.42 : 0.34)); g.lineTo(k * s * 0.12, -s * (angry ? 0.2 : 0.3)); g.stroke(); }
     g.fillStyle = '#fff'; for (const k of [-1, 1]) ell(g, k * s * 0.33, -s * 0.08, s * 0.17, s * (angry ? 0.11 : 0.14));
     g.fillStyle = '#1a1410'; for (const k of [-1, 1]) ell(g, k * s * 0.3, -s * 0.06, s * 0.075, s * 0.075);
+    g.strokeStyle = '#2a1a14'; g.lineWidth = s * 0.06; for (const k of [-1, 1]) { rr(g, k * s * 0.33 - s * 0.24, -s * 0.24, s * 0.48, s * 0.34, s * 0.07); g.stroke(); }
+    g.beginPath(); g.moveTo(-s * 0.09, -s * 0.1); g.lineTo(s * 0.09, -s * 0.1); g.moveTo(-s * 0.57, -s * 0.12); g.lineTo(-s * 0.8, -s * 0.06); g.moveTo(s * 0.57, -s * 0.12); g.lineTo(s * 0.8, -s * 0.06); g.stroke();
     g.fillStyle = dark; ell(g, 0, s * 0.2, s * 0.19, s * 0.16);
     g.fillStyle = 'rgba(255,255,255,.3)'; ell(g, -s * 0.06, s * 0.14, s * 0.06, s * 0.04);
     // big moustache, frown
@@ -328,24 +330,25 @@ const Review = (() => {
     const idx = P.review >= 0 ? P.review : 0;
     seatForReview(SEAT_PREF[idx % SEAT_PREF.length]);
     const a = lookAngles({ x: P.pos.x, y: 1.2, z: P.pos.z }, AIM); P.yaw = a.yaw; P.pitch = a.pitch; R.yaw0 = a.yaw;
-    if (W.boss) { W.boss.talking = false; W.boss.lookCam = false; }
+    if (W.boss) { W.boss.talking = false; W.boss.lookCam = false; placeBoss(true, false); }   // calm until the verdict
     buildUI(); grabLights(); R.dimK = 0;
     // timeline
     let t = 0.2;
+    R.marks = { title: t };
     at(t, () => showSlide('title', 0.9), true); const intro = pick(LINES.intro); at(t + 0.6, () => say(intro));
     t += Math.max(4.6, sayDur(intro) + 1.1);
-    at(t, () => showSlide('calls', 0.5 + R.quotes.length * 1.15 + 0.5), true);
+    R.marks.calls = t; at(t, () => showSlide('calls', 0.5 + R.quotes.length * 1.15 + 0.5), true);
     const c1 = real.length ? pick(LINES.calls) : LINES.silent; at(t + 0.4, () => say(c1));
     at(t + 1.2, () => W.boss && W.boss.play('point'));
     const c2 = pick(LINES.react); if (real.length) at(t + 0.6 + sayDur(c1) + 0.3, () => say(c2));
     t += Math.max(8.5, 0.9 + sayDur(c1) + (real.length ? sayDur(c2) + 0.5 : 0));
-    at(t, () => showSlide('chart', 2.5), true);
+    R.marks.chart = t; at(t, () => showSlide('chart', 2.5), true);
     const lines = (res.lines || []).slice(0, -1); let lt = t + 0.4;
     for (const l of lines) { at(lt, () => say(l)); lt += sayDur(l) + 0.25; }
     t = Math.max(t + 6.5, lt + 0.3);
-    R.tv = t;
+    R.tv = R.marks.verdict = t;
     at(t, () => verdict(), true);
-    R.sheetAt = t + (res.pass ? 5.2 : 6.2);
+    R.sheetAt = R.marks.sheet = t + (res.pass ? 5.2 : 6.2);
     at(R.sheetAt, () => showSheet(), true);
     R.ev.sort((x, y) => x.t - y.t);
   }
@@ -362,13 +365,13 @@ const Review = (() => {
       });
       later(2.6, () => W.boss && W.boss.play(res.week ? 'cheer' : 'shrug'));
     } else {
-      SFX.fired();
+      SFX.fired(); placeBoss(true, true);
       later(0.9, ignite);
     }
   }
   function ignite() {
     R.fired = true; R.fireT = R.t; R.alarmT = R.t;
-    FIRE_SPOTS.forEach((s, i) => later(i * 0.11, () => { const f = FX.fire([s[0], s[1], s[2]], s[3], 0); if (f) R.fires.push(f); }));
+    FIRE_SPOTS.forEach((s, i) => later(i * 0.11, () => { const f = FX.fire([s[0], s[1], s[2]], s[3], 900); if (f) R.fires.push(f); }));
     FX.flash('#ffb070', 0.6, 0.55); FX.shake(0.7, 1.4); FX.tint('#ff4a1a', 0.48); boom();
     if (R.proj) R.proj.l.color.set('#ff9a50');
     if (R.el.root) R.el.root.append(R.el.flames = flames());
@@ -381,10 +384,10 @@ const Review = (() => {
     const path = 'M50 4C58 26 84 40 82 70C80 92 66 104 50 104C34 104 18 92 18 70C18 52 30 44 34 28C40 40 44 44 48 46C46 30 44 18 50 4Z';
     const inner = 'M50 40C55 54 68 62 66 80C65 92 58 100 50 100C42 100 35 92 35 82C35 70 42 66 45 56C47 62 49 64 50 66C50 58 48 50 50 40Z';
     const el = h('div', { class: 'rv-flames' });
-    for (let i = 0; i < 11; i++) {
-      const f = h('i', { html: '<svg viewBox="0 0 100 108" preserveAspectRatio="none"><path d="' + path + '" fill="#ff6a1a"/><path d="' + inner + '" fill="#ffd34a"/></svg>' });
-      f.style.left = (i * 9.6 - 4 + rand(-2, 2)) + '%'; f.style.height = rand(16, 30) + 'vh'; f.style.width = rand(10, 15) + 'vw';
-      f.style.animationDelay = -rand(0, 1.2) + 's'; f.style.animationDuration = rand(0.5, 0.9) + 's';
+    for (let i = 0; i < 14; i++) {
+      const edge = Math.abs(i - 6.5) / 6.5, f = h('i', { html: '<svg viewBox="0 0 100 108" preserveAspectRatio="none"><path d="' + path + '" fill="#ff5a14"/><path d="' + inner + '" fill="#ffc83a"/></svg>' });
+      f.style.left = (i * 7.4 - 6 + rand(-2.5, 2.5)) + '%'; f.style.height = (rand(9, 17) + edge * 20) + 'vh'; f.style.width = (rand(8, 12) + edge * 6) + 'vw';
+      f.style.animationDelay = -rand(0, 1.2) + 's'; f.style.animationDuration = rand(0.45, 0.85) + 's'; f.style.opacity = (0.45 + edge * 0.45).toFixed(2);
       el.append(f);
     }
     return el;
@@ -525,7 +528,7 @@ const Review = (() => {
       R.t = Math.max(R.t, t); if (R.dimK < 1) { R.dimK = 1; applyDim(1); } drawSlide();
     },
     get on() { return R.on; },
-    get state() { return { on: R.on, t: R.t, slide: R.slide && R.slide.name, fired: R.fired, sheet: R.sheet ? R.sheet.className.split(' ')[1] : null, verdictAt: R.tv, sheetAt: R.sheetAt }; },
+    get state() { return { on: R.on, t: R.t, slide: R.slide && R.slide.name, fired: R.fired, sheet: R.sheet ? R.sheet.className.split(' ')[1] : null, verdictAt: R.tv, sheetAt: R.sheetAt, marks: R.marks }; },
     /* call-analysis candidates (host: everyone's; client: your own best lines) */
     quotes: () => (Game.authority() ? pool : mine).slice(),
     addQuote(text, name) { const t = clean(text); if (t) addQuote('x' + hashStr(t), name || settings.name, t, scoreLine(t) + 1); },
