@@ -8,11 +8,11 @@
    API: see docs/modules/review.md. */
 const Review = (() => {
   const SEAT_PREF = [6, 7, 4, 5, 2, 3, 0, 1];            // front seats first: a clear view of the screen (no chair backs in the way)
-  const AIM = { x: 19.85, y: 1.68, z: -5.95 };          // the projector screen, nudged towards The Boss
+  const SCR = { x: 19.94, y: 1.8, z0: -7.4, z1: -3.4 };  // the projector screen (office.md)
   const BOSS_VOICE = { seed: 11, pitch: 0.55, rate: 0.92 };
   const PAL = ['#3b82f6', '#e8590c', '#2f9e44', '#c2255c', '#7048e8', '#f08c00', '#0c8599', '#5c940d'];
-  const FIRE_SPOTS = [[14.2, 0.8, -5.2, 0.75], [15.9, 0.8, -5.65, 0.85], [17.15, 0.8, -5.05, 0.7], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
-    [18.2, 0, -3.3, 1.0], [17.4, 0, -8.5, 1.05], [12.5, 0, -8.4, 1.1], [11.0, 0, -3.0, 1.2], [15.9, 0, -2.9, 0.95], [19.05, 0, -6.55, 0.8], [10.9, 0, -6.2, 1.0]];
+  const FIRE_SPOTS = [[14.6, 0.8, -5.3, 0.75], [16.3, 0.8, -5.65, 0.7], [17.45, 0.8, -5.0, 0.6], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
+    [18.2, 0, -3.3, 1.0], [17.4, 0, -8.5, 1.05], [12.5, 0, -8.4, 1.1], [11.0, 0, -3.0, 1.2], [15.9, 0, -2.9, 0.95], [19.05, 0, -6.55, 0.8], [18.7, 0, -4.4, 0.75]];
   const LINES = {
     intro: ['Sit. Down. This will not take long.', 'Phones down. Eyes on the screen.', 'Welcome to your daily performance review. Try to look ashamed.', 'I made slides. Nobody leaves until I have shown you the slides.'],
     calls: ['I listen to every call. Every. Single. One.', 'Let us review some highlights from today\'s calls.', 'Quality assurance flagged a few of your calls. By flagged I mean framed.'],
@@ -329,8 +329,8 @@ const Review = (() => {
     // seat: the middle of the table, looking between the screen and The Boss
     const idx = P.review >= 0 ? P.review : 0;
     seatForReview(SEAT_PREF[idx % SEAT_PREF.length]);
-    const a = lookAngles({ x: P.pos.x, y: 1.2, z: P.pos.z }, AIM); P.yaw = a.yaw; P.pitch = a.pitch; R.yaw0 = a.yaw;
-    if (W.boss) { W.boss.talking = false; W.boss.lookCam = false; placeBoss(true, false); }   // calm until the verdict
+    aim();
+    if (W.boss) { W.boss.talking = false; placeBoss(true, false); }   // calm until the verdict
     buildUI(); grabLights(); R.dimK = 0;
     // timeline
     let t = 0.2;
@@ -352,16 +352,24 @@ const Review = (() => {
     at(R.sheetAt, () => showSheet(), true);
     R.ev.sort((x, y) => x.t - y.t);
   }
+  /* face the screen, with The Boss in view too when the field of view allows it */
+  function aim() {
+    const cam = W.camera, hf = Math.atan(Math.tan(cam.fov * Math.PI / 360) * cam.aspect) - 0.06, dx = SCR.x - P.pos.x;
+    const ang = (x, z) => Math.atan2(z - P.pos.z, x - P.pos.x);
+    const sL = ang(SCR.x, SCR.z0), sR = ang(SCR.x, SCR.z1), bA = ang(BOSS_REVIEW.x, BOSS_REVIEW.z) - 0.2;
+    const c = clamp((Math.min(bA, sL) + sR) / 2, sR - hf, sL + hf);
+    P.yaw = R.yaw0 = Math.atan2(-Math.cos(c), -Math.sin(c)); P.pitch = Math.atan2(SCR.y - 1.25, Math.hypot(dx, SCR.z0 / 2 + SCR.z1 / 2 - P.pos.z)) * 0.75;
+  }
   function verdict() {
     const res = R.res; showSlide('verdict', 1.2);
     const last = (res.lines || [])[res.lines ? res.lines.length - 1 : 0]; if (last) later(0.5, () => say(last));
     if (res.pass) {
       SFX.pass();
       later(0.6, () => {
-        FX.spawn('confetti', [15.4, 0.9, -5.4], { dir: [0, 1, 0], n: 150 });
-        FX.spawn('confetti', [18.6, 1.4, -3.4], { dir: [-0.5, 1, -0.3], n: 70 }); FX.spawn('confetti', [18.6, 1.4, -7.6], { dir: [-0.5, 1, 0.3], n: 70 });
+        FX.spawn('confetti', [18.4, 0.9, -5.4], { dir: [-0.3, 1, 0], n: 140 });
+        FX.spawn('confetti', [19.2, 1.2, -3.6], { dir: [-0.6, 1, -0.3], n: 70 }); FX.spawn('confetti', [19.2, 1.2, -7.2], { dir: [-0.6, 1, 0.3], n: 70 });
         FX.flash('#eaffd8', 0.5, 0.3); if (W.boss) W.boss.play('nod');
-        if (res.week) FX.spawn('coins', [15.4, 1.0, -5.4], { n: 30 });
+        if (res.week) FX.spawn('coins', [17.4, 0.9, -5.4], { n: 30 });
       });
       later(2.6, () => W.boss && W.boss.play(res.week ? 'cheer' : 'shrug'));
     } else {
@@ -500,7 +508,6 @@ const Review = (() => {
     for (const f of R.fires) if (f && f.stop) f.stop(); R.fires = [];
     if (R.fired) FX.tint(null); R.fired = false;
     restoreLights(); hideSub(); TTS.stop();
-    if (W.boss) W.boss.lookCam = undefined;
     if (W.projector && was) W.projector.clear();
     document.body.classList.remove('rv-on');
     const root = $('#review'); if (root && was) { root.replaceChildren(); root.classList.add('hidden'); }
