@@ -27,9 +27,8 @@ module.exports = async page => {
     Review.addQuote('Congratulations! You have won a JET SKI and a lifetime supply of bananas!', 'Marcus');
     Review.addQuote('Sir, I am calling from Bonk Bank. Your llama has been hacked.', 'Tomasz');
     res.lines = reviewLines(res);
-    if (client) { window.__auth = Game.authority; Game.authority = () => false; }
+    if (client) { window.__auth = Game.authority; Game.authority = () => false; }   // restored after the shot
     Game.enterReview(res);
-    if (client) Game.authority = window.__auth;
     return Review.state;
   }, pass, day, !!client);
 
@@ -90,8 +89,10 @@ module.exports = async page => {
     const st = await fake(false, 3, true);
     await ev(() => { Review.skip(); Review.skip(); return true; });
     await gw(1.4);
+    const wait = await ev(() => !!document.querySelector('.rv-sheet .wait'));
     await page.shot('rv-10-termination-client');
-    await ev(() => { const T = window.__tli; T.G.phase = 'review'; T.Game.retryDay(); return true; });
+    await ev(() => { const T = window.__tli; T.Game.authority = window.__auth; T.G.phase = 'review'; T.Game.retryDay(); return true; });
+    if (!wait) throw new Error('client sheet should wait for the host');
   }
 
   if (want('d')) {

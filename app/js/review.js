@@ -11,7 +11,7 @@ const Review = (() => {
   const SCR = { x: 19.94, y: 1.8, z0: -7.4, z1: -3.4 };  // the projector screen (office.md)
   const BOSS_VOICE = { seed: 11, pitch: 0.55, rate: 0.92 };
   const PAL = ['#3b82f6', '#e8590c', '#2f9e44', '#c2255c', '#7048e8', '#f08c00', '#0c8599', '#5c940d'];
-  const FIRE_SPOTS = [[14.6, 0.8, -5.3, 0.75], [19.4, 0, -5.95, 0.85], [19.35, 0, -4.6, 0.75], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
+  const FIRE_SPOTS = [[14.6, 0.8, -5.3, 0.75], [19.4, 0, -5.95, 1.15], [19.35, 0, -4.55, 1.0], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
     [18.2, 0, -3.3, 1.0], [17.4, 0, -8.5, 1.05], [12.5, 0, -8.4, 1.1], [11.0, 0, -3.0, 1.2], [15.9, 0, -2.9, 0.95], [19.05, 0, -6.55, 0.8], [18.7, 0, -4.4, 0.75]];
   const LINES = {
     intro: ['Sit. Down. This will not take long.', 'Phones down. Eyes on the screen.', 'Welcome to your daily performance review. Try to look ashamed.', 'I made slides. Nobody leaves until I have shown you the slides.'],
@@ -529,7 +529,7 @@ const Review = (() => {
     skip() {
       if (!R.on || R.sheet) return;
       if (R.t < R.tv - 0.05) { R.ev = R.ev.filter(e => e.t >= R.tv); R.t = R.tv - 0.01; hideSub(); TTS.stop(); if (R.dimK < 1) { R.dimK = 1; applyDim(1); } }
-      else { R.ev = []; showSheet(); }
+      else api.seek(R.sheetAt);   // the verdict's own events (fire, confetti) still run on the way
     },
     /* jump the review clock to t seconds (runs every event on the way; for tests) */
     seek(t) {
