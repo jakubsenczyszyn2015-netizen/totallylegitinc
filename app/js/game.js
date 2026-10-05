@@ -188,3 +188,5 @@ const Game = {
     Bus.emit('quit');
   }
 };
+/* items used up or picked up are saved too (debounced: inventory changes come in bursts) */
+Bus.on('inv:change', () => { clearTimeout(Game._invT); Game._invT = setTimeout(() => { if (G.phase === 'day') Game.saveProgress(); }, 1000); });
