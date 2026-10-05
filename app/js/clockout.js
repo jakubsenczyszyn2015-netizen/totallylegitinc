@@ -21,7 +21,13 @@ const ClockOut = {
   available() { return G.phase === 'day' && G.mode === 'week' && !G.result; },
   cooldown() { return Math.max(0, Net.isHost ? this.cool - now() : this.coolLeft); },
   myVote() { const v = this.view; if (!v) return null; if (this.mine && this.mine.n === v.n) return this.mine.yes; return v.yes.includes(Net.myId) ? true : v.no.includes(Net.myId) ? false : null; },
-  tally() { const v = this.view; return v ? v.yes.length + '/' + v.total + ' yes' : ''; },
+  /* yes / no counts with my own vote applied at once (the host's state may lag a few frames) */
+  counts() {
+    const v = this.view; if (!v) return { y: 0, n: 0 };
+    const mv = this.myVote(), inY = v.yes.includes(Net.myId), inN = v.no.includes(Net.myId);
+    return { y: v.yes.length + (mv === true && !inY ? 1 : 0) - (mv !== true && inY ? 1 : 0), n: v.no.length + (mv === false && !inN ? 1 : 0) - (mv !== false && inN ? 1 : 0) };
+  },
+  tally() { const v = this.view; return v ? this.counts().y + '/' + v.total + ' yes' : ''; },
 
   /* ----- what the buttons call ----- */
   request() {
@@ -147,15 +153,15 @@ const ClockOut = {
       this.$res.replaceChildren(h('b', {}, r.pass ? 'Clocking out!' : 'Vote failed'), h('small', {}, r.yes + ' of ' + r.total + ' said yes · ' + (r.pass ? 'to the review room' : 'back to work')));
       return;
     }
-    const mv = this.myVote(), left = Math.max(0, v.left), k = v.n + '|' + v.yes.length + '|' + v.no.length + '|' + v.total + '|' + mv + '|' + Math.ceil(left);
+    const mv = this.myVote(), c = this.counts(), left = Math.max(0, v.left), k = v.n + '|' + c.y + '|' + c.n + '|' + v.total + '|' + mv + '|' + Math.ceil(left);
     el.style.setProperty('--p', (left / this.VOTE_S).toFixed(3));
     if (el._k === k) return; el._k = k;
     el.className = (mv == null ? '' : 'voted') + (left < 8 ? ' hurry' : '');
     const me = v.by === Net.myId;
     this.$t.replaceChildren(h('b', {}, me ? 'You' : v.name), me ? ' want to clock out early' : ' wants to clock out early');
-    const pips = []; for (let i = 0; i < v.total; i++) pips.push(h('i', { class: i < v.yes.length ? 'y' : i < v.yes.length + v.no.length ? 'n' : '' }));
+    const pips = []; for (let i = 0; i < v.total; i++) pips.push(h('i', { class: i < c.y ? 'y' : i < c.y + c.n ? 'n' : '' }));
     this.$pips.replaceChildren(...pips);
-    this.$n.textContent = v.yes.length + '/' + v.total + ' yes · ' + v.need + ' needed';
+    this.$n.textContent = c.y + '/' + v.total + ' yes · ' + v.need + ' needed';
     this.$s.textContent = Math.ceil(left);
     this.$yes.classList.toggle('on', mv === true); this.$no.classList.toggle('on', mv === false);
   },

@@ -11,7 +11,7 @@ module.exports = async page => {
   const freshDay = () => ev(() => { const T = window.__tli; if (T.G.phase === 'review') T.Game.retryDay(); const dc = document.getElementById('daycard'); dc.classList.remove('on'); T.G.timeLeft = 200; return T.G.phase; });
   await ev(() => { document.head.append(Object.assign(document.createElement('style'), { textContent: '#daycard{display:none!important}.toast{animation:none!important}' })); return true; });
   await page.startSolo('week');
-  await ev(() => { window.__tli.G.timeLeft = 200; return true; });
+  await ev(() => { window.__tli.G.timeLeft = 200; window.__tli.OS.fastBoot = true; return true; });
 
   if (want('solo')) {
     // 1. the punch clock on the hallway wall: E -> confirm -> review
@@ -122,8 +122,9 @@ module.exports = async page => {
     await ev(() => { window.__tli.Net._x({ k: 'co:vote', p: { n: ClockOut.view.n, yes: true } }, 'p3'); return true; });
     const v7 = await ev(() => ({ result: ClockOut.result, phase: window.__tli.G.phase }));
     check('majority passes', v7.result && v7.result.pass && v7.result.yes === 2 && v7.phase === 'day', v7);
-    await page.wait(300);
+    await ev(() => { ClockOut.result.until = now() + 60; return true; });   // the harness is slow: keep the stamp up for the shot
     await shot('co-09-vote-passed');
+    await ev(() => { ClockOut.result.until = now() + 0.5; return true; });
     await page.wait(1800);
     const v8 = await ev(() => ({ phase: window.__tli.G.phase, early: window.__tli.G.result && window.__tli.G.result.early }));
     check('passed vote ends the day on the host', v8.phase === 'review' && v8.early > 0, v8);
@@ -138,8 +139,8 @@ module.exports = async page => {
       ClockOut.applyShared({ n: 7, by: 'p2', name: 'Priya', yes: ['p2'], no: [], left: 21, total: 3, need: 2 }); return true; });
     await key('F1');
     await page.wait(300);
-    const c1 = await ev(() => ({ sent: window.__sent.filter(m => m.k === 'co:vote').map(m => [m.p, m.o.host]), voted: document.getElementById('co-vote').className, mine: ClockOut.myVote() }));
-    check('client F1 sends the vote to the host', c1.sent.length === 1 && c1.sent[0][0].n === 7 && c1.sent[0][0].yes === true && c1.sent[0][1] === true && /voted/.test(c1.voted) && c1.mine === true, c1);
+    const c1 = await ev(() => ({ sent: window.__sent.filter(m => m.k === 'co:vote').map(m => [m.p, m.o.host]), voted: document.getElementById('co-vote').className, mine: ClockOut.myVote(), tally: document.querySelector('#co-vote .cv-n').textContent }));
+    check('client F1 sends the vote to the host', c1.sent.length === 1 && c1.sent[0][0].n === 7 && c1.sent[0][0].yes === true && c1.sent[0][1] === true && /voted/.test(c1.voted) && c1.mine === true && /2\/3 yes/.test(c1.tally), c1);
     await shot('co-10-vote-client');
     await ev(() => { window.__tli.Net._x({ k: 'co:result', p: { n: 7, pass: false, yes: 1, total: 3, name: 'Priya' } }, 'host'); return true; });
     const c2 = await ev(() => ({ result: ClockOut.result, view: ClockOut.view }));
