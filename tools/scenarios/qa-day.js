@@ -9,7 +9,7 @@ module.exports = async page => {
 
   // ---------- menu → start a week ----------
   await page.eval(() => { const T = window.__tli; T.Saves.week = [null, null, null]; T.Saves.endless = null; writeSaves(); T.UI.menu('home'); return true; });
-  await page.shot('day-01-menu');
+  await Q.shot('day-01-menu');
   Q.check('menu visible', await Q.visible('#menu'));
   await page.eval(() => { window.__dc = null; window.__tli.Bus.on('day:start', () => { window.__dc = document.querySelector('#daycard').classList.contains('on') && document.querySelector('#daycard').textContent; }); return true; });
   await Q.click('#menu .home-btns .btn', /Singleplayer/);
@@ -18,7 +18,7 @@ module.exports = async page => {
   let g = await G();
   Q.check('week started on Monday', g.phase === 'day' && g.day === 1 && g.quota > 0, g);
   Q.check('day card shown', /Monday/.test(await page.eval(() => window.__dc)), await page.eval(() => window.__dc));
-  await page.shot('day-02-office-daycard');
+  await Q.shot('day-02-office-daycard');
 
   // ---------- walk to a desk and sit ----------
   const desk = await page.eval(() => { const T = window.__tli; const d = T.W.desks.find(x => !x.npc && !T.Game.deskTaken(x.i)); return { i: d.i, x: d.stand.x, z: d.stand.z, rot: d.rot }; });
@@ -26,16 +26,16 @@ module.exports = async page => {
   await page.wait(400);
   const lab = await page.eval(() => { const T = window.__tli; return T.W.cur && T.W.cur.label(); });
   Q.check('E prompt at the desk', !!lab, lab);
-  await page.shot('day-03-desk-prompt');
+  await Q.shot('day-03-desk-prompt');
   await Q.press('KeyE');
   await page.wait(900);
   Q.check('seated after E', (await G()).seated);
   await Q.waitFor(() => window.__tli.OS.open, 10000, 100);
-  await page.shot('day-04-boot');
+  await Q.shot('day-04-boot');
   await Q.desktop();
   const wins = await page.eval(() => [...window.__tli.OS.wins.keys()]);
   Q.check('desktop open with the phone and memo', wins.includes('phone') && wins.includes('memo'), wins);
-  await page.shot('day-05-desktop');
+  await Q.shot('day-05-desktop');
   await Q.hush();
   await page.eval(() => { const T = window.__tli; T.OS.close('memo', true); return true; });
 
@@ -47,7 +47,7 @@ module.exports = async page => {
   Q.check('call live after answering on the card', (await Q.state()).st === 'live');
   await page.eval(() => { window.__tli.Call.setScheme('card'); return true; });
   let r = await Q.play();
-  await page.shot('day-06-card-paid');
+  await Q.shot('day-06-card-paid');
   const paid = await page.eval(() => window.__tli.Call.cur && window.__tli.Call.cur.paid);
   g = await G();
   Q.check('card scheme paid', r.res === 'paid', r);
@@ -70,7 +70,7 @@ module.exports = async page => {
   await page.eval(() => { window.__tli.Call.setScheme('gift'); return true; });
   r = await Q.play();
   await page.wait(1600);
-  await page.shot('day-07-baited');
+  await Q.shot('day-07-baited');
   g = await G();
   const pops = await page.eval(() => window.__tli.OS.popups);
   Q.check('baited result', (await page.eval(() => window.__tli.Call.cur && window.__tli.Call.cur.result)) === 'baited', r);
@@ -104,18 +104,18 @@ module.exports = async page => {
   const mood0 = await page.eval(() => Avatars.tmood);
   Q.check('no verdict face before the verdict', mood0 !== 'happy' && mood0 !== 'surprised', mood0);
   Q.check('desktop closed for the review', !(await page.eval(() => window.__tli.OS.open)));
-  await page.shot('day-08-review-title');
+  await Q.shot('day-08-review-title');
   const marks = await page.eval(() => Review.state.marks);
   await page.eval(t => { Review.seek(t + 1.5); return true; }, marks.calls); await page.wait(900);
-  await page.shot('day-09-review-calls');
+  await Q.shot('day-09-review-calls');
   await page.eval(t => { Review.seek(t - 0.2); return true; }, marks.verdict); await page.wait(300);
   Q.check('still no verdict face just before the verdict', !['happy', 'surprised'].includes(await page.eval(() => Avatars.tmood)));
   await page.eval(t => { Review.seek(t + 1.5); return true; }, marks.verdict); await page.wait(900);
   Q.check('happy face on the passed verdict', (await page.eval(() => Avatars.tmood)) === 'happy');
-  await page.shot('day-10-review-verdict-pass');
+  await Q.shot('day-10-review-verdict-pass');
   await page.eval(t => { Review.seek(t + 0.5); return true; }, marks.sheet); await page.wait(1200);
   Q.check('evaluation sheet', (await page.eval(() => Review.state.sheet)) === 'eval');
-  await page.shot('day-11-evaluation');
+  await Q.shot('day-11-evaluation');
   Q.check('saved after the pass (day 2)', (await page.eval(() => window.__tli.Saves.week[0] && window.__tli.Saves.week[0].day)) === 2);
   await Q.click('.rv-sheet .rv-btn.primary', /Start/, 1200);
   g = await G();
@@ -131,7 +131,7 @@ module.exports = async page => {
   await page.eval(() => { window.__tli.Call.setScheme('idv'); return true; });
   r = await Q.play();
   Q.check('ID Verifier paid', r.res === 'paid', r);
-  await page.shot('day-12-idv-paid');
+  await Q.shot('day-12-idv-paid');
   await page.wait(2600); await Q.hush();
   g = await G();
   Q.check('quota not met yet', g.team < g.quota, [g.team, g.quota]);
@@ -140,10 +140,10 @@ module.exports = async page => {
   const m2 = await page.eval(() => Review.state.marks);
   await page.eval(t => { Review.seek(t + 2.5); return true; }, m2.verdict); await page.wait(1200);
   Q.check('fired: room on fire, surprised face', (await page.eval(() => Review.state.fired)) && (await page.eval(() => Avatars.tmood)) === 'surprised');
-  await page.shot('day-13-fired');
+  await Q.shot('day-13-fired');
   await page.eval(t => { Review.seek(t + 0.5); return true; }, m2.sheet); await page.wait(1200);
   Q.check('termination report', (await page.eval(() => Review.state.sheet)) === 'fired');
-  await page.shot('day-14-termination');
+  await Q.shot('day-14-termination');
   Q.check('a failed day is not saved', (await page.eval(() => window.__tli.Saves.week[0].day)) === 2);
   await Q.click('.rv-sheet .rv-btn.primary', /again/, 1200);
   g = await G();
@@ -166,14 +166,14 @@ module.exports = async page => {
   const flow = await page.eval(() => { const c = window.__tli.Call.cur; return c && { code: c.codeGiven, remote: c.remote, res: c.result }; });
   Q.check('NosyViewer code read out and connected', flow && flow.code && flow.remote, flow);
   Q.check('Tech Support paid (PIN step done)', r.res === 'paid', r);
-  await page.shot('day-15-support-paid');
+  await Q.shot('day-15-support-paid');
   await page.wait(2600);
 
   // ---------- pause → main menu ----------
   await page.eval(() => { const T = window.__tli; T.Game.pause(true); return true; });
   await page.wait(300);
   Q.check('pause menu', await Q.visible('#pause'));
-  await page.shot('day-16-pause');
+  await Q.shot('day-16-pause');
   await Q.click('#pause .btn.danger', /Quit/, 800);
   g = await G();
   const menuState = await page.eval(() => ({ menu: !document.querySelector('#menu').classList.contains('hidden'), os: window.__tli.OS.open, wins: window.__tli.OS.wins.size, hud: !document.querySelector('#hud').classList.contains('hidden'), call: window.__tli.Call.state }));
@@ -181,6 +181,6 @@ module.exports = async page => {
   await Q.click('#menu .home-btns .btn', /Singleplayer/);
   const tc = await page.eval(() => document.querySelector('#solo-body .tcard').textContent);
   Q.check('time card shows Tuesday', /Next: Tuesday/.test(tc), tc);
-  await page.shot('day-17-timecard');
+  await Q.shot('day-17-timecard');
   await Q.done();
 };

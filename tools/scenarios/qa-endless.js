@@ -11,14 +11,14 @@ module.exports = async page => {
   let g = await page.eval(() => { const T = window.__tli; return { mode: T.G.mode, phase: T.G.phase, quota: T.G.quota, team: T.G.team, n: T.Game.unlockCount() }; });
   Q.check('endless started', g.mode === 'endless' && g.phase === 'day' && g.team === 0, g);
   await page.wait(2000);
-  await page.shot('end-01-daycard');
+  await Q.shot('end-01-daycard');
   await Q.sit();
   const tb = await page.eval(() => document.querySelector('#tb-stats').textContent);
   Q.check('taskbar: team + overtime, no quota', /Overtime/i.test(tb) && !/Quota/i.test(tb), tb);
   // the phone rings by itself
   const rang = await Q.waitFor(() => window.__tli.Call.state === 'ringing', 15000, 300);
   Q.check('calls come in by themselves', rang);
-  await page.shot('end-02-desktop-ringing');
+  await Q.shot('end-02-desktop-ringing');
   await Q.click('#os-modal .ringcard .rb.yes', null, 900);
   await page.eval(() => { window.__tli.OS.close('memo', true); window.__tli.Call.setScheme(window.__tli.Game.unlocked()[0].id); return true; });
   const r = await Q.play();
@@ -32,7 +32,7 @@ module.exports = async page => {
   await page.wait(500);
   const un = await page.eval(() => { const T = window.__tli; return { n: T.Game.unlockCount(), icons: T.OS.desktopIds().filter(i => /^sch_/.test(i)).length, toasts: [...document.querySelectorAll('#toasts .toast')].map(t => t.textContent).filter(t => /unlocked/.test(t)) }; });
   Q.check('earning unlocks schemes with a toast and icons', un.n > n0 && un.icons === un.n && un.toasts.length, un);
-  await page.shot('end-03-unlocked');
+  await Q.shot('end-03-unlocked');
   // no review ever
   await page.eval(() => { window.__tli.G.timeLeft = 0; return true; });
   await page.wait(1200);
@@ -46,7 +46,7 @@ module.exports = async page => {
   await page.wait(300);
   const txt = await page.eval(() => document.querySelector('#solo-body').textContent);
   Q.check('menu shows the endless total and Continue', txt.includes('Continue endless') && txt.replace(/,/g, '').includes(String(before.team)), txt.slice(0, 400));
-  await page.shot('end-04-menu-total');
+  await Q.shot('end-04-menu-total');
   // reload the page: the save survives
   await page.eval(() => { location.reload(); return true; }).catch(() => {});
   await page.wait(4000);
@@ -58,7 +58,7 @@ module.exports = async page => {
   Q.check('continue restores total, wallet, inventory, stats and progress', after.mode === 'endless' && after.team === before.team && after.wallet === before.wallet && after.soda === before.soda && after.scams === before.scams && after.prog === 1, { before, after });
   Q.check('unlocks restored from the total', after.n >= un.n, after.n);
   await page.wait(1500);
-  await page.shot('end-05-continued');
+  await Q.shot('end-05-continued');
   // reset total from the menu
   await page.eval(() => { window.__tli.Game.quit(); window.__tli.UI.menu('solo'); return true; });
   await page.wait(300);

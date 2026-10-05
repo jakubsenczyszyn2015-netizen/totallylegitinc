@@ -25,7 +25,7 @@ module.exports = async page => {
     await Q.click('.win .bm-tab', new RegExp(['Scams', 'Business', 'Games', 'Physical'][i]), 900);
     const n = await page.eval(() => document.querySelectorAll('.win .bm-card').length);
     Q.check('tab ' + tab + ' lists products', n > 0, n);
-    await page.shot('eco-0' + (i + 1) + '-tab-' + tab);
+    await Q.shot('eco-0' + (i + 1) + '-tab-' + tab);
   }
 
   // ---------- hold to buy (UI) ----------
@@ -40,7 +40,7 @@ module.exports = async page => {
     return { early, got: T.Inv.count('confetti') - n0, paid: w - T.G.wallet };
   });
   Q.check('hold to buy: early release cancels, full hold buys', hold.early === 0 && hold.got === 1 && hold.paid === 20, hold);
-  await page.shot('eco-05-held-buy');
+  await Q.shot('eco-05-held-buy');
 
   // ---------- buy everything ----------
   await page.eval(() => { window.__tli.Game.addWallet(200000); return true; });
@@ -65,7 +65,7 @@ module.exports = async page => {
   Q.check('bought apps get desktop icons', icons.every(i => i[1] && i[2]), icons);
   await page.eval(() => { window.__tli.OS.close('shop', true); return true; });
   await page.wait(500);
-  await page.shot('eco-06-desktop-all-apps');
+  await Q.shot('eco-06-desktop-all-apps');
   Q.check('licensed schemes unlocked', await page.eval(() => window.__tli.Game.unlocked().length === SCHEMES.length));
 
   // ---------- perks ----------
@@ -81,7 +81,7 @@ module.exports = async page => {
     const ok = await page.eval(id => { const it = Shop.get(id); const st = BonkMart.state(it)[0]; return st === 'buy' ? BonkMart.buy(id) : st; }, id);
     Q.check('chaos ' + id + ' bought', ok === true, ok);
     await page.wait(id === 'chaos_strike' ? 4500 : id === 'chaos_rival' ? 3500 : 1500);
-    await page.shot('eco-07-' + id);
+    await Q.shot('eco-07-' + id);
     if (/strike|rival/.test(id)) await page.wait(6000);
   }
   const fps = await page.eval(() => new Promise(r => { let n = 0, t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else r({ fps: Math.round(n / 2), calls: window.__tli.W.renderer.info.render.calls, tris: window.__tli.W.renderer.info.render.triangles, fx: FX.stats() }); }; requestAnimationFrame(f); }));
@@ -102,12 +102,16 @@ module.exports = async page => {
       return { id, sel: Props.heldId(), before: n0, after: T.Inv.count(id), hold: !!(d && d.hold) };
     }, i, id);
     Q.log('used', out);
-    if (i === 1 || id === 'beans' || id === 'soda') await page.shot('eco-08-use-' + id);
+    if (i === 1 || id === 'beans' || id === 'soda') await Q.shot('eco-08-use-' + id);
     await page.wait(500);
   }
   // throw one of each throwable item with F
   await page.eval(() => { const T = window.__tli; T.Inv.give('soda', 1); Props.refreshHeld(); Props.select(Props.slots.indexOf('soda')); Props.throwT = 0; Props.throwSel(); return true; });
   await page.wait(800);
+
+  await page.wait(1800);
+  const sv = await page.eval(() => { const T = window.__tli, s = T.Saves.week[T.G.slot], k = o => JSON.stringify(Object.keys(o || {}).sort().map(i => [i, o[i]])); return { inv: k(T.Inv.dump()), saved: k(s && s.inv) }; });
+  Q.check('used-up items are saved (no free refills after quit / continue)', sv.inv === sv.saved, sv);
 
   // ---------- quit restores the perks, continue applies them again ----------
   await page.eval(() => { window.__tli.Game.quit(); return true; });

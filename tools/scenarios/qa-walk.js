@@ -29,7 +29,7 @@ module.exports = async page => {
   Q.check('W walks forward', p1.x < p0.x - 0.8, [p0, p1]);
   Q.check('walk speed sane', mid.speed > 2 && mid.speed < 4.5, mid.speed);
   Q.check('stops when the key is released', p1.speed < 0.3, p1.speed);
-  await page.shot('walk-01-floor');
+  await Q.shot('walk-01-floor');
   // sprint
   await page.eval(() => { const K = window.__tli.Keys; K.ShiftLeft = true; K.KeyW = true; return true; });
   await page.wait(800);
@@ -57,7 +57,7 @@ module.exports = async page => {
   Q.check('C toggles third person and shows your avatar', th.third && th.vis, th);
   await page.key('KeyW', 500);
   await page.wait(300);
-  await page.shot('walk-02-third-person');
+  await Q.shot('walk-02-third-person');
   await Q.press('KeyC');
   await page.wait(300);
   Q.check('C again: first person', !(await page.eval(() => window.__tli.P.third)));
@@ -71,7 +71,7 @@ module.exports = async page => {
     await page.wait(500);
     const bub = await page.eval(() => window.__bub.slice());
     Q.check('punching a coworker gets a reaction', bub.length > 0, { at, bub });
-    await page.shot('walk-03-punch-npc');
+    await Q.shot('walk-03-punch-npc');
     await page.wait(600);
     await page.eval(() => { window.__bub.length = 0; Props.punch(); return true; });   // 2nd
     await page.wait(700);
@@ -97,7 +97,7 @@ module.exports = async page => {
     return null;
   }, bin);
   Q.log('real throw into the bin', hit);
-  await page.shot('walk-04-bin');
+  await Q.shot('walk-04-bin');
 
   // ---------- pick up a box, carry, throw, drop ----------
   const box = await page.eval(() => { const b = Props.bodies.find(b => b.type === 'box'); return b ? { id: b.id, x: b.pos.x, y: b.pos.y, z: b.pos.z } : null; });
@@ -109,7 +109,7 @@ module.exports = async page => {
     await page.wait(300);
     const carry = await page.eval(() => Props.carry && Props.carry.type);
     Q.check('E picks up the box', carry === 'box', { lb, carry });
-    await page.shot('walk-05-carry-box');
+    await Q.shot('walk-05-carry-box');
     await page.eval(() => { const P = window.__tli.P; P.pitch = 0.1; Props.throwT = 0; return true; });
     await Q.press('KeyF');
     await page.wait(1500);
@@ -134,7 +134,7 @@ module.exports = async page => {
     await page.wait(400);
     const t1 = await page.eval(() => document.querySelectorAll('#toasts .toast').length);
     Q.check('E: ' + want, lb === want && t1 > t0, { lb });
-    if (want === 'Drink coffee') { Q.check('coffee gives a speed boost', (await P()).boost > 30); await page.shot('walk-06-break-room-coffee'); }
+    if (want === 'Drink coffee') { Q.check('coffee gives a speed boost', (await P()).boost > 30); await Q.shot('walk-06-break-room-coffee'); }
   }
   // the boost makes you faster
   await page.teleport(8, 0, Math.PI / 2, 0);
@@ -155,7 +155,7 @@ module.exports = async page => {
     await page.wait(900);
     const d1 = await page.eval(id => window.__tli.W.doors[id].isOpen, id);
     Q.check('E toggles the ' + id + ' door', /door/.test(lb || '') && d1 !== d0, { lb, d0, d1 });
-    if (id === 'main') await page.shot('walk-07-main-door');
+    if (id === 'main') await Q.shot('walk-07-main-door');
   }
   // walk through the open boss door into the boss office
   const boss = await page.eval(() => { const T = window.__tli; if (!T.W.doors.boss.isOpen) T.W.doors.boss.open(); const r = T.W.rooms.boss, g = T.W.boss.group.position; return { r, x: g.x, z: g.z }; });
@@ -169,12 +169,12 @@ module.exports = async page => {
   await page.wait(600);
   const bb = await page.eval(() => window.__bub.slice());
   Q.check('punching The Boss gets a reaction', bb.length > 0, bb);
-  await page.shot('walk-08-boss-office');
+  await Q.shot('walk-08-boss-office');
   // break room overview
   const br = await page.eval(() => window.__tli.W.rooms.break);
   await page.teleport(br.x0 + 0.8, (br.z0 + br.z1) / 2, -Math.PI / 2 - 0.4, -0.15);
   await page.wait(500);
-  await page.shot('walk-09-break-room');
+  await Q.shot('walk-09-break-room');
 
   // ---------- frame times on the busy floor ----------
   await page.teleport(8, 0, Math.PI / 2, -0.05);

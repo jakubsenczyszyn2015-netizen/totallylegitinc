@@ -9,6 +9,8 @@ module.exports = page => {
       console.log((ok ? 'ok   ' : 'FAIL ') + name + (info !== undefined ? '  ' + (typeof info === 'string' ? info : JSON.stringify(info)) : ''));
       if (!ok) fails.push(name); return !!ok;
     },
+    /* screenshot after two fresh frames (software GL under load can lag a second behind the game state) */
+    async shot(name) { await page.eval(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => r(true), 50))))); return page.shot(name); },
     log(...a) { console.log('     ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ')); },
     /* real key events (the game's keydown/keyup listeners), not just the Keys map */
     async press(code, ms = 80, target) {
