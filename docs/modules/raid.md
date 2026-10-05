@@ -23,9 +23,13 @@ light through the windows, cartoon cops chasing whoever is nearest. Fight back w
    (`#raid-glow`), additive red/blue light pools through the west + south windows, round the main door and in
    the lobby (`RaidLights`, two merged meshes), coworkers dive under their desks, The Boss crouches behind his.
 2. After 1.25 s `W.doors.main` bursts open (dust, smoke, "BAM!", screen shake near it).
-3. Cops (`2 + players`, max 6) run in from `W.spawn.police` and chase the nearest standing player, or a seated
+3. If BonkMart's **Inflatable Boss** stands in the lobby (`Chaos.st.boss`), every officer first turns to it and salutes
+   for ~1.1 s ("Sorry, sir! Didn't see you there!"): it "scares the police" as its shop text promises.
+   Cops (`2 + players`, max 6) run in from `W.spawn.police` and chase the nearest standing player, or a seated
    one (they go to the desk's aisle spot). Steering: BFS distance fields on a 0.4 m grid over the office and
    lobby built from `W.colliders` (`RaidNav`, rebuilt when the colliders change), plus a little separation.
+   Seated players do not see the office (the desktop covers it), so LegitOS shows `#raid-near` ("OFFICER INCOMING!",
+   distance, a "Stand up & run" button that stands you up and grabs the pointer) while an officer is within 9 m of your desk.
 4. A tag (0.8 m, 0.95 m for seated players) = **arrest**: the victim is cuffed (stun, cuffs on the avatar
    for everyone), fined 25 % of their Bonk Pay wallet (min $40, never more than they have), teleported to the
    lobby for a 3.8 s mugshot cut-scene (height chart, a booking officer, camera shutter, a "BUSTED!" stamp, the
@@ -93,17 +97,20 @@ FX kinds added: `FX.spawn/net('word', pos, {w, c, s})` (comic word sprite: "ZAP!
 | `raid:hit` | `{c, d, s, kb: [x, z], k}` | client → host: a weapon hit cop `c` |
 | `raid:arrest` | `{id, c}` | host → all: cop `c` arrested player `id` (the victim applies its own fine) |
 | `raid:block` | `{id, c}` | host → all: a riot shield bounced cop `c` |
+| `raid:spook` | `{c}` | host → all: cop `c` salutes the inflatable boss in the lobby (wave + bubble) |
 | `raid:shot` | `{k: 'foam'\|'sniper', o, v: [[vx,vy,vz], …]}` | shooter → all: darts (visual; only the shooter tests hits) |
 | `raid:ouch` | `{id, k: 'mace'\|'zap'}` | to the victim: tint / flash + toast |
 Weapon effects use `FX.net`, props' `hit` / `npc` messages and `Avatars.act` (all already synced).
 
 ## DOM
 `#raid-heat` (in `#hud`), `#tb-heat` (in `#tb-tray`), `#raid-alert` (z 9800), `#raid-glow` (z 11), `#raid-bust` (z 60),
-`#raid-scope` (z 4). `body.raid-busted` hides the hotbar, key hints and crosshair during the mugshot.
+`#raid-scope` (z 4), `#raid-near` (z 9790, only while seated during a raid). `body.raid-busted` hides the hotbar, key hints and crosshair during the mugshot.
 
 ## Testing
-`tools/scenarios/raid.js` (`RAID_ONLY=heat,shop,raid,arrest,end,lineup`): HUD gauge (warm, raid risk), the
+`tools/scenarios/raid.js` (`RAID_ONLY=banner,heat,shop,raid,arrest,end,lineup,desk,spook,net`; the whole run takes
+over 15 minutes on a loaded machine, so run it in parts): HUD gauge (warm, raid risk), the
 taskbar pill and the weapons in BonkMart, a forced raid (door burst, cops coming in, chase in third person, mace,
 taser, foam darts, coworkers ducking, The Boss hiding, sniper scope), an arrest with the mugshot (asserts the fine),
-hammer hits, dizzy cops, the "raid repelled" banner, weapons in first and third person.
+hammer hits, dizzy cops, the "raid repelled" banner, weapons in first and third person, the seated "officer incoming"
+warning, officers saluting the inflatable boss, and the multiplayer handlers (client snapshot, teammate cuffs, a client's hit on the host).
 `RAID.tag = 0` makes cops harmless for screenshots.
