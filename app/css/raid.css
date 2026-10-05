@@ -56,7 +56,8 @@ body.q-low #raid-glow.on{animation:none;box-shadow:inset 0 0 0 5px rgba(255,40,6
 
 /* ---------- POLICE RAID! banner ---------- */
 #raid-alert{position:fixed;left:0;right:0;top:13%;z-index:9800;display:none;justify-content:center;pointer-events:none}
-#raid-alert.on{display:flex;animation:raidal 4.3s ease-out forwards}
+#raid-alert.on{display:flex;animation:raidin .55s ease-out both}
+#raid-alert.on.out{animation:raidout .45s ease-in forwards}
 #raid-alert .ra-in{display:flex;align-items:stretch;max-width:min(52rem,94vw);background:linear-gradient(#18213d,#0f1529);border:4px solid var(--ink);border-radius:20px;overflow:hidden;
   box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 70px rgba(255,40,60,.35);transform:rotate(-1.5deg)}
 #raid-alert .ra-l,#raid-alert .ra-r{flex:none;width:3.6rem;position:relative}
@@ -68,7 +69,8 @@ body.q-low #raid-glow.on{animation:none;box-shadow:inset 0 0 0 5px rgba(255,40,6
 #raid-alert.win .ra-t b{color:#7cf05b} #raid-alert.lose .ra-t b{color:#ff8b84}
 #raid-alert.win .ra-l,#raid-alert.win .ra-r{background:radial-gradient(circle at 50% 50%,#fff 0 12%,#7cf05b 13% 42%,#1d5a2c 70%)}
 #raid-alert.win .ra-in{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 70px rgba(124,240,91,.35)}
-@keyframes raidal{0%{opacity:0;transform:scale(2.2)}9%{opacity:1;transform:scale(.92)}14%{transform:scale(1.04)}18%{transform:scale(1)}86%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-30px) scale(.96)}}
+@keyframes raidin{0%{opacity:0;transform:scale(2.2)}50%{opacity:1;transform:scale(.92)}78%{transform:scale(1.04)}100%{opacity:1;transform:scale(1)}}
+@keyframes raidout{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-30px) scale(.96)}}
 @keyframes ralamp{0%{filter:brightness(1.25)}50%{filter:brightness(.35) saturate(.6)}}
 
 /* ---------- busted: stamp, charge sheet and the mugshot photo ---------- */

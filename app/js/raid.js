@@ -27,7 +27,7 @@ const _rV = new THREE.Vector3(), _rV2 = new THREE.Vector3(), _rQ = new THREE.Qua
 const RaidArt = (() => {
   const G0 = {}, once = (k, f) => G0[k] || (G0[k] = f());
   const PI = Math.PI;
-  let vc = null, lab = null, glass = null;
+  let vc = null, lab = null, glass = null; const caseNo = 100 + Math.floor(Math.random() * 899);
   const CELLS = {};
   const vcMat = () => vc || (vc = new THREE.MeshLambertMaterial({ vertexColors: true }));
   const sph = (r, w, h) => once('s' + r + w + h, () => new THREE.SphereGeometry(r, w || 14, h || 10));
@@ -70,7 +70,7 @@ const RaidArt = (() => {
     });
     cell('plate', 256, 96, (g, w, hh) => {
       g.fillStyle = '#15171c'; g.fillRect(0, 0, w, hh); g.strokeStyle = '#f4f1ea'; g.lineWidth = 4; g.strokeRect(6, 6, w - 12, hh - 12);
-      txt(g, 'TOTALLY LEGIT INC.', w / 2, 32, 26, '#f4f1ea'); txt(g, 'CASE  #404-' + (100 + Math.floor(Math.random() * 899)), w / 2, 66, 28, '#ffe14a');
+      txt(g, 'TOTALLY LEGIT INC.', w / 2, 32, 26, '#f4f1ea'); txt(g, 'CASE  #404-' + caseNo, w / 2, 66, 28, '#ffe14a');
     });
     const t = new THREE.CanvasTexture(c); t.anisotropy = 4;
     lab = new THREE.MeshLambertMaterial({ map: t, transparent: true, alphaTest: 0.2 });
@@ -152,7 +152,7 @@ const RaidArt = (() => {
       for (const [w, hh, x, y] of [[0.47, 0.035, -0.1, 0.6], [0.47, 0.035, -0.1, -0.12], [0.035, 0.72, 0.13, 0.24], [0.035, 0.72, -0.33, 0.24]]) b.add(rboxGeo(w, hh, 0.034, 0.012, 1), x, y, -0.12, '#2a2f3a');
       b.add(boxGeo(0.4, 0.13, 0.004), -0.1, 0.4, -0.131, '#1b2747').dec('shield', 0.38, 0.095, -0.1, 0.4, -0.134, { ry: PI }).dec('smile', 0.1, 0.1, -0.1, 0.1, -0.13, { ry: PI });
       b.add(boxGeo(0.03, 0.14, 0.03), 0, 0.02, -0.075, '#2a2f3a').add(boxGeo(0.03, 0.03, 0.05), 0, 0.08, -0.095, '#2a2f3a').add(boxGeo(0.03, 0.03, 0.05), 0, -0.04, -0.095, '#2a2f3a');
-      return b.done({ thumb: { rx: 0.12, ry: PI - 0.45, zoom: 1.15 }, show: [0, PI, 0] });
+      return b.done({ thumb: { rx: 0.12, ry: -0.45, zoom: 1.15 }, show: [0, PI, 0] });
     }
   };
   const defs = {};
@@ -180,7 +180,7 @@ const RaidArt = (() => {
   }
   const cuffDef = () => once('cuff', () => B().add(new THREE.TorusGeometry(0.042, 0.009, 6, 18), 0, 0, 0, '#c9ced6', { rx: PI / 2 }).add(boxGeo(0.02, 0.016, 0.026), 0.046, 0, 0, '#9aa1ab').done());
   return {
-    vcMat, labMat, decalGeo, mesh, def, MAKE,
+    vcMat, labMat, decalGeo, mesh, def, MAKE, caseNo,
     weapon(id) { const m = mesh(def(id)); m.name = 'w:' + id; return m; },
     /* the same weapon turned for a shop picture (muzzle to the right, grip down) */
     show(id) { const d = def(id), m = mesh(d), g = new THREE.Group(); m.rotation.set(d.show[0], d.show[1], d.show[2], 'YXZ'); g.add(m); g.userData.thumb = d.thumb; return g; },
@@ -407,7 +407,7 @@ function copLook(seed) {
 }
 function copAvatar(seed, name) {
   const av = buildAvatar({ look: copLook(seed), name: name == null ? 'POLICE' : name, headset: false });
-  av.tag.material.color.set('#b8d2ff'); av.head.add(RaidArt.cap()); av.chest.add(RaidArt.chest()); av.lookCam = false; av.isCop = true;
+  av.tag.material.color.set('#b8d2ff'); av.tag.userData.base *= 0.6; av.head.add(RaidArt.cap()); av.chest.add(RaidArt.chest()); av.lookCam = false; av.isCop = true;
   return av;
 }
 const _rDir = { x: 0, z: 0 };
@@ -465,7 +465,7 @@ const Raid = {
   },
   /* drop everything at once (new day, review, quit): no money, no banners */
   abort() {
-    this.on = false; this.doorT = -1; this.clearCops(); RaidLights.set(false); RaidSnd.sirenOff(); RaidUI.glow(false); this.duckAll(false, true);
+    this.on = false; this.doorT = -1; this.clearCops(); RaidLights.set(false); RaidSnd.sirenOff(); RaidUI.glow(false); RaidUI.alertOff(true); this.duckAll(false, true);
     if (this.bust) this.release(true); for (const id of [...this.cuffs.keys()]) this.uncuff(id); this.later.length = 0;
   },
   burst() {
@@ -642,7 +642,7 @@ const Raid = {
   bustUpdate(dt, t) {
     if (this.book && this.book.av.group.visible) poseAvatar(this.book.av, false, t, 0);
     const b = this.bust; if (!b) return; b.t += dt;
-    if (W.me) W.me.group.visible = true;
+    if (W.me) W.me.group.visible = true; const ho = Props.held.get('me'); if (ho && ho.obj) ho.obj.visible = false;
     if (!b.snap && b.t > 1.5) { b.snap = true; RaidSnd.shutter(); FX.flash('#ffffff', 0.3, 0.95); RaidUI.snap(); }
     if (b.t > 3.8 || G.phase !== 'day' || P.review >= 0) this.release();
   },
@@ -850,7 +850,7 @@ const W_HIT = {
 };
 /* first-person view model placement per weapon: [rx, ry, rz, scale, x, y, z] (hold frame, Euler YXZ) and the muzzle in the model frame */
 const W_VM = {
-  mace: [0.08, 0.36, 0, 1.25, 0.0, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.82, 0, 0.01, 0],
+  mace: [0.1, 0.62, 0, 1.1, -0.01, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.82, 0, 0.01, 0],
   sniper: [Math.PI / 2, 0.3, 0, 0.72, 0, 0.02, 0.02], stress: [Math.PI / 2, 0.32, 0, 0.85, 0, 0.0, 0],
   hammer: [1.45, 0.1, 0.3, 0.8, 0.0, -0.02, 0], baton: [1.5, 0.1, 0.32, 0.95, 0.0, -0.02, 0], shield: [0, 0.38, 0, 0.5, -0.16, -0.06, 0]
 };
@@ -861,6 +861,11 @@ const _wO = new THREE.Vector3(), _wD = new THREE.Vector3(), _wT = [], _wTP = [];
 const RaidW = {
   cd: {}, maceLeft: 0, aim: 0, aimOn: false, aimT: 0, swingT: 1, swingK: 0, fov: 0,
   isWeapon: id => !!RAID_W[id],
+  /* give a weapon; when the hotbar (5 item slots) is full it moves to the front so it can be selected */
+  give(id) {
+    Inv.give(id); if (Props.slotList().includes(id)) return;
+    const n = Inv.items[id], rest = Object.assign({}, Inv.items); delete rest[id]; Inv.items = Object.assign({ [id]: n }, rest); Bus.emit('inv:change', id, n);
+  },
   /* everyone a weapon can hit: cops + Props._targets (other players, coworkers, The Boss) */
   targets() {
     const T = _wT; T.length = 0; let k = 0;
@@ -1021,7 +1026,7 @@ for (const id in RAID_W) {
     sort: 300 + Object.keys(RAID_W).indexOf(id), repeatable: id === 'mace', available: () => true,
     owned: () => id !== 'mace' && Inv.count(id) > 0, ownedLabel: 'In your hotbar',
     model: () => RaidArt.show(id),
-    buy() { Inv.give(id); const k = Props.slots.indexOf(id); toast(w.name + ' added to your hotbar' + (k >= 0 ? ' (slot ' + (k + 1) + ').' : '.'), 'good'); Game.saveProgress(); }
+    buy() { RaidW.give(id); const k = Props.slots.indexOf(id); toast(w.name + ' added to your hotbar' + (k >= 0 ? ' (slot ' + (k + 1) + ').' : '.'), 'good'); Game.saveProgress(); }
   });
 }
 
@@ -1055,6 +1060,7 @@ const RaidUI = {
   col(h) { const k = clamp(h / 100, 0, 1); return 'hsl(' + Math.round(52 - 50 * k) + ',' + Math.round(92 + 6 * k) + '%,' + Math.round(56 - 6 * k) + '%)'; },
   tick() {
     const E = this.el; if (!E.hud) return;
+    if (this.alertT && W.t > this.alertT) this.alertOff();
     const ht = Raid.heat, on = Raid.on, live = G.phase === 'day' || G.phase === 'lobby', pct = Math.round(ht);
     const vis = live && !P.seated && P.review < 0 && !G.paused && !Raid.bust;
     E.hud.classList.toggle('hidden', !vis); document.body.classList.toggle('raid-busted', !!Raid.bust);
@@ -1081,10 +1087,10 @@ const RaidUI = {
       win: ['RAID REPELLED!', 'Hazard pay +' + money(RAID.hazard) + ' each. Legal says this never happened.'],
       lose: ['RAID OVER', amt > 0 ? 'The officers seized ' + money(amt) + ' of your petty cash on the way out.' : 'The officers got bored and went for donuts.']
     }[kind]; if (!M) return;
-    E.alert.className = ''; void E.alert.offsetWidth; E.alert.className = 'on ' + kind;
+    E.alert.className = ''; void E.alert.offsetWidth; E.alert.className = 'on ' + kind; this.alertT = W.t + 4;
     E.alert.replaceChildren(h('div', { class: 'ra-in' }, h('i', { class: 'ra-l' }), h('div', { class: 'ra-t' }, h('b', {}, M[0]), h('small', {}, M[1])), h('i', { class: 'ra-r' })));
-    clearTimeout(this._at); this._at = setTimeout(() => { E.alert.className = ''; }, 4300);
   },
+  alertOff(now) { const a = this.el.alert; this.alertT = 0; if (!a || !a.className) return; if (now) a.className = ''; else { a.classList.add('out'); clearTimeout(this._at); this._at = setTimeout(() => { if (a.classList.contains('out')) a.className = ''; }, 450); } },
   glow(on) { if (this.el.glow) this.el.glow.classList.toggle('on', !!on); },
   busted(fine) {
     const E = this.el; if (!E.bust) return;
@@ -1101,7 +1107,7 @@ const RaidUI = {
     if (!this.grab) return; this.grab = false; const E = this.el, src = W.renderer && W.renderer.domElement; if (!src || !E.bust || !Raid.bust) return;
     const cw = 220, chh = 250, c = h('canvas', { width: cw, height: chh }), g = c.getContext('2d'), sw = src.height * 0.62 * cw / chh, sh = src.height * 0.62;
     try { g.drawImage(src, (src.width - sw) / 2, src.height * 0.12, sw, sh, 0, 0, cw, chh); } catch (e) { return; }
-    E.bust.append(h('div', { class: 'rb-photo' }, c, h('b', {}, (settings.name || 'Agent').slice(0, 18)), h('small', {}, 'CASE #404-' + randi(100, 999))));
+    E.bust.append(h('div', { class: 'rb-photo' }, c, h('b', {}, (settings.name || 'Agent').slice(0, 18)), h('small', {}, 'CASE #404-' + RaidArt.caseNo)));
   }
 };
 
