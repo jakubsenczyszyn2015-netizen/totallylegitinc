@@ -11,12 +11,13 @@ module.exports = async page => {
   await page.eval(() => { const T = window.__tli; T.Saves.week = [null, null, null]; T.Saves.endless = null; writeSaves(); T.UI.menu('home'); return true; });
   await page.shot('day-01-menu');
   Q.check('menu visible', await Q.visible('#menu'));
+  await page.eval(() => { window.__dc = null; window.__tli.Bus.on('day:start', () => { window.__dc = document.querySelector('#daycard').classList.contains('on') && document.querySelector('#daycard').textContent; }); return true; });
   await Q.click('#menu .home-btns .btn', /Singleplayer/);
   Q.check('solo screen', await Q.visible('#menu .screen[data-s="solo"].on'));
   await Q.click('#solo-body .tcard .btn.primary', /Start a week/, 700);
   let g = await G();
   Q.check('week started on Monday', g.phase === 'day' && g.day === 1 && g.quota > 0, g);
-  Q.check('day card shown', await page.eval(() => document.querySelector('#daycard').classList.contains('on')));
+  Q.check('day card shown', /Monday/.test(await page.eval(() => window.__dc)), await page.eval(() => window.__dc));
   await page.shot('day-02-office-daycard');
 
   // ---------- walk to a desk and sit ----------
