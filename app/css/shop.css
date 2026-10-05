@@ -1,1 +1,113 @@
-/* shop */
+/* =====================================================================
+   BONKMART MARKET (apps/shop.js) — store window, product cards, hold-to-buy, airstrike banner
+   ===================================================================== */
+.win.bonkmart{min-width:28rem;min-height:20rem;background:#ececee}
+.win.bonkmart .wb{padding:0;gap:0;overflow:hidden;background:#ececee;font-family:'Roboto',sans-serif}
+
+/* header: wordmark left, greeting + wallet right, orange rule */
+.bm-head{flex:none;display:flex;align-items:center;gap:1rem;height:3.3rem;padding:0 1rem 0 .85rem;background:#10151f;border-bottom:3px solid #ff9f1a;color:#fff}
+.bm-logo{display:flex;align-items:center;gap:.5rem;min-width:0}
+.bm-mark{width:2.2rem;height:2.2rem;flex:none;display:grid;place-items:center;filter:drop-shadow(0 2px 0 rgba(0,0,0,.4))}
+.bm-mark svg{width:100%;height:100%;overflow:visible}
+.bm-logo b{font:400 1.5rem/1 'Lilita One',sans-serif;letter-spacing:.02em;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+.bm-tag{background:#ffc61a;color:#1d1400;font:900 .92rem/1 'Roboto',sans-serif;letter-spacing:.07em;padding:.28rem .45rem .24rem;border-radius:3px;box-shadow:0 2px 0 #b98600}
+.bm-hello{margin-left:auto;display:flex;align-items:center;gap:.8rem;font:700 .82rem 'Roboto',sans-serif;white-space:nowrap}
+.bm-hello > span:first-child{padding-right:.85rem;border-right:1px solid #3a4352;color:#e8ebf1}
+.bm-wallet{display:flex;align-items:center;gap:.4rem;padding:.28rem .75rem .28rem .45rem;border-radius:99px;background:#15261b;border:1px solid #2e6a40}
+.bm-wallet i{width:1.25rem;height:1.25rem;border-radius:50%;background:#2fbf62;display:grid;place-items:center}
+.bm-wallet i svg{width:72%;height:72%;fill:#fff}
+.bm-wallet small{font:700 .66rem 'Roboto',sans-serif;letter-spacing:.06em;text-transform:uppercase;color:#8fd5a5}
+.bm-wallet b{font:900 .95rem 'Roboto',sans-serif;color:#4be07f}
+
+/* coloured tabs */
+.bm-tabs{flex:none;display:flex;gap:.45rem;padding:.5rem .85rem 0;background:#1d2533;border-bottom:1px solid #0b0f17;overflow-x:auto;scrollbar-width:none}
+.bm-tab{flex:none;border:0;border-radius:5px 5px 0 0;padding:.52rem 1rem .48rem;font:700 .98rem 'Roboto',sans-serif;cursor:pointer;letter-spacing:.005em;transition:background .12s,color .12s;
+  background:color-mix(in srgb,var(--tc) 30%,#1d2533);color:color-mix(in srgb,var(--tc) 50%,#fff)}
+.bm-tab:hover{background:color-mix(in srgb,var(--tc) 42%,#1d2533)}
+.bm-tab.on{background:#2e3a50;color:#fff;box-shadow:inset 0 -3px 0 var(--tc)}
+
+/* shelves */
+.bm-scroll{flex:1;min-height:0;overflow:auto;padding:.9rem 1rem 1rem;background:#ececee}
+.bm-sec{margin:0 0 .8rem;padding:.48rem .8rem;border-left:4px solid var(--tc);border-radius:2px;background:color-mix(in srgb,var(--tc) 13%,#fff);font:700 1.02rem 'Roboto',sans-serif;color:#1b2130}
+.bm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(13.4rem,1fr));gap:.8rem;margin-bottom:1.3rem}
+.bm-empty{display:flex;flex-direction:column;align-items:center;gap:.45rem;padding:3.5rem 1rem;color:#5d6573;text-align:center}
+.bm-empty i{width:4.4rem;height:4.4rem;border-radius:50%;background:#d7dae0;display:grid;place-items:center;margin-bottom:.3rem}
+.bm-empty i svg{width:56%;height:56%;fill:#fff}
+.bm-empty b{font:400 1.5rem 'Lilita One',sans-serif;color:#2b3242}
+.bm-foot{text-align:center;color:#9aa0ab;font:.72rem 'Roboto',sans-serif;padding:.2rem 0 .4rem}
+
+/* product card */
+.bm-card{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid #dcdde2;border-radius:6px;padding:.7rem .7rem .8rem;box-shadow:0 1px 2px rgba(20,24,34,.06)}
+.bm-picw{position:relative;margin-bottom:.7rem}
+.bm-pic{aspect-ratio:1.9;border-radius:4px;overflow:hidden;display:grid;place-items:center;
+  background-image:radial-gradient(ellipse at 50% 38%,rgba(255,255,255,.26),rgba(255,255,255,0) 62%),linear-gradient(180deg,rgba(255,255,255,.05),rgba(0,0,0,.1))}
+.bm-pic > svg{width:100%;height:100%;display:block}
+.bm-pic img,.bm-pic canvas{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.bm-pic img.bm-3d{filter:drop-shadow(0 7px 5px rgba(0,0,0,.3))}
+.bm-ico{width:56%;height:74%;display:grid;place-items:center;filter:drop-shadow(0 4px 3px rgba(0,0,0,.28))}
+.bm-ico svg{width:100%;height:100%;fill:#fff;stroke:#fff}
+.bm-ico .emo{font-size:3.4rem;line-height:1}
+.bm-cnt{position:absolute;top:.4rem;right:.4rem;padding:.2rem .55rem;border-radius:99px;background:rgba(16,21,31,.86);color:#fff;font:700 .72rem 'Roboto',sans-serif;box-shadow:0 2px 4px rgba(0,0,0,.25)}
+.bm-cnt.hidden{display:none}
+.bm-name{font:700 1.02rem/1.25 'Roboto',sans-serif;color:#1b2130;margin:0 .05rem .4rem}
+.bm-pips{display:flex;align-items:center;gap:.26rem;margin:-.1rem .05rem .45rem}
+.bm-pips i{width:.66rem;height:.66rem;border-radius:50%;background:#e2e5ea;border:1.5px solid #b9bfca}
+.bm-pips i.on{background:#ffc61a;border-color:#b98600}
+.bm-pips span{font:500 .72rem 'Roboto',sans-serif;color:#6b7385;margin-left:.3rem}
+.bm-desc{flex:1;margin:0 .05rem .6rem;font:.85rem/1.42 'Roboto',sans-serif;color:#4d5566}
+.bm-price{margin:0 .05rem .55rem;font:700 1.02rem 'Roboto',sans-serif;color:#c92a2a}
+.bm-card.owned .bm-price{color:#8a919e;text-decoration:line-through;text-decoration-thickness:1.5px}
+
+/* the big button: HOLD TO BUY (yellow, fills up) / NEED $X (red) / OWNED (grey) */
+.bm-btn{position:relative;overflow:hidden;width:100%;height:2.65rem;border:0;border-radius:.85rem;cursor:pointer;user-select:none;touch-action:none;
+  font:700 .98rem 'Roboto',sans-serif;text-transform:uppercase;letter-spacing:.035em;box-shadow:0 3px 0 rgba(0,0,0,.2);transition:transform .06s,box-shadow .06s,filter .1s}
+.bm-btn .bm-lbl{position:relative;pointer-events:none}
+.bm-btn .bm-fill{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,#ff8f1a,#ffb02e);transform:scaleX(0);transform-origin:0 50%;transition:transform .16s ease-out}
+.bm-btn.buy{background:#ffd21f;color:#2a1d00}
+.bm-btn.buy:hover{filter:brightness(1.06)}
+.bm-btn.hold{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.bm-btn.hold .bm-fill{transform:scaleX(1);transition:transform .7s linear}
+.bm-btn.need{background:#e8423f;color:#2a0707}
+.bm-btn.need:hover{filter:brightness(1.05)}
+.bm-btn.owned,.bm-btn.blocked{background:#d5d9df;color:#5d6573;box-shadow:none;cursor:default}
+.bm-btn.blocked{background:#e3d6ff;color:#5a3fa0}
+.bm-btn.bought{background:#2fbf62;color:#05290f;box-shadow:0 3px 0 rgba(0,0,0,.2);animation:bmok .35s ease-out}
+.bm-btn.shake{animation:bmshake .34s ease-in-out}
+@keyframes bmshake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+@keyframes bmok{0%{transform:scale(.94)}55%{transform:scale(1.05)}100%{transform:scale(1)}}
+.bm-card.bump .bm-pic{animation:bmbump .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes bmbump{0%{transform:scale(1)}35%{transform:scale(1.06) rotate(-1deg)}100%{transform:scale(1)}}
+
+/* purchase pop: chunky "-$250" + a burst of coins */
+.bm-pop{position:absolute;left:50%;top:30%;z-index:5;display:grid;place-items:center;pointer-events:none;animation:bmpop 1.25s cubic-bezier(.2,1.2,.4,1) forwards}
+.bm-pop > span{position:relative;z-index:1;grid-area:1/1;font:400 2.6rem/1 'Lilita One',sans-serif;letter-spacing:.02em;white-space:nowrap;padding:0 .1em}
+.bm-pop .o{color:#10240d;-webkit-text-stroke:.22em #10240d;text-shadow:0 .08em 0 #10240d,0 .12em .2em rgba(0,0,0,.4)}
+.bm-pop .f{color:#ffe23d;-webkit-text-stroke:.03em #fff7b0}
+.bm-coin{position:absolute;left:50%;top:50%;width:.95rem;height:.95rem;margin:-.48rem;border-radius:50%;border:2px solid #6b4a00;
+  background:radial-gradient(circle at 35% 32%,#fffbd0,#ffd21f 45%,#d08f00);animation:bmcoin .85s ease-out forwards}
+@keyframes bmpop{0%{transform:translate(-50%,0) scale(.3);opacity:0}14%{transform:translate(-50%,-4px) scale(1.18);opacity:1}28%{transform:translate(-50%,-6px) scale(1)}75%{transform:translate(-50%,-30px) scale(1);opacity:1}100%{transform:translate(-50%,-56px) scale(.95);opacity:0}}
+@keyframes bmcoin{0%{transform:rotate(var(--a)) translateY(0) scale(.4);opacity:1}70%{opacity:1}100%{transform:rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(1);opacity:0}}
+
+/* airstrike warning banner (over the 3D view and the desktop) */
+#bm-alert{position:fixed;left:0;right:0;top:20%;z-index:9800;display:flex;justify-content:center;pointer-events:none;animation:bmal 3.6s ease-out forwards}
+#bm-alert .bm-al-in{padding:.5rem;background:repeating-linear-gradient(-45deg,#ffd21f 0 22px,#151a26 22px 44px);box-shadow:0 10px 30px rgba(0,0,0,.45);transform:rotate(-2deg)}
+#bm-alert b{display:block;padding:.12em .9em .08em;background:#d6342c;color:#fff;font:400 clamp(2.2rem,6.2vw,4.6rem)/1.1 'Lilita One',sans-serif;letter-spacing:.05em;text-align:center;text-shadow:0 .06em 0 rgba(0,0,0,.4);animation:bmblink .5s steps(2) 5}
+#bm-alert span{display:block;padding:.4rem 1rem;background:#151a26;color:#ffd21f;font:700 clamp(.85rem,1.5vw,1.15rem) 'Roboto',sans-serif;text-align:center;letter-spacing:.02em}
+#bm-alert.blue .bm-al-in{background:repeating-linear-gradient(-45deg,#74c0fc 0 22px,#151a26 22px 44px)}
+#bm-alert.blue b{background:#1864ab}
+#bm-alert.blue span{color:#a5d8ff}
+@keyframes bmal{0%{transform:scaleY(0);opacity:0}7%{transform:scaleY(1.12);opacity:1}11%{transform:scaleY(1)}86%{transform:translateY(0);opacity:1}100%{transform:translateY(-24px);opacity:0}}
+@keyframes bmblink{50%{background:#ff5b4a}}
+
+/* BonkNews live broadcast of the rival strike (over the 3D view and the desktop) */
+#bm-news{position:fixed;right:1.2rem;top:7.2rem;z-index:9750;width:clamp(270px,31vw,470px);padding:.38rem .38rem .45rem;border-radius:.7rem;background:#141824;
+  box-shadow:0 14px 34px rgba(0,0,0,.5),0 0 0 2px #2c3346;pointer-events:none;transform:translateX(calc(100% + 2rem)) rotate(2deg);opacity:0}
+#bm-news.on{animation:bmnewsin .5s cubic-bezier(.2,1.3,.4,1) forwards}
+#bm-news.off{animation:bmnewsout .4s ease-in forwards}
+#bm-news canvas{display:block;width:100%;aspect-ratio:16/9;border-radius:.35rem;background:#000}
+.bm-nw-cap{display:flex;align-items:center;gap:.45rem;padding:.05rem .25rem .4rem;font:700 .74rem 'Roboto',sans-serif;color:#aab3c5;white-space:nowrap;overflow:hidden}
+.bm-nw-cap i{width:.55rem;height:.55rem;border-radius:50%;background:#ff3b30;box-shadow:0 0 6px #ff3b30;animation:bmblink 1s steps(2) infinite}
+.bm-nw-cap b{font:400 .95rem/1 'Lilita One',sans-serif;letter-spacing:.04em;color:#fff}
+.bm-nw-cap span{overflow:hidden;text-overflow:ellipsis}
+@keyframes bmnewsin{0%{transform:translateX(calc(100% + 2rem)) rotate(2deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes bmnewsout{0%{transform:none;opacity:1}100%{transform:translateX(calc(100% + 2rem)) rotate(2deg);opacity:0}}
