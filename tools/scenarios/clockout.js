@@ -7,6 +7,7 @@ module.exports = async page => {
   const shot = async n => { await ev(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => r(true))))); await page.wait(150); return page.shot(n); };
   const check = (name, ok, info) => { console.log((ok ? 'OK   ' : 'FAIL ') + name + (info !== undefined ? ' ' + JSON.stringify(info) : '')); if (!ok) throw new Error('check failed: ' + name); };
   const key = code => ev(c => { window.dispatchEvent(new KeyboardEvent('keydown', { code: c, bubbles: true })); return true; }, code);
+  const sit = async () => { await page.sit(); await ev(() => new Promise(r => { const t0 = performance.now(), f = () => (window.__tli.OS.open && !document.getElementById('os').classList.contains('hidden')) || performance.now() - t0 > 15000 ? setTimeout(() => r(true), 1500) : setTimeout(f, 100); f(); })); };
   const freshDay = () => ev(() => { const T = window.__tli; if (T.G.phase === 'review') T.Game.retryDay(); const dc = document.getElementById('daycard'); dc.classList.remove('on'); T.G.timeLeft = 200; return T.G.phase; });
   await ev(() => { document.head.append(Object.assign(document.createElement('style'), { textContent: '#daycard{display:none!important}.toast{animation:none!important}' })); return true; });
   await page.startSolo('week');
@@ -14,7 +15,7 @@ module.exports = async page => {
 
   if (want('solo')) {
     // 1. the punch clock on the hallway wall: E -> confirm -> review
-    await page.teleport(18.62, 0.35, Math.PI, -0.18);
+    await page.teleport(15.68, -0.45, 0, -0.18);
     await page.wait(700);
     const lab = await ev(() => { const W = window.__tli.W; return W.cur ? W.cur.label() : null; });
     check('punch clock prompt', lab === 'Clock out early', lab);
@@ -60,7 +61,7 @@ module.exports = async page => {
     check('hidden in the review, endless and the lobby', hid.review && hid.endless && hid.lobby, hid);
     await freshDay();
     // 4. LegitOS start menu
-    await page.sit();
+    await sit();
     await ev(() => { window.__tli.OS.power(true); return true; });
     await page.wait(300);
     const pm = await ev(() => { const b = document.querySelector('#powermenu .co-pm'); return b && b.textContent; });
@@ -86,7 +87,7 @@ module.exports = async page => {
       return true;
     });
     await freshDay();
-    await page.sit();
+    await sit();
     await ev(() => { ClockOut.hostStart('p2'); return true; });
     await page.wait(500);
     const v1 = await ev(() => ({ view: ClockOut.view, shown: !document.getElementById('co-vote').classList.contains('hidden'), title: document.querySelector('#co-vote .cv-title').textContent }));

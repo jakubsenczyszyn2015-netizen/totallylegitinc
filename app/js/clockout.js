@@ -181,10 +181,10 @@ const ClockOut = {
     if (this.clock) this.clock.punchT = 0.5;
   },
   buildClock() {
-    const X = 18.75, Y = 1.36, WZ = 1.70, ry = Math.PI;                 // on the north hallway wall, facing the hallway (-z)
-    const M = (x, y, z, o) => xf(X - x, Y + y, WZ - z, Object.assign({ ry }, o || {}));   // local: +x right, +z out of the wall
+    const X = 15.55, Y = 1.36, WZ = -1.70, ry = 0;                    // on the south hallway wall (between the review-room door and the bench), facing the hallway (+z)
+    const M = (x, y, z, o) => xf(X + x, Y + y, WZ + z, Object.assign({ ry }, o || {}));   // local: +x right, +z out of the wall
     const it = [];
-    it.push(rboxGeo(0.5, 0.7, 0.03, 0.03, 2), M(0.05, 0, 0.015), '#4a3a2c');                      // backplate
+    it.push(rboxGeo(0.46, 0.66, 0.025, 0.025, 2), M(0.02, 0.01, 0.0125), '#9a7552');                // backplate
     it.push(rboxGeo(0.38, 0.52, 0.15, 0.045, 2), M(0, 0.02, 0.105), '#e6d9b8');                   // body
     it.push(rboxGeo(0.4, 0.06, 0.17, 0.025, 2), M(0, 0.29, 0.105), '#c9b48a');                    // top cap
     it.push(cylGeo(0.142, 0.142, 0.035, 28), M(0, 0.1, 0.19, { rx: Math.PI / 2 }), '#c9ccd2');      // dial bezel
@@ -192,10 +192,10 @@ const ClockOut = {
     it.push(boxGeo(0.16, 0.012, 0.02), M(-0.03, -0.12, 0.226), '#0b0b0d');                        // slot
     it.push(cylGeo(0.04, 0.046, 0.035, 20), M(0.125, -0.13, 0.2, { rx: Math.PI / 2 }), '#d6342c'); // big red button
     it.push(cylGeo(0.028, 0.028, 0.02, 16), M(0.125, -0.13, 0.226, { rx: Math.PI / 2 }), '#ff6a5c');
-    it.push(boxGeo(0.21, 0.5, 0.02), M(0.4, -0.02, 0.01), '#8a8f98');                             // card rack
+    it.push(boxGeo(0.21, 0.5, 0.02), M(0.4, -0.02, 0.01), '#4f555e');                             // card rack
     for (let i = 0; i < 4; i++) {
-      it.push(boxGeo(0.21, 0.035, 0.045), M(0.4, -0.22 + i * 0.13, 0.035), '#6f747d');
-      it.push(boxGeo(0.085, 0.13, 0.004), M(0.36 + (i % 2) * 0.07, -0.17 + i * 0.13 + (i * 37 % 5) * 0.006, 0.04, { rz: (i % 2 ? 0.06 : -0.05) }), ['#f0dfa8', '#f6e7b8', '#e9d59a', '#f3e2ae'][i]);
+      it.push(boxGeo(0.21, 0.035, 0.045), M(0.4, -0.22 + i * 0.13, 0.035), '#9aa1ab');
+      it.push(boxGeo(0.085, 0.13, 0.004), M(0.36 + (i % 2) * 0.07, -0.17 + i * 0.13 + (i * 37 % 5) * 0.006, 0.04, { rz: (i % 2 ? 0.06 : -0.05) }), ['#fff1c4', '#fbe7a6', '#fff6da', '#f6dc8f'][i]);
     }
     const body = new THREE.Mesh(mergeGeos(it), new THREE.MeshLambertMaterial({ vertexColors: true }));
     body.matrixAutoUpdate = false; body.receiveShadow = true; W.scene.add(body);
@@ -210,11 +210,11 @@ const ClockOut = {
     const signs = new THREE.Mesh(mergeGeos([sg, M(0.05, 0.56, 0.004), 0xffffff, pg, M(0, -0.205, 0.1805), 0xffffff]), new THREE.MeshLambertMaterial({ map: stex, alphaTest: 0.5 }));
     signs.matrixAutoUpdate = false; W.scene.add(signs);
     // the time card in the top slot (it dips in when someone punches)
-    const card = new THREE.Mesh(boxGeo(0.085, 0.15, 0.004), mat('#f0dfa8')); card.position.set(X, Y + 0.31, WZ - 0.12); card.rotation.y = ry; W.scene.add(card);
-    const C = this.clock = { dc, dtex, sc, stex, card, punchT: 0, minute: -1, pos: new THREE.Vector3(X, Y, WZ - 0.25) };
+    const card = new THREE.Mesh(boxGeo(0.085, 0.15, 0.004), mat('#f0dfa8')); card.position.set(X, Y + 0.31, WZ + 0.12); card.rotation.y = ry; W.scene.add(card);
+    const C = this.clock = { dc, dtex, sc, stex, card, punchT: 0, minute: -1, pos: new THREE.Vector3(X, Y, WZ + 0.25) };
     this.drawSign(); this.drawDial(9);
-    W.interact.push({ pos: new THREE.Vector3(X, Y - 0.05, WZ - 0.22), label: () => this.label(), act: () => this.request() });
-    W.colliders.push({ x0: X - 0.55, x1: X + 0.22, z0: WZ - 0.24, z1: WZ, y1: 1.8 });
+    W.interact.push({ pos: new THREE.Vector3(X, Y - 0.05, WZ + 0.22), label: () => this.label(), act: () => this.request() });
+    W.colliders.push({ x0: X - 0.22, x1: X + 0.55, z0: WZ, z1: WZ + 0.24, y1: 1.8 });
     return C;
   },
   label() {
@@ -232,12 +232,12 @@ const ClockOut = {
     g.fillStyle = '#d6342c'; rrect(g, 12, 12, Wd - 24, 40, 16); g.fill(); g.fillRect(12, 34, Wd - 24, 18);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     g.fillStyle = '#fff'; g.font = '700 26px ' + FONT.menu; g.fillText('TOTALLY LEGIT INC. · STAFF ONLY', Wd / 2, 33);
-    g.font = '86px ' + FONT.chunky; g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = '#16110f'; g.strokeText('CLOCK OUT', Wd / 2, 102); g.fillStyle = '#fff6df'; g.fillText('CLOCK OUT', Wd / 2, 102);
-    g.fillStyle = '#3a2512'; g.font = '700 23px ' + FONT.menu; g.fillText('Leaving early? The Boss reviews you on the spot.', Wd / 2, 147);
+    g.font = '86px ' + FONT.chunky; g.lineJoin = 'round'; g.lineWidth = 10; g.strokeStyle = '#16110f'; g.strokeText('CLOCK OUT', Wd / 2, 102, Wd - 50); g.fillStyle = '#fff6df'; g.fillText('CLOCK OUT', Wd / 2, 102, Wd - 50);
+    g.fillStyle = '#3a2512'; g.font = '700 23px ' + FONT.menu; g.fillText('Leaving early? The Boss reviews you on the spot.', Wd / 2, 147, Wd - 60);
     // brass plate under the slot
     const gr = g.createLinearGradient(0, 180, 0, 256); gr.addColorStop(0, '#f2cf72'); gr.addColorStop(1, '#a87b2a');
     g.fillStyle = gr; rrect(g, 6, 182, Wd - 12, 68, 12); g.fill();
-    g.fillStyle = '#3a2512'; g.font = '46px ' + FONT.slab; g.fillText('PUNCH-O-MATIC 3000', Wd / 2, 218);
+    g.fillStyle = '#3a2512'; g.font = '42px ' + FONT.slab; g.fillText('PUNCH-O-MATIC 3000', Wd / 2, 218, Wd - 50);
     C.stex.needsUpdate = true;
   },
   /* hour: 9 (start of the shift) .. 17 (end) */
