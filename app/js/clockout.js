@@ -128,7 +128,7 @@ const ClockOut = (() => {
   });
   Bus.on('quit', () => { V.v = null; V.cool.clear(); closeCard(); show(); });
   Bus.on('game:begin', () => { V.v = null; V.cool.clear(); show(); });
-  Bus.on('review', () => closeCard());
+  Bus.on('review', () => { closeCard(); show(); });
 
   /* The Boss mentions it in the review (Game.endDay → reviewLines) */
   if (typeof reviewLines === 'function') {
@@ -164,13 +164,13 @@ const ClockOut = (() => {
   /* ----- UI: the vote panel (top centre, over the 3D view and the desktop) ----- */
   const CLOCK_SVG = '<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8.5" fill="#fff6dc" stroke="currentColor" stroke-width="2.4"/><path d="M12 8.6V13l3 2" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M5 4.5l3 -1.6M19 4.5l-3 -1.6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>';
   function show() {
-    const v = V.v;
+    const v = G.phase === 'day' || (V.v && !V.v.res) ? V.v : null;   // the review takes the screen as soon as it starts
     if (!v) { if (V.el) { V.el.classList.add('out'); const el = V.el; V.el = null; V.sig = ''; setTimeout(() => el.remove(), 260); } return; }
     const all = ids(), n = all.length, me = myVote(), sig = [v.id, v.yes.join(), v.no.join(), v.res, all.join(), me].join('|');
     if (V.el && sig === V.sig) return tick();
     V.sig = sig;
     const pips = all.map(id => { const s = v.yes.includes(id) ? 'yes' : v.no.includes(id) ? 'no' : 'wait';
-      return h('span', { class: 'co-pip ' + s }, h('i', { style: { background: colorOf(id) } }), nameOf(id) + (id === Net.myId ? ' (you)' : ''), h('em', {}, s === 'yes' ? '✓' : s === 'no' ? '✕' : '…')); });
+      return h('span', { class: 'co-pip ' + s }, h('i', { style: { background: colorOf(id) } }), nameOf(id) + (id === Net.myId ? ' (you)' : ''), h('em', {}, s === 'yes' ? '✓' : s === 'no' ? '✕' : '?')); });
     const btn = (yes, label) => h('button', { class: 'co-b ' + (yes ? 'yes' : 'no') + (me === (yes ? 'yes' : 'no') ? ' on' : ''), onclick: () => cast(yes) }, h('kbd', {}, yes ? 'Y' : 'N'), label);
     const el = h('div', { id: 'co-vote', class: v.res ? 'done ' + v.res : '' },
       h('div', { class: 'co-vh' }, h('i', { class: 'co-ic', html: CLOCK_SVG }), h('b', {}, 'Clock out early?'), h('span', { class: 'co-t' })),
