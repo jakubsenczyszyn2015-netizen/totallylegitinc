@@ -642,6 +642,7 @@ const Raid = {
   bustUpdate(dt, t) {
     if (this.book && this.book.av.group.visible) poseAvatar(this.book.av, false, t, 0);
     const b = this.bust; if (!b) return; b.t += dt;
+    if (!W.camOverride) W.camOverride = { pos: [21.05, 1.52, 0.04], look: [23.3, 1.22, 0] };   // keep the mugshot camera even if someone released it
     if (W.me) W.me.group.visible = true; const ho = Props.held.get('me'); if (ho && ho.obj) ho.obj.visible = false;
     if (!b.snap && b.t > 1.5) { b.snap = true; RaidSnd.shutter(); FX.flash('#ffffff', 0.3, 0.95); RaidUI.snap(); }
     if (b.t > 3.8 || G.phase !== 'day' || P.review >= 0) this.release();
