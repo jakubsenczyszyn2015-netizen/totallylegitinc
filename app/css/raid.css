@@ -55,7 +55,7 @@
 body.q-low #raid-glow.on{animation:none;box-shadow:inset 0 0 0 5px rgba(255,40,60,.7)}
 
 /* ---------- POLICE RAID! banner ---------- */
-#raid-alert{position:fixed;left:0;right:0;top:13%;z-index:9800;display:none;justify-content:center;pointer-events:none}
+#raid-alert{position:fixed;left:0;right:0;top:8%;z-index:9800;display:none;justify-content:center;pointer-events:none}
 #raid-alert.on{display:flex;animation:raidin .55s ease-out both}
 #raid-alert.on.out{animation:raidout .45s ease-in forwards}
 #raid-alert .ra-in{display:flex;align-items:stretch;max-width:min(52rem,94vw);background:linear-gradient(#18213d,#0f1529);border:4px solid var(--ink);border-radius:20px;overflow:hidden;

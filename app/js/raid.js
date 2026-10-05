@@ -248,7 +248,8 @@ const RaidWords = {
     for (const s of this.pool) {
       if (!s.visible) continue; const u = s.userData; u.t += dt; const k = u.t / u.life;
       if (k >= 1) { s.visible = false; continue; }
-      const sc = (k < 0.14 ? k / 0.14 * 1.25 : k < 0.28 ? 1.25 - (k - 0.14) / 0.14 * 0.25 : 1) * u.k;
+      const near = W.camera ? clamp(W.camera.position.distanceTo(s.position) / 5, 0.3, 1) : 1;
+      const sc = (k < 0.14 ? k / 0.14 * 1.25 : k < 0.28 ? 1.25 - (k - 0.14) / 0.14 * 0.25 : 1) * u.k * near;
       s.scale.set(0.95 * sc, 0.475 * sc, 1); s.position.y = u.y + k * 0.35; s.material.opacity = k > 0.72 ? 1 - (k - 0.72) / 0.28 : 1;
     }
   }
@@ -595,6 +596,7 @@ const Raid = {
   copVisual(c, t) {
     const g = c.av.group; g.position.set(c.x, 0, c.z); g.rotation.y = c.ry;
     poseAvatar(c.av, false, t, c.st === 3 ? 0 : c.sp); avTagScale(c.av, W.camera);
+    const tg = c.av.tag; if (tg.visible) tg.material.opacity *= clamp((W.camera.position.distanceTo(g.position) - 2.5) / 2.5, 0, 1);
     c.av.head.getWorldPosition(c.head);
   },
   onBlock(m) {
@@ -693,7 +695,7 @@ const Raid = {
     if (B) {
       const want = this.ducking && G.phase === 'day'; this.bossW = want ? Math.min(1, this.bossW + dt * 1.6) : Math.max(0, this.bossW - dt * 1.3);
       if (this.bossW > 0) {
-        const e = this.bossW * this.bossW * (3 - 2 * this.bossW), c = B.cur; B.group.position.y = -0.6 * e; this._bossLow = true;
+        const e = this.bossW * this.bossW * (3 - 2 * this.bossW), c = B.cur; B.group.position.y = -0.44 * e; this._bossLow = true;
         avArm(c, 'lr', AV_ARM.behind, e); avLerpCh(c, AVC.cx, 0.6, e); avLerpCh(c, AVC.nx, 0.45, e); avLerpCh(c, AVC.ny, 0, e); avLerpCh(c, AVC.ltx, 1.1, e); avLerpCh(c, AVC.rtx, 1.1, e); avLerpCh(c, AVC.lkx, 1.5, e); avLerpCh(c, AVC.rkx, 1.5, e);
         c[AVC.cz] += Math.sin(t * 41) * 0.03 * e; B._pose();
         if (want && Math.random() < dt * 0.12) FX.bubble(B, pick(BOSS_HIDE), 2.6);
@@ -851,7 +853,7 @@ const W_HIT = {
 };
 /* first-person view model placement per weapon: [rx, ry, rz, scale, x, y, z] (hold frame, Euler YXZ) and the muzzle in the model frame */
 const W_VM = {
-  mace: [0.1, 0.62, 0, 1.1, -0.01, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.82, 0, 0.01, 0],
+  mace: [0.1, 0.62, 0, 1.1, -0.01, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.72, 0, 0.01, 0],
   sniper: [Math.PI / 2, 0.3, 0, 0.72, 0, 0.02, 0.02], stress: [Math.PI / 2, 0.32, 0, 0.85, 0, 0.0, 0],
   hammer: [1.45, 0.1, 0.3, 0.8, 0.0, -0.02, 0], baton: [1.5, 0.1, 0.32, 0.95, 0.0, -0.02, 0], shield: [0, 0.38, 0, 0.5, -0.16, -0.06, 0]
 };
@@ -902,7 +904,7 @@ const RaidW = {
   strike(hit, w, dx, dz, conf) {
     const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
     const top = hit.top != null ? hit.top : 1.7, k = hit.kind;
-    if (w.word) FX.net('word', [hit.x, top + 0.5, hit.z], { w: w.word, c: w.wc, s: 1 });
+    if (w.word) FX.net('word', [hit.x, top + 0.3, hit.z], { w: w.word, c: w.wc, s: 1 });
     if (conf) FX.net('confetti', [hit.x, top - 0.2, hit.z], { n: 18, dir: [dx, 0.6, dz] });
     if (k === 'cop') { FX.net('stars', [hit.x, top, hit.z], { n: w.stars || 4, scale: 0.85 }); Raid.hitCop(hit.ref, w.dmg, w.stun, dx * w.kb, dz * w.kb, w.k); }
     else if (k === 'player') {

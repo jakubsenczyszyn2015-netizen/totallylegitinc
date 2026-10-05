@@ -64,12 +64,13 @@ module.exports = async page => {
     await page.shot('r04-door-burst');
     await until('Raid.t > 2.6', 6);
     await page.shot('r05-cops-in');
-    await ev(() => { W.camOverride = null; P.third = true; return true; });
-    await until('window.__near() && window.__near().d < 3.6', 8);
+    await ev(() => { P.third = true; W.camOverride = { pos: [11.6, 2.75, 1.45], look: [16.2, 0.7, -0.7] }; return true; });
+    await until('window.__near() && window.__near().d < 3.2', 8);
     await ev(() => { const n = __near(); if (n) __face(n.c.x, n.c.z); return true; });
     await gw(0.15);
-    await page.shot('r06-chase-third');
-    // Bear Mace in the face of the nearest cop
+    await page.shot('r06-chase');
+    // Bear Mace in the face of the nearest cop (first person)
+    await ev(() => { W.camOverride = null; P.third = false; return true; });
     await until('window.__near() && window.__near().d < 2.2', 6);
     await ev(() => { const n = __near(); __face(n.c.x, n.c.z, 1.3); Props.startUse(); return n.d; });
     await gw(0.3);
@@ -86,19 +87,13 @@ module.exports = async page => {
     await gw(0.12);
     await page.shot('r09-foam');
     // coworkers under their desks, The Boss hiding behind his
-    await ev(() => { const n = W.npcs[0], d = W.desks[n.desk], dx = d.stand.x - d.x, dz = d.stand.z - d.z, l = Math.hypot(dx, dz) || 1; W.camOverride = { pos: [d.stand.x + dx / l * 0.9, 2.15, d.stand.z + dz / l * 0.9 + 0.5], look: [d.x, 0.45, d.z] }; return true; });
+    await ev(() => { P.third = true; const n = W.npcs[0], d = W.desks[n.desk], dx = d.stand.x - d.x, dz = d.stand.z - d.z, l = Math.hypot(dx, dz) || 1; W.camOverride = { pos: [d.stand.x + dx / l * 0.5, 1.8, d.stand.z + dz / l * 0.5 + 0.35], look: [d.x, 0.4, d.z] }; return true; });
     await gw(0.4);
     await page.shot('r10-coworkers-duck');
     await ev(() => { const b = W.boss.group.position; W.camOverride = { pos: [16.9, 1.7, 2.4], look: [b.x, 0.7, b.z] }; return true; });
     await gw(0.3);
     await page.shot('r11-boss-hides');
-    await ev(() => { W.camOverride = null; return true; });
-    // sniper scope
-    await ev(() => { __sel('sniper'); const n = __near(); if (n) __face(n.c.x, n.c.z, 1.2); Props.startUse(); return true; });
-    await gw(0.5);
-    await page.shot('r12-sniper-scope');
-    await ev(() => { Props.endUse(); return true; });
-    await gw(0.2);
+    await ev(() => { W.camOverride = null; P.third = false; return true; });
   }
 
   if (want('arrest')) {   // let the nearest cop catch us: cuffs, fine, mugshot in the lobby
@@ -133,8 +128,13 @@ module.exports = async page => {
     await page.shot('r17-repelled');
   }
 
-  if (want('lineup')) {   // every weapon in a teammate-ish pose (third person), for the art
-    await ev(() => { if (Raid.on) Raid.abort(); __stand(9, 2.2, 0, 2.2); P.third = true; __sel('sniper'); return true; });
+  if (want('lineup')) {   // sniper scope on a coworker across the floor, weapons in third and first person
+    await ev(() => { if (Raid.on) Raid.abort(); __stand(9, 0, -8, 0); P.third = false; __sel('sniper'); const n = W.npcs.slice().sort((a, b) => a.group.position.x - b.group.position.x)[0]; __face(n.group.position.x, n.group.position.z, 1.3); Props.startUse(); return true; });
+    await gw(0.6);
+    await page.shot('r12-sniper-scope');
+    await ev(() => { Props.endUse(); return true; });
+    await gw(0.3);
+    await ev(() => { __stand(9, 2.2, 0, 2.2); P.third = true; __sel('sniper'); return true; });
     await gw(0.4);
     await ev(() => { Avatars.act('point', { dur: 3 }); return true; });
     await gw(0.4);
