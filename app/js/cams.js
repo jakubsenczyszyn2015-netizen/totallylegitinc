@@ -183,6 +183,7 @@ const PhotoArt = {
   model(p, held) { this.init(); const g = new THREE.Group(), m = new THREE.Mesh(this.geo, this.mats(p)); if (held) m.rotation.x = 1.15; g.add(m); return g; },
   dress(g, id) { const p = Photos.get(id), m = g && g.children[0]; if (!m) return; m.rotation.set(0, 0, 0); if (p) m.material = this.mats(p); }
 };
+PropIcons.photo = '<svg viewBox="0 0 48 48"><g transform="rotate(-8 24 24)"><rect x="9" y="6" width="30" height="36" rx="2" fill="#fbf8ef" stroke="#141824" stroke-width="3"/><rect x="13" y="10" width="22" height="22" fill="#e7a35a"/><path d="M13 32l7-9 5 6 4-4 6 7z" fill="#3f8f5a"/><circle cx="29" cy="16" r="3" fill="#ffd36b"/><path d="M15 37h18" stroke="#27306b" stroke-width="2" stroke-linecap="round"/></g></svg>';
 PropTypes.photo = { name: 'photo', r: 0.04, bounce: 0.05, fric: 1.4, box: 0.002, model: () => { const c = Props.carry && Props.carry.type === 'photo'; return PhotoArt.model(c ? Photos.get(Props.carry.id) : null, c); } };
 (() => {
   /* wrap Props from here: photos get their picture, a nicer label, a usage count, and leaf-like air drag */
@@ -244,7 +245,7 @@ const SnapCam = {
   M() {
     if (this.mats) return this.mats; const L = c => new THREE.MeshLambertMaterial({ color: c });
     return (this.mats = { body: L('#efe6cf'), dark: L('#2c2e35'), lens: new THREE.MeshPhongMaterial({ color: '#4d79ad', shininess: 90, specular: 0x99aacc }), orange: L('#ff7a2e'), teal: L('#2bb5a5'), red: L('#e5383b'),
-      glow: new THREE.MeshBasicMaterial({ color: '#fff6c8', toneMapped: false }), slot: L('#121216') });
+      glow: new THREE.MeshBasicMaterial({ color: '#fff6c8', toneMapped: false }), slot: L('#121216'), top: L('#4a4d57') });
   },
   /* a chunky boxy instant camera, ~14 cm wide, lens facing -z (the holder sees the back: eyepiece, counter, stripes) */
   model() {
@@ -252,7 +253,7 @@ const SnapCam = {
     add(rboxGeo(0.14, 0.085, 0.1, 0.022, 2), M.body, 0, 0.0425, 0);                   // body
     add(rboxGeo(0.144, 0.011, 0.104, 0.005, 1), M.orange, 0, 0.03, 0);               // wrap-around stripes
     add(rboxGeo(0.144, 0.009, 0.104, 0.004, 1), M.teal, 0, 0.019, 0);
-    add(rboxGeo(0.1, 0.034, 0.05, 0.012, 1), M.dark, 0.012, 0.098, -0.022);          // flash hump (front half of the top)
+    add(rboxGeo(0.1, 0.034, 0.05, 0.012, 1), M.top, 0.012, 0.098, -0.022);           // flash hump (front half of the top)
     add(rboxGeo(0.04, 0.02, 0.006, 0.004, 1), M.glow, 0.03, 0.1, -0.048);             // flash window
     add(rboxGeo(0.03, 0.026, 0.03, 0.008, 1), M.dark, -0.045, 0.094, 0.03);           // viewfinder housing
     add(rboxGeo(0.022, 0.018, 0.006, 0.004, 1), M.lens, -0.045, 0.094, 0.046);        // eyepiece glass (back)
