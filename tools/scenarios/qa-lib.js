@@ -16,6 +16,10 @@ module.exports = page => {
       await page.eval(() => { if (window.__raf) { window.requestAnimationFrame = window.__raf; for (const cb of window.__cbs || []) window.__raf(cb); window.__cbs = []; } return true; });
       return f;
     },
+    /* wait for `sec` seconds of GAME time (software GL under load can run at 1-2 fps, and dt is capped per frame) */
+    async gw(sec, maxMs = 90000) { return page.eval((s, m) => new Promise(res => { const T = window.__tli, t0 = T.W.t, e = Date.now() + m; const f = () => (T.W.t - t0 >= s || Date.now() > e ? res(true) : setTimeout(f, 20)); f(); }), sec, maxMs); },
+    /* hold a key for `sec` seconds of game time */
+    async hold(code, sec) { await page.eval(c => { window.__tli.Keys[c] = true; return true; }, code); await Q.gw(sec); await page.eval(c => { window.__tli.Keys[c] = false; return true; }, code); },
     log(...a) { console.log('     ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ')); },
     /* real key events (the game's keydown/keyup listeners), not just the Keys map */
     async press(code, ms = 80, target) {
