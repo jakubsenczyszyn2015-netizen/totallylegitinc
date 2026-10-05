@@ -40,6 +40,7 @@ app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');   // plain host ICE candidates between local windows
 app.commandLine.appendSwitch('use-fake-device-for-media-stream');                  // a fake microphone so voice calls run too
 app.commandLine.appendSwitch('use-fake-ui-for-media-stream');
+app.commandLine.appendSwitch('allow-loopback-in-peer-connection');
 
 const IGN = /GL Driver|GroupMarkerNotSet|Electron Security Warning|fonts\.g|swiftshader|Autoplay/i;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -63,7 +64,10 @@ function makePage(name, mp) {
     return win.webContents.executeJavaScript('(async () => { try { return await ' + code + '; } catch (e) { console.error("eval failed: " + (e && e.stack || e)); throw e; } })()');
   };
   page.wait = sleep;
-  page.shot = async n => { const img = await win.webContents.capturePage(); const f = path.join(outDir, n.replace(/\.png$/, '') + '.png'); fs.writeFileSync(f, img.toPNG()); console.log('shot: ' + f); return f; };
+  page.shot = async n => {
+    await page.eval(() => { window.__mpDraw = 3; return true; });
+    for (let i = 0; i < 100 && await page.eval(() => window.__mpDraw > 0); i++) await sleep(60);
+    await sleep(80); const img = await win.webContents.capturePage(); const f = path.join(outDir, n.replace(/\.png$/, '') + '.png'); fs.writeFileSync(f, img.toPNG()); console.log('shot: ' + f); return f; };
   page.key = async (code, ms = 300) => { await page.eval(c => { window.__tli.Keys[c] = true; }, code); await sleep(ms); await page.eval(c => { window.__tli.Keys[c] = false; }, code); };
   page.sit = async desk => {
     const i = await page.eval(d => { const T = window.__tli; const free = T.W.desks.filter(x => !x.npc && !T.Game.deskTaken(x.i)); const pick = d != null ? T.W.desks[d] : free[0]; sitAt(pick.i); return pick.i; }, desk);
@@ -84,7 +88,15 @@ function makePage(name, mp) {
       S.tts = false; S.quality = 'low'; S.micMode = 'off'; S.name = nm; S.look = null;
       S.peerHost = '127.0.0.1'; S.peerPort = String(port); S.peerPath = '/'; S.peerSecure = false;
       S.color = ['#ef4444', '#22c55e', '#a855f7', '#f59e0b'][idx % 4];
-      saveSettings(); if (typeof applyQuality === 'function') applyQuality(); Avatars.refreshMe(); return true;
+      saveSettings(); if (typeof applyQuality === 'function') applyQuality(); Avatars.refreshMe();
+      // no STUN/TURN on the local rig (their DNS lookups fail offline and slow ICE down): host candidates only
+      const o = Net.opts; Net.opts = function () { return Object.assign(o.call(Net), { config: { iceServers: [] } }); };
+      // software WebGL is slow and 2-3 windows share the CPU: skip drawing the main canvas except right before a screenshot
+      // (render-to-texture passes such as webcam / photo shots still run), so the game logic and the network keep a decent frame rate
+      const R = W.renderer, draw = R.render.bind(R); window.__mpDraw = 2;
+      R.render = (sc, cam) => { if (window.__mpDraw > 0 || R.getRenderTarget()) draw(sc, cam); };
+      Loop.add(() => { if (window.__mpDraw > 0) window.__mpDraw--; });
+      return true;
     }, name, mp.port, idx);
   })();
   return page;
