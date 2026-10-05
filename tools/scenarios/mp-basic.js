@@ -30,12 +30,13 @@ module.exports = async mp => {
   mp.check('Bob sees Alice avatar with her look', av2 && av2.name === 'Alice' && av2.lk === await A.eval(() => packLook(avMyLook())), av2);
   if (C) mp.check('Cara sees both teammates', await C.eval((a, b) => W.avatars.has(a) && W.avatars.has(b) && W.avatars.size === 2, ids.Alice, ids.Bob));
   // talking indicator: Bob's open mic beeps -> the host sees him talking
-  const talk = await mp.waitFor(A, id => { const a = W.avatars.get(id); return a && a.talk && a.av.talk.visible; }, 6000, ids.Bob).catch(() => false);
+  await A.eval(id => { window.__sawTalk = false; Loop.add(() => { const a = W.avatars.get(id); if (a && a.talk && a.av.talk.visible) window.__sawTalk = true; }); return true; }, ids.Bob);
+  const talk = await mp.waitFor(A, () => window.__sawTalk, 6000).catch(() => false);
   mp.check('host sees Bob talking (voice indicator)', talk);
   mp.check('voice mesh connected host <-> Bob', await A.eval(id => Voice.nodes.has(id), ids.Bob));
   // walking: put Bob in front of Alice, Alice looks at him
   await A.teleport(4, 2, Math.PI / 2, 0);
-  await B.teleport(1.2, 2, -Math.PI / 2, 0);
+  await B.teleport(-1.5, 2, -Math.PI / 2, 0);
   await B.key('KeyW', 500);
   await mp.wait(400);
   const pos = await A.eval(id => { const a = W.avatars.get(id); return a && [+a.av.group.position.x.toFixed(2), +a.av.group.position.z.toFixed(2)]; }, ids.Bob);

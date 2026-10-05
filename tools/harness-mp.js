@@ -105,8 +105,8 @@ function makePage(name, mp) {
 app.whenReady().then(async () => {
   const { PeerServer } = require('peer');
   const port = +process.env.MP_PEER_PORT || 9100 + (process.pid % 700);
-  const server = process.env.MP_PEER_PORT ? null : PeerServer({ port, host: '127.0.0.1', path: '/', allow_discovery: false });
-  if (server) server.on('error', e => console.log('peer server error: ' + e.message));
+  let server = null;
+  if (!process.env.MP_PEER_PORT) await new Promise(res => { const ps = PeerServer({ port, host: '127.0.0.1', path: '/', allow_discovery: false }, s => { server = s; res(); }); ps.on('error', e => console.log('peer server error: ' + (e && e.message))); setTimeout(res, 5000); });
   process.on('uncaughtException', e => console.log('MAIN ERROR: ' + (e && e.stack || e)));
   const mp = { pages: [], port, code: '', checks: [], wait: sleep };
   mp.check = (name, ok, detail) => { mp.checks.push({ name, ok: !!ok }); console.log((ok ? 'OK   ' : 'FAIL ') + name + (detail !== undefined ? '  ' + (typeof detail === 'string' ? detail : JSON.stringify(detail)) : '')); return !!ok; };
@@ -119,14 +119,20 @@ app.whenReady().then(async () => {
   mp.close = async page => { page.closed = true; try { page.win.destroy(); } catch (e) {} await sleep(300); };
   mp.host = async (mode = 'week', slot = 0) => {
     const h = mp.pages[0];
-    await h.eval((m, s) => window.__tli.Game.startHost(m, s).then(() => true), mode, slot);
+    for (let i = 0; ; i++) {   // a busy machine can miss the 15 s signalling timeout: try again
+      try { await h.eval((m, s) => window.__tli.Game.startHost(m, s).then(() => true), mode, slot); break; }
+      catch (e) { if (i >= 2) throw e; console.log('host attempt ' + (i + 1) + ' failed: ' + e.message); h.errors.length = 0; }
+    }
     mp.code = await h.eval(() => window.__tli.Net.room);
     await h.eval(() => { const dc = document.getElementById('daycard'); if (dc) dc.classList.remove('on'); return true; });
     console.log('room: ' + mp.code + ' (peer server on :' + port + ')');
     return mp.code;
   };
   mp.join = async page => {
-    await page.eval(c => window.__tli.Game.joinRoom(c).then(() => true), mp.code);
+    for (let i = 0; ; i++) {
+      try { await page.eval(c => window.__tli.Game.joinRoom(c).then(() => true), mp.code); break; }
+      catch (e) { if (i >= 2) throw e; console.log(page.name + ' join attempt ' + (i + 1) + ' failed: ' + e.message); page.errors.length = 0; }
+    }
     await mp.waitFor(mp.pages[0], id => window.__tli.Net.players.has(id), 8000, await page.id());
     await sleep(300);
   };
@@ -149,6 +155,6 @@ app.whenReady().then(async () => {
   const bad = mp.checks.filter(c => !c.ok);
   console.log('CHECKS: ' + (mp.checks.length - bad.length) + '/' + mp.checks.length + ' passed' + (bad.length ? '  FAILED: ' + bad.map(c => c.name).join(', ') : ''));
   if (bad.length) code = 1;
-  try { server.close && server.close(); } catch (e) {}
+  try { if (server) server.close(); } catch (e) {}
   app.exit(code);
 });
