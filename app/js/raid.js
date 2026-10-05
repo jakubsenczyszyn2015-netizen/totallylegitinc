@@ -855,7 +855,7 @@ const W_HIT = {
 const W_VM = {
   mace: [0.1, 0.62, 0, 1.1, -0.01, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.72, 0, 0.01, 0],
   sniper: [Math.PI / 2, 0.3, 0, 0.72, 0, 0.02, 0.02], stress: [Math.PI / 2, 0.32, 0, 0.85, 0, 0.0, 0],
-  hammer: [1.45, 0.1, 0.3, 0.8, 0.0, -0.02, 0], baton: [1.5, 0.1, 0.32, 0.95, 0.0, -0.02, 0], shield: [0, 0.38, 0, 0.5, -0.16, -0.06, 0]
+  hammer: [1.45, 0.1, 0.3, 0.8, 0.0, -0.02, 0], baton: [1.5, 0.1, 0.32, 0.95, 0.0, -0.02, 0], shield: [0.05, 0.75, 0.06, 0.46, -0.36, -0.13, 0.02]
 };
 const W_TIP = { mace: [0, 0, -0.11], taser: [0, -0.2, -0.042], foam: [0, -0.42, -0.05], sniper: [0, -0.67, -0.06], stress: [0, -0.31, -0.075], hammer: [0, 0, -0.34], baton: [0, 0, -0.45], shield: [-0.1, 0.24, -0.14] }; for (const k in W_TIP) W_TIP[k] = new THREE.Vector3().fromArray(W_TIP[k]);
 const W_SWING = { hammer: 1, baton: 1, shield: 2 };

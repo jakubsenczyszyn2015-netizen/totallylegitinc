@@ -22,9 +22,14 @@ module.exports = async page => {
     window.__near = () => { let b = null, bd = 1e9; for (const c of Raid.cops) { if (c.st >= 3 && c.st !== 6) continue; const d = Math.hypot(c.x - P.pos.x, c.z - P.pos.z); if (d < bd) { bd = d; b = c; } } return b ? { c: b, d: bd } : null; };
     window.__sel = id => { if (!Props.slotList().includes(id)) { const n = Inv.count(id) || 1; delete Inv.items[id]; Inv.items = Object.assign({ [id]: n }, Inv.items); } Props.refreshHeld(); const k = Props.slots.indexOf(id); if (k >= 0) Props.select(k); return k; };
     window.__noCalls = () => { const C = window.__tli.Call; if (C.state === 'ringing') C.decline(); C.wait = 1e9; return true; };
-    ['soda', 'beans', 'whoopee', 'confetti'].forEach(id => { while (Inv.count(id)) Inv.take(id); });
+    ['soda', 'beans', 'whoopee', 'confetti', ...Object.keys(RAID_W)].forEach(id => { while (Inv.count(id)) Inv.take(id); });
     return true;
   });
+
+  if (want('banner')) {   // the three banners on their own
+    for (const k of ['win', 'lose']) { await ev(b => { RaidUI.alert(b, 240); return true; }, k); await page.wait(900); await page.shot('r00-banner-' + k); }
+    await ev(() => { RaidUI.alertOff(true); return true; });
+  }
 
   if (want('heat')) {   // HUD gauge while walking, then "raid risk"
     await ev(() => { Raid.heat = 0; Raid.addHeat(46); __stand(9, 2.2, 0, 2.2); return true; });
@@ -110,21 +115,21 @@ module.exports = async page => {
   }
 
   if (want('end')) {   // hammer + baton on the cops until they see stars and run out
-    await ev(() => { RAID.tag = 0; if (!Raid.on) Raid.start(3); Raid.immune.delete('me'); P.third = true; __sel('hammer'); return true; });
+    await ev(() => { RAID.tag = 0; if (!Raid.on) Raid.start(3); Raid.immune.delete('me'); P.third = true; __stand(13.6, 0.5, 18, 0); __sel('hammer'); W.camOverride = { pos: [11.2, 2.5, -1.4], look: [15.2, 0.8, 0.6] }; return true; });
     await until('Raid.cops.some(c => c.st === 1)', 8);
     for (let i = 0; i < 3; i++) {
       await until('window.__near() && window.__near().d < 1.7', 6);
-      await ev(() => { const n = __near(); if (n) { __face(n.c.x, n.c.z); RaidW.cd = {}; Props.startUse(); } return true; });
+      await ev(() => { const n = __near(); if (n) { __face(n.c.x, n.c.z); RaidW.cd = {}; Props.startUse(); } const p = window.__tli.P.pos; W.camOverride = { pos: [p.x - 2.6, 2.4, p.z - 1.6], look: [p.x + 1.2, 0.9, p.z + 0.4] }; return true; });
       await gw(0.25);
     }
     await page.shot('r15-hammer');
-    await ev(() => { for (const c of Raid.cops) Raid.hurt(c, 99, 0, 0, 0, 'baton'); const n = Raid.cops[0]; __face(n.x, n.z, 0.6); return true; });
+    await ev(() => { for (const c of Raid.cops) Raid.hurt(c, 99, 0, 0, 0, 'baton'); const n = Raid.cops[0]; __face(n.x, n.z, 0.6); W.camOverride = { pos: [n.x - 2.4, 1.9, n.z + (n.z > 0 ? -1.2 : 1.2)], look: [n.x, 0.4, n.z] }; return true; });
     await gw(0.9);
     await page.shot('r16-dizzy');
-    await ev(() => { P.third = false; RAID.tag = 0.8; return true; });
+    await ev(() => { W.camOverride = null; P.third = false; RAID.tag = 0.8; return true; });
     const ended = await until('!Raid.on', 14);
     console.log('raid ended: ' + ended + ' heat ' + (await ev(() => Raid.heat)));
-    await gw(0.4);
+    await gw(0.4); await page.wait(2500);   // the banner's CSS entry runs in real time
     await page.shot('r17-repelled');
   }
 
@@ -134,11 +139,15 @@ module.exports = async page => {
     await page.shot('r12-sniper-scope');
     await ev(() => { Props.endUse(); return true; });
     await gw(0.3);
-    await ev(() => { __stand(9, 2.2, 0, 2.2); P.third = true; __sel('sniper'); return true; });
+    await ev(() => { __stand(8, 0, 0, 0); P.third = true; __sel('sniper'); W.camOverride = { pos: [6.3, 1.65, 1.1], look: [8, 1.15, 0] }; return true; });
     await gw(0.4);
     await ev(() => { Avatars.act('point', { dur: 3 }); return true; });
-    await gw(0.4);
+    await gw(0.5);
     await page.shot('r18-third-sniper');
+    await ev(() => { __sel('shield'); return true; });
+    await gw(0.5);
+    await page.shot('r18b-third-shield');
+    await ev(() => { W.camOverride = null; return true; });
     for (const id of ['foam', 'shield', 'hammer']) {
       await ev(i => { P.third = false; __sel(i); return true; }, id);
       await gw(0.5);
