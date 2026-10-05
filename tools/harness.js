@@ -33,6 +33,8 @@ if (!fs.existsSync(path.join(vendor, 'fonts'))) {
     try { fs.cpSync(path.join(path.dirname(nm), 'app', 'vendor'), vendor, { recursive: true }); if (fs.existsSync(path.join(vendor, 'fonts'))) break; } catch (e) {}
   }
 }
+// a private profile per run, so parallel runs never share saves / settings (localStorage) or lock each other's storage
+const profile = path.join(require('os').tmpdir(), 'tli-harness-' + process.pid); app.setPath('userData', profile);
 app.commandLine.appendSwitch('enable-unsafe-swiftshader');
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 app.whenReady().then(async () => {
@@ -77,5 +79,6 @@ app.whenReady().then(async () => {
   } catch (e) { console.log('SCENARIO FAILED: ' + (e && e.stack || e)); code = 1; }
   if (page.errors.length) { console.log('PAGE ERRORS (' + page.errors.length + '):\n  ' + [...new Set(page.errors)].slice(0, 30).join('\n  ')); code = 1; }
   else console.log('PAGE ERRORS: none');
+  try { fs.rmSync(profile, { recursive: true, force: true }); } catch (e) {}
   app.exit(code);
 });

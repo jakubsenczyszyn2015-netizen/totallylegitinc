@@ -11,15 +11,19 @@ module.exports = page => {
     },
     /* screenshot after two fresh frames (software GL under load can lag a second behind the game state) */
     async shot(name) {
+      const fast = await page.eval(() => { const f = !!window.__rw && window.renderWorld !== window.__rw; if (f) window.renderWorld = window.__rw; return f; });
       await page.eval(() => new Promise(res => { const raf = window.requestAnimationFrame; window.__raf = raf; raf(() => { window.__cbs = []; window.requestAnimationFrame = cb => { window.__cbs.push(cb); return 0; }; raf(() => setTimeout(() => res(true), 30)); }); }));
       const f = await page.shot(name);
       await page.eval(() => { if (window.__raf) { window.requestAnimationFrame = window.__raf; for (const cb of window.__cbs || []) window.__raf(cb); window.__cbs = []; } return true; });
+      if (fast) await Q.fast(true);
       return f;
     },
     /* wait for `sec` seconds of GAME time (software GL under load can run at 1-2 fps, and dt is capped per frame) */
     async gw(sec, maxMs = 90000) { return page.eval((s, m) => new Promise(res => { const T = window.__tli, t0 = T.W.t, e = Date.now() + m; const f = () => (T.W.t - t0 >= s || Date.now() > e ? res(true) : setTimeout(f, 20)); f(); }), sec, maxMs); },
     /* hold a key for `sec` seconds of game time */
     async hold(code, sec) { await page.eval(c => { window.__tli.Keys[c] = true; return true; }, code); await Q.gw(sec); await page.eval(c => { window.__tli.Keys[c] = false; return true; }, code); },
+    /* skip drawing the 3D view (software GL is the bottleneck) while the game logic runs; Q.shot draws again */
+    async fast(on) { return page.eval(o => { if (!window.__rw) window.__rw = window.renderWorld; window.renderWorld = o ? () => {} : window.__rw; return true; }, !!on); },
     log(...a) { console.log('     ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ')); },
     /* real key events (the game's keydown/keyup listeners), not just the Keys map */
     async press(code, ms = 80, target) {
