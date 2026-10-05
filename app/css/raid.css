@@ -1,1 +1,98 @@
-/* raid */
+/* raid — heat gauge (HUD), heat pill (LegitOS taskbar), police raid banner, red/blue edge glow, busted card, sniper scope */
+
+/* ---------- HUD heat gauge (top right, under the shift stats) ---------- */
+#raid-heat{--heat:#ffd23b;position:absolute;right:1rem;top:6.2rem;width:14.2rem;display:flex;align-items:center;gap:.6rem;padding:.45rem .65rem .5rem .5rem;
+  background:rgba(15,19,29,.86);border:2px solid var(--ink);border-radius:14px;box-shadow:0 4px 0 rgba(15,19,29,.55);pointer-events:none;user-select:none;transition:border-color .3s}
+#raid-heat.hidden{display:none}
+#raid-heat .rh-ic{flex:none;width:2.45rem;height:2.45rem;border-radius:50%;background:var(--heat);border:3px solid var(--ink);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18),0 3px 0 var(--ink);display:grid;place-items:center;transition:background .4s}
+#raid-heat .rh-ic svg{width:62%;height:62%;fill:#fff;filter:drop-shadow(0 2px 0 rgba(15,19,29,.55))}
+#raid-heat .rh-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.28rem}
+#raid-heat .rh-top{display:flex;align-items:baseline;justify-content:space-between;gap:.4rem;white-space:nowrap}
+#raid-heat .rh-top b{font:400 1.08rem/1 'Lilita One',var(--font-d);letter-spacing:.07em;color:#fff;-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+#raid-heat .rh-word{font-weight:900;font-size:.8rem;color:var(--heat);text-shadow:0 1px 0 var(--ink)}
+#raid-heat .rh-bar{position:relative;height:.78rem;border-radius:99px;background:#262d45;border:2px solid var(--ink);overflow:hidden}
+#raid-heat .rh-bar i{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:99px;background:linear-gradient(90deg,#ffe14a,var(--heat));box-shadow:inset 0 2px 0 rgba(255,255,255,.35);transition:width .35s ease-out}
+#raid-heat .rh-bar u{position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 2px),rgba(15,19,29,.6) calc(10% - 2px) 10%)}
+#raid-heat .rh-cops{display:none;align-items:center;gap:.12rem;font-size:.72rem;font-weight:800;color:#c9d4ff}
+#raid-heat .rh-cops span{width:1.25rem;height:1.25rem;display:inline-block}
+#raid-heat .rh-cops span svg{width:100%;height:100%;display:block}
+#raid-heat .rh-cops span.dz{transform:rotate(-24deg);opacity:.7;filter:saturate(.6)}
+#raid-heat .rh-cops span.out{opacity:.28;filter:grayscale(1)}
+#raid-heat .rh-cops em{font-style:normal;margin-left:.3rem;white-space:nowrap}
+#raid-heat.risk{animation:rhrisk .9s ease-in-out infinite}
+#raid-heat.risk .rh-ic{animation:rhwob .45s ease-in-out infinite alternate}
+#raid-heat.raid{width:15.4rem;animation:rhraid .77s steps(1) infinite}
+#raid-heat.raid .rh-ic{background:#e03131;animation:rhsiren .77s steps(1) infinite}
+#raid-heat.raid .rh-top b{color:#ffe14a}
+#raid-heat.raid .rh-word{color:#fff;font-size:.95rem;font-family:'Lilita One',var(--font-d);font-weight:400;letter-spacing:.04em}
+#raid-heat.raid .rh-bar i{background:linear-gradient(90deg,#ff3b4a,#ff8a3c 60%,#ffe14a)}
+#raid-heat.raid .rh-cops{display:flex}
+@keyframes rhrisk{50%{border-color:#ff4a3a;box-shadow:0 4px 0 rgba(15,19,29,.55),0 0 18px rgba(255,70,50,.55)}}
+@keyframes rhwob{from{transform:rotate(-9deg) scale(1.04)}to{transform:rotate(9deg) scale(1.1)}}
+@keyframes rhraid{0%{border-color:#ff2a3c;box-shadow:0 4px 0 rgba(15,19,29,.55),0 0 20px rgba(255,40,60,.6)}50%{border-color:#2f6bff;box-shadow:0 4px 0 rgba(15,19,29,.55),0 0 20px rgba(47,107,255,.6)}}
+@keyframes rhsiren{0%{background:#e03131}50%{background:#2f6bff}}
+
+/* ---------- LegitOS taskbar pill (left of the shift stats) ---------- */
+#tb-heat{--heat:#ffd23b;display:flex;align-items:center;gap:.45em;align-self:center;margin-right:calc(var(--u) * 1.6);padding:.32em .7em .32em .45em;border-radius:99px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);font:900 max(11px,calc(var(--u) * 1.6))/1 'Roboto',sans-serif;color:#ffd8a8;white-space:nowrap;letter-spacing:.03em}
+#tb-heat.hidden{display:none}
+#tb-heat i{width:1.5em;height:1.5em;border-radius:50%;background:var(--heat);display:grid;place-items:center;transition:background .4s}
+#tb-heat i svg{width:66%;height:66%;fill:#fff}
+#tb-heat .th-bar{width:4.4em;height:.62em;border-radius:99px;background:rgba(255,255,255,.13);overflow:hidden;box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}
+#tb-heat .th-bar u{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#ffe14a,var(--heat));transition:width .35s}
+#tb-heat em{font-style:normal;min-width:2.5em;text-align:right;color:#fff}
+#tb-heat.risk{animation:thrisk .9s ease-in-out infinite}
+#tb-heat.raid{color:#fff;animation:thraid .77s steps(1) infinite;border-color:rgba(255,255,255,.35)}
+#tb-heat.raid i{background:#fff} #tb-heat.raid i svg{fill:#e03131}
+#tb-heat.raid .th-bar u{background:#fff}
+@keyframes thrisk{50%{background:rgba(255,70,50,.35);border-color:rgba(255,120,90,.7)}}
+@keyframes thraid{0%{background:#d6283a}50%{background:#2457e6}}
+
+/* ---------- red / blue police light on the screen edges ---------- */
+#raid-glow{position:fixed;inset:0;z-index:11;pointer-events:none;opacity:0;transition:opacity .6s}
+#raid-glow.on{opacity:1;animation:raidglow .77s steps(1) infinite}
+@keyframes raidglow{0%{box-shadow:inset 0 0 90px 18px rgba(255,30,50,.5),inset 0 0 0 4px rgba(255,40,60,.65)}50%{box-shadow:inset 0 0 90px 18px rgba(40,90,255,.5),inset 0 0 0 4px rgba(60,110,255,.65)}}
+body.q-low #raid-glow.on{animation:none;box-shadow:inset 0 0 0 5px rgba(255,40,60,.7)}
+
+/* ---------- POLICE RAID! banner ---------- */
+#raid-alert{position:fixed;left:0;right:0;top:13%;z-index:9800;display:none;justify-content:center;pointer-events:none}
+#raid-alert.on{display:flex;animation:raidal 4.3s ease-out forwards}
+#raid-alert .ra-in{display:flex;align-items:stretch;max-width:min(52rem,94vw);background:linear-gradient(#18213d,#0f1529);border:4px solid var(--ink);border-radius:20px;overflow:hidden;
+  box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 70px rgba(255,40,60,.35);transform:rotate(-1.5deg)}
+#raid-alert .ra-l,#raid-alert .ra-r{flex:none;width:3.6rem;position:relative}
+#raid-alert .ra-l{background:radial-gradient(circle at 50% 50%,#fff 0 12%,#ff4d5e 13% 42%,#7a0d18 70%);animation:ralamp .38s steps(1) infinite}
+#raid-alert .ra-r{background:radial-gradient(circle at 50% 50%,#fff 0 12%,#4d7dff 13% 42%,#0c1d6e 70%);animation:ralamp .38s steps(1) .19s infinite}
+#raid-alert .ra-t{padding:.4rem 1.5rem .75rem;text-align:center}
+#raid-alert .ra-t b{display:block;font:400 clamp(2.4rem,6.4vw,4.6rem)/1.08 'Lilita One',var(--font-d);letter-spacing:.04em;color:var(--yellow);-webkit-text-stroke:9px var(--ink);paint-order:stroke fill;text-shadow:0 6px 0 rgba(0,0,0,.35)}
+#raid-alert .ra-t small{display:block;margin-top:.1rem;font-weight:800;font-size:clamp(.85rem,1.6vw,1.1rem);color:#dfe6ff;text-shadow:0 2px 0 var(--ink)}
+#raid-alert.win .ra-t b{color:#7cf05b} #raid-alert.lose .ra-t b{color:#ff8b84}
+#raid-alert.win .ra-l,#raid-alert.win .ra-r{background:radial-gradient(circle at 50% 50%,#fff 0 12%,#7cf05b 13% 42%,#1d5a2c 70%)}
+#raid-alert.win .ra-in{box-shadow:0 10px 0 rgba(0,0,0,.35),0 0 70px rgba(124,240,91,.35)}
+@keyframes raidal{0%{opacity:0;transform:scale(2.2)}9%{opacity:1;transform:scale(.92)}14%{transform:scale(1.04)}18%{transform:scale(1)}86%{opacity:1;transform:scale(1)}100%{opacity:0;transform:translateY(-30px) scale(.96)}}
+@keyframes ralamp{0%{filter:brightness(1.25)}50%{filter:brightness(.35) saturate(.6)}}
+
+/* ---------- busted: stamp, charge sheet and the mugshot photo ---------- */
+#raid-bust{position:fixed;inset:0;z-index:60;pointer-events:none}
+#raid-bust.hidden{display:none}
+#raid-bust .rb-stamp{position:absolute;left:50%;top:9%;padding:.02em .35em .08em;font:400 clamp(3rem,10vw,7.4rem)/1 'Alfa Slab One',var(--font-d);color:#e8302a;border:.09em solid #e8302a;border-radius:.16em;
+  background:rgba(255,245,235,.12);text-shadow:0 4px 0 rgba(0,0,0,.35);box-shadow:0 6px 0 rgba(0,0,0,.3);transform:translateX(-50%) rotate(-8deg);animation:rbstamp .32s cubic-bezier(.2,1.6,.45,1) both}
+#raid-bust .rb-info{position:absolute;left:50%;bottom:8%;transform:translateX(-50%) rotate(-1deg);min-width:min(24rem,90vw);padding:.7rem 1.4rem .8rem;text-align:center;background:#fbf7ea;color:#2a1a12;
+  border:3px solid var(--ink);border-radius:12px;box-shadow:0 7px 0 rgba(0,0,0,.4);animation:rbup .4s .25s ease-out both}
+#raid-bust .rb-info small{display:block;font-weight:900;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#8a7a6a}
+#raid-bust .rb-info b{display:block;font:400 1.45rem/1.15 'Alfa Slab One',var(--font-d);color:#8a1c1c;margin:.08rem 0 .2rem}
+#raid-bust .rb-fine{display:block;font:400 2.1rem/1.1 'Lilita One',var(--font-d);color:#d6342c;letter-spacing:.02em}
+#raid-bust .rb-info em{display:block;font-style:normal;font-weight:700;font-size:.84rem;color:#6a5a50;margin-top:.15rem}
+#raid-bust .rb-photo{position:absolute;right:7%;top:50%;padding:.55rem .55rem .5rem;background:#fff;box-shadow:0 10px 24px rgba(0,0,0,.45);transform:translateY(-50%) rotate(5deg);animation:rbphoto .45s cubic-bezier(.2,1.4,.5,1) both;text-align:center}
+#raid-bust .rb-photo canvas{display:block;width:11rem;height:12.5rem;background:#cfd5df}
+#raid-bust .rb-photo b{display:block;margin-top:.35rem;font:400 1.15rem/1 'Lilita One',var(--font-d);color:#1b2747}
+#raid-bust .rb-photo small{display:block;font-weight:900;font-size:.7rem;letter-spacing:.12em;color:#8a1c1c}
+body.raid-busted #hotbar,body.raid-busted #keyhint,body.raid-busted #crosshair,body.raid-busted #hud-prompt{display:none!important}
+@keyframes rbstamp{0%{opacity:0;transform:translateX(-50%) rotate(-14deg) scale(2.6)}100%{opacity:1;transform:translateX(-50%) rotate(-8deg) scale(1)}}
+@keyframes rbup{0%{opacity:0;transform:translateX(-50%) translateY(40px) rotate(-1deg)}100%{opacity:1;transform:translateX(-50%) rotate(-1deg)}}
+@keyframes rbphoto{0%{opacity:0;transform:translateY(-50%) translateX(80px) rotate(18deg)}100%{opacity:1;transform:translateY(-50%) rotate(5deg)}}
+
+/* ---------- Remote-Work Nerf Sniper scope ---------- */
+#raid-scope{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(circle at center,transparent 0 34vmin,#05080e calc(34vmin + 3px))}
+#raid-scope i{position:absolute;left:50%;top:50%;width:68vmin;height:68vmin;transform:translate(-50%,-50%);border-radius:50%;box-shadow:inset 0 0 0 5px #0b0e15,inset 0 0 40px rgba(0,0,0,.55);
+  background:linear-gradient(#0b0e15,#0b0e15) center/2px 100% no-repeat,linear-gradient(#0b0e15,#0b0e15) center/100% 2px no-repeat}
+#raid-scope i::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 6px #ff3b3b}

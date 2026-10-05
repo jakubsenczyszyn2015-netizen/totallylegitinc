@@ -803,3 +803,337 @@ const Shots = {
   }
 };
 PropTypes.stressball = { name: 'stress ball', r: 0.06, bounce: 0.72, fric: 0.5, roll: true, model: () => RaidArt.ball() };
+
+/* =====================================================================
+   WEAPONS — cartoon self-defence: ItemDefs for the props hotbar + BonkMart goods ('Weapons & personal safety').
+   Every weapon works on cops (damage + stun), coworkers (a reaction) and teammates (mild slapstick knockback).
+   ===================================================================== */
+const _wSvg = b => '<svg viewBox="0 0 48 48" stroke="#141824" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">' + b + '</svg>';
+const W_ICONS = {
+  mace: _wSvg('<path d="M35 9c3-1 6 0 7 2M36 15c3 0 5 1 6 3" fill="none" stroke="#ff8a3c" stroke-width="2.6"/><circle cx="40" cy="6" r="2.4" fill="#ffb347" stroke="none"/><rect x="17" y="13" width="15" height="30" rx="4" fill="#262a33"/><rect x="17" y="21" width="15" height="13" fill="#ff7a1a" stroke="none"/><circle cx="24.5" cy="27.5" r="4.2" fill="#7a4a24" stroke-width="2"/><rect x="20" y="6" width="9" height="7" rx="2" fill="#d6342c"/><path d="M29 9h4" stroke-width="2.6"/>'),
+  taser: _wSvg('<path d="M6 13h27a5 5 0 0 1 5 5v5a5 5 0 0 1-5 5H23l-3 12h-9l3-12H9a3 3 0 0 1-3-3z" fill="#ffd43b"/><path d="M6 21h32" stroke-width="2.4"/><path d="M41 12l5-2-3 5 4 0-6 6" fill="none" stroke="#3bd0ff" stroke-width="2.6"/>'),
+  foam: _wSvg('<rect x="4" y="12" width="30" height="5.5" rx="2.5" fill="#2f7de1"/><rect x="4" y="18" width="30" height="5.5" rx="2.5" fill="#2f7de1"/><rect x="33" y="11" width="6" height="14" rx="2" fill="#ff8a12"/><path d="M20 24h14l-4 16h-9l2-9h-6z" fill="#ff8a12"/><rect x="10" y="10" width="8" height="15" rx="2" fill="#ffd23b"/><circle cx="43" cy="14.5" r="2.6" fill="#ff8a12" stroke-width="2"/><circle cx="44" cy="21" r="2.6" fill="#1f6fd6" stroke-width="2"/>'),
+  sniper: _wSvg('<rect x="13" y="9" width="17" height="6" rx="3" fill="#30343e"/><path d="M2 19h9l4-3h22v7H24l-3 10h-7l2-10H6l-4 5z" fill="#ff8a12"/><rect x="36" y="18" width="10" height="3.4" rx="1.6" fill="#f1efe8" stroke-width="2.2"/><path d="M2 19v5" stroke-width="2.4"/>'),
+  stress: _wSvg('<rect x="6" y="15" width="28" height="13" rx="5" fill="#38b25a"/><rect x="31" y="13" width="7" height="17" rx="2.5" fill="#ffd23b"/><path d="M13 27l-3 12h8l3-12z" fill="#8a63d2"/><circle cx="43" cy="12" r="4.5" fill="#ff5c93" stroke-width="2.4"/><circle cx="42" cy="28" r="3.6" fill="#3bc9ff" stroke-width="2.2"/><path d="M41.4 12.6a1.6 1.6 0 0 0 3.2 0" fill="none" stroke-width="1.6"/>'),
+  hammer: _wSvg('<path d="M26 22L10 42" stroke="#141824" stroke-width="9"/><path d="M26 22L10 42" stroke="#3b82f6" stroke-width="4.5"/><rect x="14" y="5" width="28" height="18" rx="8" fill="#ff4d5a" transform="rotate(38 28 14)"/><path d="M19 9l14 11" stroke="#ffffff" stroke-width="2.6" opacity=".55"/><circle cx="23" cy="10" r="1.6" fill="#141824" stroke="none"/>'),
+  baton: _wSvg('<path d="M12 42L38 9" stroke="#141824" stroke-width="10"/><path d="M12 42L38 9" stroke="#2a2d34" stroke-width="5.6"/><path d="M13.5 40.5l5-6" stroke="#ffd23b" stroke-width="5.6" stroke-linecap="butt"/><path d="M27 19l-9 3" stroke="#141824" stroke-width="7"/><path d="M27 19l-9 3" stroke="#2a2d34" stroke-width="3"/>'),
+  shield: _wSvg('<rect x="9" y="4" width="30" height="40" rx="7" fill="#bfe6ff" fill-opacity=".85"/><rect x="12" y="10" width="24" height="8" rx="2" fill="#1b2747" stroke-width="2"/><circle cx="24" cy="30" r="6" fill="#ffd23b" stroke-width="2.4"/><path d="M21 31a3 3 0 0 0 6 0" fill="none" stroke-width="2"/>')
+};
+/* id: [name, price, colour, description, hotbar hint, cooldown] */
+const RAID_W = {
+  mace: { name: 'Bear Mace', price: 120, color: '#9b5de5', cd: 0.5, uses: 8,
+    desc: 'A pocket-sized performance review. Eight bursts per can: officers forget why they came, coworkers forget your birthday.' },
+  taser: { name: 'Motivational Taser', price: 260, color: '#2fb344', cd: 1.6, hint: 'Click to zap (7 m)',
+    desc: 'Delivers actionable feedback at seven metres. Recharges between pep talks. Not approved by the wellness committee.' },
+  foam: { name: 'Conflict Resolution Foam Blaster', price: 320, color: '#ff8a12', cd: 0.9, hint: 'Click to fire six foam darts',
+    desc: 'Six foam darts per pump. Settles any dispute before HR finishes reading the complaint form.' },
+  shield: { name: 'Customer Support Riot Shield', price: 280, color: '#ff6b2c', cd: 0.7, hint: 'Hold it to block arrests, click to bash',
+    desc: 'Officers bounce off it like complaints off the call script. Hold it towards them. Click to shove.' },
+  sniper: { name: 'Remote-Work Nerf Sniper', price: 480, color: '#8fb4e6', cd: 1.2, hint: 'Hold click to aim, release to fire', hold: true,
+    desc: 'Manage colleagues from the far side of the building. Hold to zoom, release to deliver one very focused foam dart.' },
+  stress: { name: 'Stress-Ball Launcher', price: 220, color: '#20c997', cd: 0.6, hint: 'Click to launch a stress ball',
+    desc: 'Fires smiley stress balls at alarming speeds. Very relaxing, for one of the two people involved.' },
+  hammer: { name: 'Inflatable Hammer', price: 90, color: '#ff4d8d', cd: 0.55, hint: 'Click to bonk (huge knockback)',
+    desc: 'Squeaky, harmless and somehow still a disciplinary matter. Sends people flying, gently.' },
+  baton: { name: 'Batton (Definitely Spelled Right)', price: 160, color: '#fab005', cd: 0.6, hint: 'Click to swing',
+    desc: 'Standard issue for middle management. The typo on the side was signed off by Legal.' }
+};
+/* hit parameters: dmg/stun/kb on cops, f/s knockback + stun on teammates, npc reaction, comic word */
+const W_HIT = {
+  mace: { dmg: 0.9, stun: 2.6, kb: 1, k: 'mace', f: 1.2, s: 1.4, npc: 'hit', word: 'ACHOO!', wc: '#ff9a3c', stars: 3, ouch: 'mace' },
+  taser: { dmg: 1.6, stun: 3, kb: 2, k: 'zap', f: 2.5, s: 1.8, npc: 'hit', word: 'ZAP!', wc: '#7fe8ff', stars: 5, ouch: 'zap' },
+  stress: { dmg: 1, stun: 1, kb: 4, k: 'stress', f: 4, s: 0.8, npc: 'bonk', word: 'SQUISH!', wc: '#7cf05b', stars: 4 },
+  hammer: { dmg: 0.8, stun: 0.9, kb: 7.5, k: 'hammer', f: 8, s: 0.7, npc: 'bonk', word: 'BOING!', wc: '#ff7ab8', stars: 5, r: 2.0 },
+  baton: { dmg: 1.4, stun: 1.5, kb: 3.5, k: 'baton', f: 4.5, s: 1.3, npc: 'hit', word: 'BONK!', wc: '#ffd23b', stars: 7, r: 1.9 },
+  shield: { dmg: 0.6, stun: 0.8, kb: 8, k: 'shield', f: 7, s: 0.7, npc: 'hit', word: 'SHOVE!', wc: '#7fd4ff', stars: 4, r: 1.6 },
+  punch: { dmg: 0.5, stun: 0.6, kb: 3, k: 'punch', word: 'POW!', wc: '#ffd23b', stars: 6 }
+};
+/* first-person view model placement per weapon: [rx, ry, rz, scale, x, y, z] (hold frame, Euler YXZ) and the muzzle in the model frame */
+const W_VM = {
+  mace: [0.08, 0.36, 0, 1.25, 0.0, 0.02, 0], taser: [Math.PI / 2, 0.34, 0, 1.0, 0, 0.0, 0], foam: [Math.PI / 2, 0.32, 0, 0.82, 0, 0.01, 0],
+  sniper: [Math.PI / 2, 0.3, 0, 0.72, 0, 0.02, 0.02], stress: [Math.PI / 2, 0.32, 0, 0.85, 0, 0.0, 0],
+  hammer: [1.45, 0.1, 0.3, 0.8, 0.0, -0.02, 0], baton: [1.5, 0.1, 0.32, 0.95, 0.0, -0.02, 0], shield: [0, 0.38, 0, 0.5, -0.16, -0.06, 0]
+};
+const W_TIP = { mace: [0, 0, -0.11], taser: [0, -0.2, -0.042], foam: [0, -0.42, -0.05], sniper: [0, -0.67, -0.06], stress: [0, -0.31, -0.075], hammer: [0, 0, -0.34], baton: [0, 0, -0.45], shield: [-0.1, 0.24, -0.14] }; for (const k in W_TIP) W_TIP[k] = new THREE.Vector3().fromArray(W_TIP[k]);
+const W_SWING = { hammer: 1, baton: 1, shield: 2 };
+const _wO = new THREE.Vector3(), _wD = new THREE.Vector3(), _wT = [], _wTP = [];
+
+const RaidW = {
+  cd: {}, maceLeft: 0, aim: 0, aimOn: false, aimT: 0, swingT: 1, swingK: 0, fov: 0,
+  isWeapon: id => !!RAID_W[id],
+  /* everyone a weapon can hit: cops + Props._targets (other players, coworkers, The Boss) */
+  targets() {
+    const T = _wT; T.length = 0; let k = 0;
+    const add = (kind, ref, x, z, y0, y1, r) => { const o = _wTP[k] || (_wTP[k] = {}); k++; o.kind = kind; o.ref = ref; o.x = x; o.z = z; o.y0 = y0; o.y1 = y1; o.r = r; o.top = y1; T.push(o); };
+    for (const c of Raid.cops) if ((c.st < 3 || c.st === 6) && c.av.group.visible) add('cop', c, c.x, c.z, 0.1, 1.85, 0.38);
+    for (const g of Props._targets) if (!g.me) add(g.kind, g, g.x, g.z, g.y0, g.y1, g.r);
+    return T;
+  },
+  /* the camera ray (crosshair) */
+  ray() { const cp = Math.cos(P.pitch); return _wD.set(-Math.sin(P.yaw) * cp, Math.sin(P.pitch), -Math.cos(P.yaw) * cp); },
+  /* targets along a ray from o in direction d: closest approach within reach (r + pad + t * widen); sorted by distance */
+  along(o, d, max, pad, widen, all) {
+    const out = [];
+    for (const g of this.targets()) {
+      const yc = (g.y0 + g.y1) / 2, t = (g.x - o.x) * d.x + (yc - o.y) * d.y + (g.z - o.z) * d.z; if (t < 0.15 || t > max) continue;
+      const px = o.x + d.x * t, py = o.y + d.y * t, pz = o.z + d.z * t;
+      if (Math.hypot(px - g.x, pz - g.z) > g.r + pad + t * widen || py < g.y0 - 0.25 - t * widen || py > g.y1 + 0.25 + t * widen) continue;
+      if (Space.ray(o.x, o.y, o.z, d.x, d.y, d.z, t, 0) < t - g.r - 0.15) continue;   // behind a wall
+      out.push({ g, t, x: px, y: py, z: pz }); if (!all) break;
+    }
+    out.sort((a, b) => a.t - b.t); return all ? out : out.slice(0, 1);
+  },
+  /* muzzle position and the direction from it to whatever is under the crosshair */
+  muzzle(id, ctx) {
+    const o = _wO.copy(ctx.pos), a = Props.held.get('me');
+    if (P.third && a && a.obj && a.obj.children[0]) { const m = a.obj.children[0]; m.updateWorldMatrix(true, false); o.copy(W_TIP[id]).applyMatrix4(m.matrixWorld); }
+    const c = W.camera.position, f = this.ray(); let dist = Math.min(40, Space.ray(c.x, c.y, c.z, f.x, f.y, f.z, 40, 0));
+    const hit = this.along(c, f, dist, 0, 0); if (hit.length) dist = hit[0].t;
+    const dir = new THREE.Vector3(c.x + f.x * dist - o.x, c.y + f.y * dist - o.y, c.z + f.z * dist - o.z).normalize();
+    return { o: o.clone(), d: dir };
+  },
+  /* one hit on a target from a weapon (local player decides, everyone sees it) */
+  strike(hit, w, dx, dz, conf) {
+    const l = Math.hypot(dx, dz) || 1; dx /= l; dz /= l;
+    const top = hit.top != null ? hit.top : 1.7, k = hit.kind;
+    if (w.word) FX.net('word', [hit.x, top + 0.5, hit.z], { w: w.word, c: w.wc, s: 1 });
+    if (conf) FX.net('confetti', [hit.x, top - 0.2, hit.z], { n: 18, dir: [dx, 0.6, dz] });
+    if (k === 'cop') { FX.net('stars', [hit.x, top, hit.z], { n: w.stars || 4, scale: 0.85 }); Raid.hitCop(hit.ref, w.dmg, w.stun, dx * w.kb, dz * w.kb, w.k); }
+    else if (k === 'player') {
+      FX.spawn('stars', [hit.x, top, hit.z], { n: w.stars || 4, scale: 0.8 });
+      const m = { id: hit.ref.id, d: [+dx.toFixed(2), +dz.toFixed(2)], f: w.f, s: w.s, sl: 0, y: +top.toFixed(2) };
+      Net.emit('hit', m); onHitMsg(m, Net.myId, true); if (w.ouch) Net.emit('raid:ouch', { id: hit.ref.id, k: w.ouch }, { to: hit.ref.id });
+    } else if (k === 'npc') { FX.net('stars', [hit.x, top, hit.z], { n: w.stars || 4, scale: 0.8 }); Props.npcNet(hit.ref.n, w.npc || 'hit', true); }
+  },
+  /* the victim's side of a mace / taser hit */
+  ouch(k) {
+    if (k === 'mace') { FX.tint('#ff7a1a', 0.32, 2.2); SFX.cough(); toast(pick(['Bear mace! Your eyes are watering.', 'Spicy! You cannot see a thing.', 'That was a performance review to the face.']), 'bad'); }
+    else if (k === 'zap') { FX.flash('#bff4ff', 0.3, 0.7); FX.shake(0.4, 0.4); toast(pick(['Bzzzt! You feel extremely motivated.', 'Zapped! Your hair is standing up.', 'Actionable feedback received.']), 'bad'); }
+  },
+  use(id, ctx) {
+    const w = RAID_W[id]; if (!w || W.t < (this.cd[id] || 0)) return; this.cd[id] = W.t + w.cd;
+    if (id === 'mace') this.spray(ctx);
+    else if (id === 'taser') this.zap(ctx);
+    else if (id === 'foam') { const m = this.muzzle(id, ctx); Shots.fire('foam', m.o, m.d, 6, 0.075, 21); RaidSnd.fwump(m.o); Props.vmKick = 0; Avatars.act('point', { dur: 0.55 }); }
+    else if (id === 'sniper') { this.aimOn = true; this.aimT = 0; }
+    else if (id === 'stress') {
+      const m = this.muzzle(id, ctx), s = 15; Props.launch('stressball', [m.o.x, m.o.y, m.o.z], [m.d.x * s + (P.vx || 0) * 0.5, m.d.y * s + 1.2, m.d.z * s + (P.vz || 0) * 0.5]);
+      RaidSnd.fwump(m.o); RaidSnd.squeak(m.o); Props.vmKick = 0; Avatars.act('point', { dur: 0.5 });
+    } else this.melee(id);
+  },
+  /* Bear Mace: a cone of orange pepper spray, everyone in it sneezes */
+  spray(ctx) {
+    if (this.maceLeft <= 0) this.maceLeft = RAID_W.mace.uses;
+    const m = this.muzzle('mace', ctx), f = this.ray(), e = eyePos();
+    FX.net('mace', [m.o.x, m.o.y, m.o.z], { dir: [+m.d.x.toFixed(2), +(m.d.y + 0.05).toFixed(2), +m.d.z.toFixed(2)] });
+    Avatars.act('spray', { dur: 0.6 }); Props.vmKick = 0.5;
+    for (const h of this.along(e, f, 3.6, 0.15, 0.3, true)) this.strike(h.g, W_HIT.mace, h.g.x - P.pos.x, h.g.z - P.pos.z);
+    if (--this.maceLeft <= 0) { Inv.take('mace'); toast(Inv.count('mace') ? 'Can empty. Opening a fresh one.' : 'Your Bear Mace is empty.', Inv.count('mace') ? '' : 'bad'); }
+    HUDBar.nameHTML && HUDBar.el && HUDBar.nameHTML();
+  },
+  /* Motivational Taser: a crackling bolt to the first target under the crosshair (7 m) */
+  zap(ctx) {
+    const m = this.muzzle('taser', ctx), e = eyePos(), f = this.ray(), h = this.along(e, f, 7, 0.22, 0.03)[0];
+    let to;
+    if (h) to = [h.g.x, Math.min(h.g.y1 - 0.35, Math.max(h.g.y0 + 0.5, h.y)), h.g.z];
+    else { const d = Math.min(7, Space.ray(e.x, e.y, e.z, f.x, f.y, f.z, 7, 0)); to = [e.x + f.x * d, e.y + f.y * d, e.z + f.z * d]; }
+    FX.net('zap', [m.o.x, m.o.y, m.o.z], { to: to.map(v => +v.toFixed(2)) });
+    Props.vmKick = 0; Avatars.act('point', { dur: 0.5 });
+    if (h) this.strike(h.g, W_HIT.taser, h.g.x - P.pos.x, h.g.z - P.pos.z);
+  },
+  /* sniper: hold to zoom, release to fire */
+  aimEnd(id, ctx) {
+    if (!this.aimOn) return; this.aimOn = false; const m = this.muzzle(id, ctx);
+    Shots.fire('sniper', m.o, m.d, 1, 0, 42); RaidSnd.thwip(m.o); Props.vmKick = 0; Avatars.act('point', { dur: 0.5 }); this.cd[id] = W.t + RAID_W.sniper.cd;
+  },
+  /* hammer / baton / shield bash: a short cone in front */
+  melee(id) {
+    const w = W_HIT[id], fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw); let best = null, bd = w.r;
+    for (const g of this.targets()) {
+      const dx = g.x - P.pos.x, dz = g.z - P.pos.z, d = Math.hypot(dx, dz); if (d > bd + g.r * 0.5 || d < 0.01 || (dx * fx + dz * fz) / d < 0.5) continue; best = g; bd = d;
+    }
+    this.swingT = 0; this.swingK = W_SWING[id] || 1; Props.act(id === 'shield' ? 'punch' : 'slap'); SFX.whoosh();
+    if (!best) return;
+    setTimeout(() => {
+      if (id === 'hammer') RaidSnd.boing(_rV.set(best.x, 1.4, best.z)); else if (id === 'baton') { SFX.punch(); SFX.bonk(); } else SFX.punch();
+      FX.shake(0.2, 0.15); this.strike(best, w, fx, fz, id === 'hammer' && Math.random() < 0.5);
+    }, 110);
+  },
+  /* stress balls in flight vs cops (props.js already bonks players and coworkers) */
+  stressHits(t) {
+    if (!Raid.cops.length) return;
+    for (const b of Props.bodies) {
+      if (b.type !== 'stressball' || !b.local || b.rest || t - b.hitT < 0.4 || b.vel.lengthSq() < 9) continue;
+      for (const c of Raid.cops) {
+        if (c.st >= 3 && c.st !== 6) continue; const dx = b.pos.x - c.x, dz = b.pos.z - c.z, d = Math.hypot(dx, dz);
+        if (d > 0.45 || b.pos.y < 0.1 || b.pos.y > 1.9) continue;
+        b.hitT = t; this.strike({ kind: 'cop', ref: c, x: c.x, z: c.z, top: 1.8 }, W_HIT.stress, b.vel.x, b.vel.z);
+        const nx = dx / (d || 1), nz = dz / (d || 1), dot = b.vel.x * nx + b.vel.z * nz; if (dot < 0) { b.vel.x -= 1.6 * dot * nx; b.vel.z -= 1.6 * dot * nz; }
+        b.vel.multiplyScalar(0.4); b.vel.y = Math.max(b.vel.y, 1.5); Props.launch(b.type, [b.pos.x, b.pos.y, b.pos.z], [b.vel.x, b.vel.y, b.vel.z], { id: b.id });
+        break;
+      }
+    }
+  },
+  /* per frame (after the props view model update): sniper zoom + scope, melee swing on the view model */
+  update(dt) {
+    const id = Props.slots[Props.sel], held = !Props.carry && id === 'sniper' && Props.useDown && Props.useId === 'sniper' && this.aimOn;
+    if (this.aimOn && !held) this.aimOn = false;
+    this.aim = clamp(this.aim + (held ? dt * 4 : -dt * 6), 0, 1);
+    const cam = W.camera;
+    if (this.aim > 0 && cam && !P.seated && !P.cam) { const f = lerp(cam.fov, 26, this.aim * this.aim * (3 - 2 * this.aim)); if (Math.abs(cam.fov - f) > 0.01) { cam.fov = f; cam.updateProjectionMatrix(); } }
+    if (RaidUI.el.scope) RaidUI.el.scope.style.opacity = this.aim > 0.55 ? Math.min(1, (this.aim - 0.55) / 0.3) : 0;
+    const v = Props.vm; if (!v || !v.root.visible) return;
+    if (this.aim > 0.6) v.root.visible = false;
+    if (this.swingT < 1) {
+      this.swingT = Math.min(1, this.swingT + dt * 3.2); const k = this.swingT;
+      if (this.swingK === 2) { const e = k < 0.3 ? k / 0.3 : 1 - (k - 0.3) / 0.7; v.sway.position.z -= 0.22 * e; v.sway.position.x -= 0.1 * e; }
+      else { const up = k < 0.22 ? k / 0.22 : 0, dn = k < 0.22 ? 0 : k < 0.45 ? (k - 0.22) / 0.23 : 1 - (k - 0.45) / 0.55; v.sway.rotation.x += 0.7 * up - 1.6 * dn * dn * (3 - 2 * dn); v.sway.rotation.z += 0.5 * dn; v.sway.position.x -= 0.12 * dn; }
+    }
+  },
+  /* view model: our weapons are modelled in the hand frame, so re-pose them for the first-person hold */
+  fixVM(v, key) {
+    const p = W_VM[key], m = v.item; if (!p || !m) return;
+    m.rotation.set(p[0], p[1], p[2], 'YXZ'); m.scale.setScalar(p[3]); m.position.set(p[4], p[5], p[6]); m.updateMatrix();
+    v.anchor.position.copy(W_TIP[key]).applyMatrix4(m.matrix);
+    if (v.hand) { v.hand.visible = key !== 'shield'; v.hand.scale.setScalar(1.1); }
+  }
+};
+/* hook our weapons into the props module: first-person pose, and punches that land on cops */
+{
+  const _set = VM.setItem; VM.setItem = function (v, key) { _set.call(this, v, key); if (v.hand) v.hand.visible = true; if (RAID_W[key]) RaidW.fixVM(v, key); };
+  const _hit = Props.doHit; Props.doHit = function (slap) {
+    if (Raid.cops.length) {
+      const fx = -Math.sin(P.yaw), fz = -Math.cos(P.yaw); let best = null, bd = 1.75;
+      for (const c of Raid.cops) { if (c.st >= 3 && c.st !== 6) continue; const dx = c.x - P.pos.x, dz = c.z - P.pos.z, d = Math.hypot(dx, dz); if (d > bd || d < 0.01 || (dx * fx + dz * fz) / d < 0.55) continue; best = c; bd = d; }
+      if (best) { (slap ? SFX.slap : SFX.punch)(); FX.shake(0.22, 0.18); RaidW.strike({ kind: 'cop', ref: best, x: best.x, z: best.z, top: 1.75 }, W_HIT.punch, fx, fz); return; }
+    }
+    return _hit.call(this, slap);
+  };
+}
+for (const id in RAID_W) {
+  const w = RAID_W[id];
+  const def = ItemDefs[id] = { name: w.name, desc: w.desc, icon: W_ICONS[id], hint: w.hint, weapon: true, model: () => RaidArt.weapon(id), use: ctx => RaidW.use(id, ctx) };
+  if (w.hold) Object.assign(def, { hold: true, useHold() {}, useEnd: ctx => RaidW.aimEnd(id, ctx) });
+  if (id === 'mace') Object.defineProperty(def, 'hint', { get: () => 'Click to spray · ' + (RaidW.maceLeft > 0 ? RaidW.maceLeft : RAID_W.mace.uses) + ' bursts left in this can', enumerable: true });
+  if (id === 'shield') def.equip = () => toast('Riot shield up: officers who run into the front of it bounce off.', 'good');
+  Shop.add({
+    id: 'w_' + id, item: id, tab: 'goods', section: 'Weapons & personal safety', name: w.name, desc: w.desc, price: w.price, icon: W_ICONS[id], color: w.color,
+    sort: 300 + Object.keys(RAID_W).indexOf(id), repeatable: id === 'mace', available: () => true,
+    owned: () => id !== 'mace' && Inv.count(id) > 0, ownedLabel: 'In your hotbar',
+    model: () => RaidArt.show(id),
+    buy() { Inv.give(id); const k = Props.slots.indexOf(id); toast(w.name + ' added to your hotbar' + (k >= 0 ? ' (slot ' + (k + 1) + ').' : '.'), 'good'); Game.saveProgress(); }
+  });
+}
+
+/* =====================================================================
+   UI — HUD heat gauge, LegitOS taskbar pill, raid banner, red/blue edge glow, busted card, sniper scope
+   ===================================================================== */
+const RAID_CHARGES = ['Excessive legitimacy', 'Aggravated cold calling', 'Felony small talk', 'Unlicensed synergy', 'Loitering with intent to upsell',
+  'Operating a headset without a permit', 'Impersonating customer service', 'Grand theft auto-dialer', 'Possession of a suspicious quota'];
+const COP_ICON = '<svg viewBox="0 0 24 24"><path d="M4 9.5c0-2.6 3.6-4.5 8-4.5s8 1.9 8 4.5l-1.4.6H5.4z" fill="#26396a" stroke="#0f131d" stroke-width="1.6" stroke-linejoin="round"/><path d="M5.6 10.4h12.8v1.8c0 4-2.8 7.8-6.4 7.8s-6.4-3.8-6.4-7.8z" fill="#f0c49c" stroke="#0f131d" stroke-width="1.6"/><path d="M7.4 12.6h3.8M12.8 12.6h3.8" stroke="#0f131d" stroke-width="2.4" stroke-linecap="round"/><path d="M8.6 16.2c1.6-.9 2.4-.2 3.4-.2s1.8-.7 3.4.2" fill="none" stroke="#5a3a24" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.4" r="1.4" fill="#f2c14e"/></svg>';
+const RaidUI = {
+  el: {}, _k: {}, grab: false,
+  build() {
+    if (this.el.hud) return; const E = this.el, hud = $('#hud');
+    E.hud = h('div', { id: 'raid-heat', class: 'hidden' },
+      E.ic = h('div', { class: 'rh-ic', html: OS.glyph('flame') }),
+      h('div', { class: 'rh-main' },
+        h('div', { class: 'rh-top' }, E.title = h('b', {}, 'HEAT'), E.word = h('span', { class: 'rh-word' })),
+        h('div', { class: 'rh-bar' }, E.fill = h('i'), h('u')),
+        E.cops = h('div', { class: 'rh-cops' })));
+    if (hud) hud.append(E.hud);
+    const st = $('#tb-stats');
+    E.pill = h('div', { id: 'tb-heat', title: 'Team heat: every scam attracts attention. Too much and the police pay a visit.' },
+      E.pic = h('i', { html: OS.glyph('flame') }), E.ptxt = h('b', {}, 'HEAT'), h('span', { class: 'th-bar' }, E.pfill = h('u')), E.pval = h('em'));
+    if (st && st.parentNode) st.parentNode.insertBefore(E.pill, st);
+    E.glow = h('div', { id: 'raid-glow' }); E.alert = h('div', { id: 'raid-alert' }); E.bust = h('div', { id: 'raid-bust', class: 'hidden' });
+    E.scope = h('div', { id: 'raid-scope' }, h('i'));
+    document.body.append(E.glow, E.scope, E.alert, E.bust);
+  },
+  set(k, el, v, prop) { if (this._k[k] === v) return; this._k[k] = v; if (prop === 'html') el.innerHTML = v; else if (prop) el.style[prop] = v; else el.textContent = v; },
+  word(h) { return h >= 95 ? 'SIRENS!' : h >= RAID.risk ? 'Raid risk!' : h >= 50 ? 'Hot' : h >= 25 ? 'Warm' : 'Chill'; },
+  col(h) { const k = clamp(h / 100, 0, 1); return 'hsl(' + Math.round(52 - 50 * k) + ',' + Math.round(92 + 6 * k) + '%,' + Math.round(56 - 6 * k) + '%)'; },
+  tick() {
+    const E = this.el; if (!E.hud) return;
+    const ht = Raid.heat, on = Raid.on, live = G.phase === 'day' || G.phase === 'lobby', pct = Math.round(ht);
+    const vis = live && !P.seated && P.review < 0 && !G.paused && !Raid.bust;
+    E.hud.classList.toggle('hidden', !vis); document.body.classList.toggle('raid-busted', !!Raid.bust);
+    if (vis) { const s = $('#hud-stats'), r = s && s.getBoundingClientRect(); this.set('top', E.hud, (r && r.height ? Math.round(r.bottom + 8) : 96) + 'px', 'top'); }
+    E.hud.classList.toggle('raid', on); E.hud.classList.toggle('risk', !on && ht >= RAID.risk); E.pill.classList.toggle('raid', on); E.pill.classList.toggle('risk', !on && ht >= RAID.risk);
+    E.pill.classList.toggle('hidden', !live);
+    const col = this.col(ht);
+    if (on) {
+      let left = 0; for (const c of Raid.cops) if (c.st < 4 || c.st === 6) left++;
+      this.set('t', E.title, 'POLICE RAID'); this.set('w', E.word, fmtTime(Raid.left)); this.set('f', E.fill, Math.round(Raid.left / RAID.dur * 100) + '%', 'width');
+      this.set('c', E.cops, Raid.cops.map(c => '<span class="' + (c.st < 3 || c.st === 6 ? '' : c.st === 3 ? 'dz' : 'out') + '">' + COP_ICON + '</span>').join('') + '<em>' + left + ' in the building</em>', 'html');
+      this.set('pt', E.ptxt, 'RAID'); this.set('pv', E.pval, fmtTime(Raid.left)); this.set('pf', E.pfill, Math.round(Raid.left / RAID.dur * 100) + '%', 'width');
+    } else {
+      this.set('t', E.title, 'HEAT'); this.set('w', E.word, this.word(ht) + ' ' + pct + '%'); this.set('f', E.fill, pct + '%', 'width'); this.set('c', E.cops, '', 'html');
+      this.set('pt', E.ptxt, 'HEAT'); this.set('pv', E.pval, pct + '%'); this.set('pf', E.pfill, pct + '%', 'width');
+    }
+    if (this._k.col2 !== col) { this._k.col2 = col; E.hud.style.setProperty('--heat', col); E.pill.style.setProperty('--heat', col); }
+  },
+  /* big banner: 'raid' | 'win' | 'lose' */
+  alert(kind, amt) {
+    const E = this.el; if (!E.alert) return;
+    const M = {
+      raid: ['POLICE RAID!', 'Cops at the front door! Mace them, tase them, or hide under a desk.'],
+      win: ['RAID REPELLED!', 'Hazard pay +' + money(RAID.hazard) + ' each. Legal says this never happened.'],
+      lose: ['RAID OVER', amt > 0 ? 'The officers seized ' + money(amt) + ' of your petty cash on the way out.' : 'The officers got bored and went for donuts.']
+    }[kind]; if (!M) return;
+    E.alert.className = ''; void E.alert.offsetWidth; E.alert.className = 'on ' + kind;
+    E.alert.replaceChildren(h('div', { class: 'ra-in' }, h('i', { class: 'ra-l' }), h('div', { class: 'ra-t' }, h('b', {}, M[0]), h('small', {}, M[1])), h('i', { class: 'ra-r' })));
+    clearTimeout(this._at); this._at = setTimeout(() => { E.alert.className = ''; }, 4300);
+  },
+  glow(on) { if (this.el.glow) this.el.glow.classList.toggle('on', !!on); },
+  busted(fine) {
+    const E = this.el; if (!E.bust) return;
+    if (fine == null) { E.bust.className = 'hidden'; E.bust.replaceChildren(); return; }
+    E.bust.className = ''; void E.bust.offsetWidth; E.bust.className = 'on';
+    E.bust.replaceChildren(
+      h('div', { class: 'rb-stamp' }, 'BUSTED!'),
+      h('div', { class: 'rb-info' }, h('small', {}, 'Charged with'), h('b', {}, pick(RAID_CHARGES)),
+        h('span', { class: 'rb-fine' }, fine > 0 ? 'Fine -' + money(fine) : 'Fine waived: your wallet is empty'), h('em', {}, 'Booked in the lobby. Released at the front door in a moment.')));
+  },
+  /* the mugshot: grab the frame right after it is rendered and pin it on the busted card as a photo */
+  snap() { this.grab = true; },
+  render() {
+    if (!this.grab) return; this.grab = false; const E = this.el, src = W.renderer && W.renderer.domElement; if (!src || !E.bust || !Raid.bust) return;
+    const cw = 220, chh = 250, c = h('canvas', { width: cw, height: chh }), g = c.getContext('2d'), sw = src.height * 0.62 * cw / chh, sh = src.height * 0.62;
+    try { g.drawImage(src, (src.width - sw) / 2, src.height * 0.12, sw, sh, 0, 0, cw, chh); } catch (e) { return; }
+    E.bust.append(h('div', { class: 'rb-photo' }, c, h('b', {}, (settings.name || 'Agent').slice(0, 18)), h('small', {}, 'CASE #404-' + randi(100, 999))));
+  }
+};
+
+/* =====================================================================
+   NETWORK + LIFECYCLE
+   ===================================================================== */
+Net.on('raid:go', d => { if (d && !Net.isHost && typeof d.n === 'number') Raid.begin({ n: d.n | 0, k: clamp(d.k | 0, 1, 6), s: d.s | 0 }); });
+Net.on('raid:end', d => { if (d && !Net.isHost && Raid.on) Raid.over({ n: d.n | 0, ok: d.ok ? 1 : 0, k: d.k | 0 }); });
+Net.on('raid:heat', d => { if (d && Net.isHost) { Raid.heat = clamp(Raid.heat + clamp(+d.a || 0, -30, 30), 0, RAID.max); Bus.emit('raid:heat', Raid.heat); } });
+Net.on('raid:hit', d => {
+  if (!d || !Net.isHost) return; const c = Raid.cops[d.c | 0], kb = Array.isArray(d.kb) ? d.kb : [0, 0];
+  if (c) Raid.hurt(c, clamp(+d.d || 0, 0, 4), clamp(+d.s || 0, 0, 4), clamp(+kb[0] || 0, -9, 9), clamp(+kb[1] || 0, -9, 9), typeof d.k === 'string' ? d.k.slice(0, 10) : 'hit');
+});
+Net.on('raid:arrest', d => { if (d && d.id != null) Raid.onArrest({ id: String(d.id), c: d.c | 0 }); });
+Net.on('raid:block', d => { if (d && d.id != null) Raid.onBlock({ id: String(d.id), c: d.c | 0 }); });
+Net.on('raid:shot', d => {
+  if (!d || !Shots.W[d.k] || !Array.isArray(d.o) || d.o.length !== 3 || !Array.isArray(d.v)) return;
+  const vs = d.v.slice(0, 8).filter(v => Array.isArray(v) && v.length === 3).map(v => v.map(x => clamp(+x || 0, -60, 60)));
+  Shots.spawn(d.k, d.o.map(Number), vs, false); _rV.set(+d.o[0] || 0, +d.o[1] || 0, +d.o[2] || 0); if (d.k === 'sniper') RaidSnd.thwip(_rV); else RaidSnd.fwump(_rV);
+});
+Net.on('raid:ouch', d => { if (d && d.id === Net.myId && typeof d.k === 'string') RaidW.ouch(d.k); });
+Net.share('raid', () => Raid.shared(), s => Raid.applyShared(s));
+
+Bus.on('world:built', () => { RaidLights.build(); Shots.init(); RaidNav.build(); });
+Bus.on('boot', () => RaidUI.build());
+/* heat: bigger payouts are louder, a scambaiter disaster is very loud */
+Bus.on('scam:paid', e => { if (G.phase === 'day') Raid.addHeat(clamp(6 + ((e && +e.amt) || 0) / 30, 6, 26)); });
+Bus.on('scam:baited', () => { if (G.phase === 'day') Raid.addHeat(18); });
+Bus.on('raid:heat', hh => { const k = hh >= RAID.risk; if (k && !Raid._warned && !Raid.on && G.phase === 'day') toast('The heat is on. Someone at the bank called the police...', 'bad'); Raid._warned = k; });
+Bus.on('game:begin', () => { Raid.abort(); Raid.heat = 0; Raid.n = 0; Raid.lastEnd = -999; Raid._warned = false; Shots.clear(); RaidW.maceLeft = 0; RaidW.aim = 0; RaidW.aimOn = false; });
+Bus.on('day:start', () => { Raid.abort(); if (Net.isAuth()) Raid.heat = Math.round(Raid.heat * 0.5); Raid.lastEnd = -999; Shots.clear(); });
+Bus.on('review', () => Raid.abort());
+Bus.on('quit', () => { Raid.abort(); Raid.heat = 0; Shots.clear(); RaidUI.tick(); });
+Loop.add((dt, t) => { Raid.update(dt, t); RaidW.update(dt); });
+Loop.addRender(() => RaidUI.render());
