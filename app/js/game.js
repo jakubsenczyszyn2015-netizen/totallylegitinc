@@ -180,6 +180,7 @@ const Game = {
   },
   confirmQuit() { this.pause(true); },
   quit() {
+    if (G.phase === 'day') { clearTimeout(this._invT); this.saveProgress(); }
     Net.leave(); Call.reset(); OS.reset(); OS.hide(); releaseLock(); TTS.stop();
     G.phase = 'menu'; G.paused = false; G.result = null; P.seated = false; P.review = -1; P.cam = null;
     ['#hud', '#review', '#pause'].forEach(s => $(s).classList.add('hidden'));
