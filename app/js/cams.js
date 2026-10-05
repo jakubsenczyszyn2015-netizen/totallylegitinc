@@ -187,7 +187,7 @@ PropIcons.photo = '<svg viewBox="0 0 48 48"><g transform="rotate(-8 24 24)"><rec
 PropTypes.photo = { name: 'photo', r: 0.04, bounce: 0.05, fric: 1.4, box: 0.002, model: () => { const c = Props.carry && Props.carry.type === 'photo'; return PhotoArt.model(c ? Photos.get(Props.carry.id) : null, c); } };
 (() => {
   /* wrap Props from here: photos get their picture, a nicer label, a usage count, and leaf-like air drag */
-  const _spawn = Props.spawn, _remove = Props.remove, _step = Props.step;
+  const _spawn = Props.spawn, _remove = Props.remove, _step = Props.step, _pu = new THREE.Vector3(), _pn = new THREE.Vector3(), _pc = new THREE.Vector3();
   Props.spawn = function (type, o, v, opts) {
     const b = _spawn.call(this, type, o, v, opts);
     if (b && type === 'photo') {
@@ -206,7 +206,10 @@ PropTypes.photo = { name: 'photo', r: 0.04, bounce: 0.05, fric: 1.4, box: 0.002,
         const t = b.ft = (b.ft || 0) + h, ph = b.ph || (b.ph = (hashStr(String(b.id)) % 628) / 100);
         v.y += 9.8 * 0.86 * h; v.y *= Math.exp(-1.6 * h); const dr = Math.exp(-2.6 * h); v.x *= dr; v.z *= dr;
         v.x += Math.cos(t * 3.3 + ph) * 1.7 * h; v.z += Math.sin(t * 2.7 + ph * 2) * 1.7 * h;
-        b.spin.set(Math.cos(t * 4.2 + ph) * 2.6, 0.9 * Math.sin(ph * 3 + t * 0.7), Math.sin(t * 3.4 + ph) * 2.6);
+        // rock like a falling leaf: steer the card's face towards a tilted "up" that swings with the side-to-side drift
+        const u = _pu.set(0, 1, 0).applyQuaternion(b.m.quaternion), n = _pn.set(Math.sin(t * 3.3 + ph) * 0.6, 1, Math.sin(t * 2.7 + ph * 2) * 0.6).normalize(), c = _pc.crossVectors(u, n);
+        if (u.dot(n) < -0.2) c.set(1, 0, 0);   // upside down: turn it over
+        b.spin.set(c.x * 7, 0.9 * Math.sin(ph * 3 + t * 0.7), c.z * 7);
       }
     }
     return _step.call(this, b, h);
@@ -300,7 +303,7 @@ const SnapCam = {
     const p = Photos.add(id, card, { by: settings.name, cap }); Photos.keep(id, url, p);
     const hp = Props.handPos();
     Net.emit('cam:photo', { id, img: url, by: settings.name, cap, p: [+hp.x.toFixed(2), +hp.y.toFixed(2), +hp.z.toFixed(2)] });
-    FX.flash('#ffffff', 0.4, 0.92); this.sound(); this.glint(hp); Props.vmKick = 0;
+    FX.flash('#ffffff', 0.4, 0.92); this.sound(); if (P.third) this.glint(hp); Props.vmKick = 0;   // (the glint is for onlookers: right at your eye it is just a streak)
     PhotoHud.show(id, [h('b', {}, 'Developing…'), h('span', {}, left ? left + ' shot' + (left === 1 ? '' : 's') + ' left' : 'Out of film')], 4.5);
     setTimeout(() => {   // the motor spits the photo out of the front slot
       const o = Props.handPos(), f = aimDir();

@@ -83,14 +83,19 @@ module.exports = async page => {
     });
     await gw(0.5);
     await page.shot('c20-snapcam-held');
-    const id = await ev(() => { SnapCam.cool = 0; SnapCam.use(); return [...Photos.map.keys()].pop(); });
+    const snap = await ev(() => { const of = FX.flash; let fl = null; FX.flash = (...a) => { fl = a; return of(...a); }; SnapCam.cool = 0; SnapCam.use(); FX.flash = of; return { id: [...Photos.map.keys()].pop(), flash: fl, left: Inv.count('polaroid') }; });
+    console.log('snap: ' + JSON.stringify(snap)); if (!snap.flash || snap.left !== 4) throw new Error('SnapCam did not fire');
+    const id = snap.id;
     await gw(0.05);
     await page.shot('c21-flash');
-    await gw(0.9);
+    await gw(0.8);
     await page.shot('c22-photo-ejected');
-    await ev(() => { const P = window.__tli.P; P.pitch = -0.35; return true; });
-    await gw(0.5);
+    // the photo fluttering down, seen by a pinned camera just above and behind it
+    const air = await ev(i => { const b = Props.byId.get(i), P = window.__tli.P; if (!b) return null; const dx = b.pos.x - P.pos.x, dz = b.pos.z - P.pos.z, d = Math.hypot(dx, dz) || 1;
+      W.camOverride = { pos: [b.pos.x - dx / d * 0.75, b.pos.y + 0.5, b.pos.z - dz / d * 0.75 + 0.2], look: [b.pos.x, b.pos.y - 0.05, b.pos.z] }; return { y: +b.pos.y.toFixed(2), rest: !!b.rest }; }, id);
+    console.log('photo in the air: ' + JSON.stringify(air));
     await page.shot('c23-photo-fluttering');
+    await ev(() => { W.camOverride = null; return true; });
     await gw(3.5);
     const st = await ev(i => { const b = Props.byId.get(i); return b ? { rest: b.rest, pos: [b.pos.x, b.pos.y, b.pos.z].map(v => +v.toFixed(2)), dev: Photos.get(i).dev } : null; }, id);
     console.log('photo body: ' + JSON.stringify(st));
@@ -106,8 +111,10 @@ module.exports = async page => {
     await ev(i => { const b = Props.byId.get(i); W.camOverride = b ? { pos: [b.pos.x + 0.7, 1.1, b.pos.z + 0.5], look: [b.pos.x, b.pos.y, b.pos.z] } : null; return !!b; }, id);
     await gw(0.3);
     await page.shot('c25-photo-on-floor');
-    await ev(i => { W.camOverride = null; const b = Props.byId.get(i); if (b) Props.pickup(b); return !!Props.carry; }, id);
+    const held = await ev(i => { W.camOverride = null; const b = Props.byId.get(i); if (b) Props.pickup(b); return { carry: !!Props.carry }; }, id);
+    if (!held.carry) throw new Error('could not pick the photo up');
     await gw(0.6);
+    console.log('held photo icon: ' + await ev(() => { const sl = document.querySelector('.hb-slot.carry'); return !!(sl && sl.querySelector('svg')); }));
     await page.shot('c26-photo-held');
   }
   if (want('photo')) {   // a photo from a fake remote player through the real Net handlers
