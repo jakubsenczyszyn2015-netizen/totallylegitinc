@@ -26,17 +26,16 @@ module.exports = async mp => {
 
   // ---- punch: Bob punches Alice -> Alice is knocked back + stunned, Cara sees Alice (not Bob) get hit
   if (C) await C.eval(id => { window.__hitOn = null; const av = W.avatars.get(id).av, o = av.play.bind(av); av.play = (n, op) => { if (n === 'hit') window.__hitOn = 'Alice'; return o(n, op); }; return true; }, ids.Alice);
-  if (C) await C.eval(id => { const av = W.avatars.get(id).av, o = av.play.bind(av); av.play = (n, op) => { if (n === 'hit') window.__hitOn = 'Bob'; return o(n, op); }; return true; }, ids.Bob);
+  if (C) await C.eval(id => { window.__bobActs = []; const av = W.avatars.get(id).av, o = av.play.bind(av); av.play = (n, op) => { window.__bobActs.push(n); if (n === 'hit') window.__hitOn = 'Bob'; return o(n, op); }; return true; }, ids.Bob);
   const ax0 = await A.eval(() => P.pos.x);
   await B.eval(() => { Props.punchT = 0; Props.punchN = 0; Props.punch(); return true; });
-  await mp.wait(250);
-  const hitA = await A.eval(() => ({ stun: P.stunT, kx: P.kx, x: P.pos.x }));
-  await mp.wait(400);
-  const ax1 = await A.eval(() => P.pos.x);
-  mp.check('punch: Alice stunned and knocked back (away from Bob = -x)', hitA.stun > 0 && ax1 < ax0 - 0.15, { hitA, ax0, ax1 });
+  await A.eval(() => { window.__hit = null; const o = W.me.stun.bind(W.me); W.me.stun = s => { if (!window.__hit) window.__hit = { stun: P.stunT, kx: P.kx }; return o(s); }; return true; });
+  await mp.wait(650);
+  const hitA = await A.eval(() => window.__hit), ax1 = await A.eval(() => P.pos.x);
+  mp.check('punch: Alice stunned and knocked back (away from Bob = +x)', hitA && hitA.stun > 0 && hitA.kx > 0 && ax1 > ax0 + 0.15, { hitA, ax0, ax1 });
   mp.check('punch: Alice got the "seeing stars" toast', (await toasts(A)).some(t => /stars|bonked|mark|incident/i.test(t)));
   if (C) mp.check('punch: Cara sees Alice play the hit (right victim)', (await C.eval(() => window.__hitOn)) === 'Alice', await C.eval(() => window.__hitOn));
-  if (C) mp.check('punch: Cara sees Bob throw the punch', await C.eval(id => { const a = W.avatars.get(id).av.act; return !!a; }, ids.Bob));
+  if (C) mp.check('punch: Cara sees Bob throw the punch', await C.eval(() => window.__bobActs.includes('punch')), await C.eval(() => window.__bobActs));
   await A.teleport(4.5, 0, Math.PI / 2, 0);
   await mp.wait(1500);
 
@@ -46,7 +45,7 @@ module.exports = async mp => {
   const heldA = await A.eval(id => { const p = Net.players.get(id); return p && p.ext && p.ext.held; }, ids.Bob);
   mp.check('host sees Bob holding + using the soda', heldA && heldA.i === 'soda' && heldA.u === 1, heldA);
   mp.check('host draws Bob\'s soda stream', (await A.eval(() => FX.stats().streams)) > 0, await A.eval(() => FX.stats()));
-  if (C) await C.shot('p01-cara-sees-bob-spray-alice');
+  if (C) { await C.teleport(3.85, 2.3, 0, -0.12); await mp.wait(150); await C.shot('p01-cara-sees-bob-spray-alice'); await C.teleport(0.6, 0, -Math.PI / 2, -0.05); }
   await mp.wait(900);
   await B.eval(() => { Props.endUse(); return true; });
   mp.check('Alice got soaked by Bob\'s soda', (await toasts(A)).some(t => /soda|sticky|keyboard/i.test(t)));
@@ -59,8 +58,8 @@ module.exports = async mp => {
   mp.check('Alice sees the fart cloud', (await A.eval(() => FX.stats().soft)) > 0);
 
   // ---- whoopee cushion on Alice's chair: Bob places it, Alice sits -> it pops for everyone
-  const deskA = 6;   // a free desk next to the aisle (x 5.2, z -2.1)
-  await B.teleport(5.2, -0.6, Math.PI, -0.5);   // stand in front of desk 6 looking at its chair
+  const deskA = await A.eval(() => (W.desks.find(d => !d.npc && d.i >= 6 && !Game.deskTaken(d.i)) || W.desks.find(d => !d.npc)).i);   // a free player desk
+  { const a = await B.eval(i => { const d = W.desks[i]; P.pos.x = d.seat.x + Math.sin(d.rot) * 1.3; P.pos.z = d.seat.z + Math.cos(d.rot) * 1.3; const a = lookAngles({ x: P.pos.x, y: P.eye, z: P.pos.z }, { x: d.seat.x, y: 0.5, z: d.seat.z }); P.yaw = a.yaw; P.pitch = a.pitch; return [d.i, d.npc]; }, deskA); }   // stand behind desk 6's chair looking at it
   await mp.wait(200);
   const cush = await B.eval(() => { Inv.give('whoopee', 1); Props.refreshHeld(); Props.select(Props.slots.indexOf('whoopee')); Props.startUse(); const c = Props.cushions[Props.cushions.length - 1]; return c && { id: c.id, desk: c.desk }; });
   await mp.wait(600);
