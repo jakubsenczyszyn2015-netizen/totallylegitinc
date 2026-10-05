@@ -76,8 +76,9 @@ module.exports = async page => {
     await page.shot('r06-chase');
     // Bear Mace in the face of the nearest cop (first person)
     await ev(() => { W.camOverride = null; P.third = false; return true; });
-    await until('window.__near() && window.__near().d < 2.2', 6);
-    await ev(() => { const n = __near(); __face(n.c.x, n.c.z, 1.3); Props.startUse(); return n.d; });
+    await ev(() => { __stand(12.4, -0.5, 18, 0); return true; });
+    await until('window.__near() && window.__near().d < 2.6 && window.__near().d > 1.3', 8);
+    await ev(() => { const n = __near(); __face(n.c.x, n.c.z, 1.25); Props.startUse(); return n.d; });
     await gw(0.3);
     await page.shot('r07-mace');
     // step back and tase the next one (first person)
