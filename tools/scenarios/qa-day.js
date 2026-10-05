@@ -76,6 +76,7 @@ module.exports = async page => {
   Q.check('baited result', (await page.eval(() => window.__tli.Call.cur && window.__tli.Call.cur.result)) === 'baited', r);
   Q.check('baited costs money', g.personal === before.personal - Math.min(100, before.personal) && g.stats.baited === before.stats.baited + 1, { before: before.personal, after: g.personal });
   Q.check('baited opens a pop-up storm', pops > 0, pops);
+  Q.check('scheme window shows the baited banner before the call ends', await page.eval(() => !!document.querySelector('.win.scheme .sx-banner.bad') && window.__tli.Call.state === 'live'));
   await page.wait(2800);
   await page.eval(() => window.__tli.OS.clearPopups());
   await Q.hush();

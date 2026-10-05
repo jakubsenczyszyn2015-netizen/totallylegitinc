@@ -133,7 +133,7 @@ const Call = {
       setTimeout(() => {
         if (this.cur !== c || this.state !== 'live') return;
         this.themSay(c, pick(GOTCHA)); c.result = 'baited'; Bus.emit('scam:baited', c); SFX.bad(); OS.cashFx('BAITED', true); G.stats.baited++;
-        Game.earn(-Math.min(100 - 40 * Game.lvl('av'), G.personal)); OS.virus(7 - 3 * Game.lvl('av'));
+        Game.earn(-Math.min(100 - 40 * Game.lvl('av'), G.personal)); OS.virus(7 - 3 * Game.lvl('av')); OS.refresh();
         setTimeout(() => { if (this.cur === c) this.end('baited'); }, 2600);
       }, 1200);
     } else {
