@@ -35,10 +35,11 @@ const ClockOut = {
     if (!this.vote || !this.available()) return;
     if (this.myVote() === (yes ? 'yes' : 'no')) return;
     // show it straight away; the host's next snapshot confirms it
-    const V = this.vote, me = Net.myId; V.yes = V.yes.filter(i => i !== me); V.no = V.no.filter(i => i !== me); (yes ? V.yes : V.no).push(me);
+    const V = this.vote, me = Net.myId; this.mark(V, me, yes); this._pend = { id: V.id, yes, t: now() };
     SFX.click(); this.render(true);
     if (Net.isHost) this.hostReq(yes ? 'yes' : 'no', me); else Net.emit('clockout', { a: yes ? 'yes' : 'no' }, { host: true });
   },
+  mark(V, id, yes) { V.yes = V.yes.filter(i => i !== id); V.no = V.no.filter(i => i !== id); (yes ? V.yes : V.no).push(id); },
   endDay() { this._early = Math.max(0, Math.round(G.timeLeft)); Game.endDay(); this._early = null; },
 
   /* ----- host side ----- */
@@ -52,7 +53,7 @@ const ClockOut = {
       this.vote = { id: ++this.seq, by: from, name: String((p && p.name) || 'Someone'), yes: [from], no: [], left: this.VOTE_SECS, n: 0, need: 0 };
       this.check(); if (this.vote) this.render(true);
     } else if (V && (a === 'yes' || a === 'no')) {
-      V.yes = V.yes.filter(i => i !== from); V.no = V.no.filter(i => i !== from); (a === 'yes' ? V.yes : V.no).push(from);
+      this.mark(V, from, a === 'yes');
       this.check(); if (this.vote) this.render(true);
     }
   },
@@ -87,6 +88,8 @@ const ClockOut = {
     const v = s && s.v;
     if (!v || typeof v !== 'object' || !Array.isArray(v.yes) || !Array.isArray(v.no)) { if (this.vote) { this.vote = null; this.render(); } return; }
     this.vote = { id: v.id | 0, by: String(v.by || ''), name: String(v.name || 'Someone').slice(0, 18), yes: v.yes.map(String), no: v.no.map(String), left: +v.left || 0, n: v.n | 0, need: v.need | 0 };
+    // a vote I just cast may not have reached the host yet: keep showing it for a moment
+    const pd = this._pend; if (pd && pd.id === this.vote.id && now() - pd.t < 1.5 && this.myVote() !== (pd.yes ? 'yes' : 'no')) this.mark(this.vote, Net.myId, pd.yes);
     this.render();
   },
 
@@ -227,7 +230,7 @@ const CO_ICONS = {
 /* ----- wiring ----- */
 Net.share('clockout', () => ({ v: ClockOut.vote, cool: Math.ceil(ClockOut.cool) }), s => ClockOut.applyShared(s));
 Net.on('clockout', (p, from) => { if (p && ['start', 'yes', 'no'].includes(p.a)) ClockOut.hostReq(p.a, from); });
-Net.on('clockout:end', r => { if (r && typeof r === 'object') ClockOut.result({ ok: !!r.ok, yes: r.yes | 0, no: r.no | 0, n: r.n | 0, need: r.need | 0, name: String(r.name || ''), timeout: !!r.timeout }); });
+Net.on('clockout:end', r => { ClockOut.vote = null; if (r && typeof r === 'object') ClockOut.result({ ok: !!r.ok, yes: r.yes | 0, no: r.no | 0, n: r.n | 0, need: r.need | 0, name: String(r.name || ''), timeout: !!r.timeout }); });
 Loop.add(dt => { ClockOut.tick(dt); if (ClockOut.cv && G.phase !== 'menu' && (ClockOut._dt = (ClockOut._dt || 0) + dt) > 1) { ClockOut._dt = 0; ClockOut.drawClock(); } });
 /* F1 / F2 vote while a vote is open (works at the desk and on foot) */
 window.addEventListener('keydown', e => { if (ClockOut.vote && (e.code === 'F1' || e.code === 'F2') && !e.repeat) { e.preventDefault(); ClockOut.cast(e.code === 'F1'); } });

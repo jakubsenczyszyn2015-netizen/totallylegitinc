@@ -1,7 +1,7 @@
 /* clock out early — confirmation, team vote card, result stamp (js/clockout.js) */
 #co-confirm,#co-vote,#co-stamp{--co-paper:#f3e3ae;--co-edge:#b89f55;--co-ink:#3a2f14;--co-red:#7a1d14;font-family:var(--font-b,'Karla',sans-serif);color:var(--co-ink)}
 .co-strip{display:flex;justify-content:space-between;padding:.28rem .8rem;background:var(--co-red);color:#fbf2d8;font-size:.7rem;font-weight:800;letter-spacing:.16em;text-transform:uppercase}
-#co-confirm kbd,#co-vote kbd{display:inline-block;margin-right:.45em;padding:0 .35em;border-radius:5px;border:2px solid currentColor;border-bottom-width:3px;font:400 .78em/1.3 'Lilita One',var(--font-d,sans-serif);opacity:.8}
+#co-confirm kbd,#co-vote kbd{display:inline-block;margin-right:.45em;padding:0 .35em;border-radius:5px;border:2px solid currentColor;border-bottom-width:3px;background:rgba(255,255,255,.45);color:inherit;font:400 .78em/1.3 'Lilita One',var(--font-d,sans-serif)}
 
 /* ---------- confirmation ---------- */
 #co-confirm{position:fixed;inset:0;z-index:64;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(10,13,22,.62);animation:co-fade .15s ease-out}
@@ -23,7 +23,8 @@
 
 /* ---------- team vote card ---------- */
 #co-vote{position:fixed;left:50%;top:4.4rem;z-index:66;width:min(27rem,calc(100vw - 2rem));transform:translateX(-50%);background:var(--co-paper);border:3px solid var(--co-ink);border-radius:10px;overflow:hidden;box-shadow:5px 6px 0 rgba(0,0,0,.45);animation:co-drop .3s cubic-bezier(.3,1.5,.5,1)}
-#co-vote.in-os{top:.8rem}
+/* at the desk it pops up like a notification above the taskbar, clear of the Phone window */
+#co-vote.in-os{top:auto;left:auto;right:.8rem;bottom:calc(max(52px,min(100vh,177.78vw) * .089) + .8rem);transform:none;width:min(25rem,calc(100vw - 1.6rem));animation-name:co-rise}
 .co-head{display:flex;align-items:center;gap:.65rem;padding:.6rem .8rem .2rem}
 .co-ic{flex:0 0 2.5rem;height:2.5rem;border-radius:50%;background:#e8590c;border:3px solid var(--co-ink);display:grid;place-items:center;animation:co-tick 1s steps(2) infinite}
 .co-ic svg{width:1.7rem;height:1.7rem}
@@ -55,15 +56,16 @@
 /* ---------- result stamp ---------- */
 #co-stamp{position:fixed;left:50%;top:26%;z-index:67;transform:translate(-50%,-50%);pointer-events:none;text-align:center;opacity:0;visibility:hidden}
 #co-stamp.on{visibility:visible;animation:co-stamp 2.6s ease-out forwards}
-.co-st{display:inline-block;padding:.15em .5em .1em;border:.18em solid currentColor;border-radius:.25em;font:400 clamp(2.4rem,6vw,4rem)/1 var(--font-d,serif);text-transform:uppercase;letter-spacing:.03em;transform:rotate(-7deg);background:rgba(251,247,234,.92);box-shadow:6px 7px 0 rgba(0,0,0,.4)}
+.co-st{display:inline-block;padding:.15em .5em .1em;border:.18em solid currentColor;border-radius:.25em;font:400 clamp(2rem,5vw,3.4rem)/1 var(--font-d,serif);text-transform:uppercase;letter-spacing:.03em;transform:rotate(-7deg);background:rgba(251,247,234,.92);box-shadow:6px 7px 0 rgba(0,0,0,.4)}
 #co-stamp.ok .co-st{color:#1f8a3b}
 #co-stamp.bad .co-st{color:#c92a2a}
-#co-stamp p{margin-top:.9rem;font-weight:800;font-size:1.05rem;color:#fff;text-shadow:0 2px 0 #0f131d,0 0 8px rgba(0,0,0,.8)}
+#co-stamp p{margin-top:2.1rem;font-weight:800;font-size:1.05rem;color:#fff;text-shadow:0 2px 0 #0f131d,0 0 8px rgba(0,0,0,.8)}
 
 @keyframes co-fade{from{opacity:0}}
 @keyframes co-pop{from{transform:scale(.85) rotate(-2deg);opacity:0}}
 @keyframes co-drop{from{transform:translate(-50%,-30px);opacity:0}}
+@keyframes co-rise{from{transform:translateY(30px);opacity:0}}
 @keyframes co-tick{50%{transform:rotate(8deg)}}
 @keyframes co-blink{50%{background:#7a1d14}}
 @keyframes co-stamp{0%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}10%{opacity:1;transform:translate(-50%,-50%) scale(.94)}16%{transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
-@media (max-height:560px){#co-vote{top:.5rem}.co-face{display:none}}
+@media (max-height:560px){#co-vote:not(.in-os){top:.5rem}.co-face{display:none}}
