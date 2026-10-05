@@ -30,7 +30,7 @@ const Call = {
       remote: false, codeGiven: false, formOk: {}, formBad: {}, result: null, paid: 0,
       flag: caller.baiter && Math.random() < [0, 0.6, 1][Game.lvl('detect')] };
     Bus.emit('call:ring', this.cur);
-    this.state = 'ringing'; this.ringLeft = 18; SFX.ring(); this.stopRing(); this.ringIv = setInterval(() => SFX.ring(), 1700);
+    this.state = 'ringing'; this.ringLeft = 18; SFX.ring(); this.stopRing(); this.ringIv = setInterval(() => { if (!G.paused || Net.active) SFX.ring(); }, 1700);
     Phone.rebuildLog(); OS.refresh();
   },
   decline() { if (this.state !== 'ringing') return; this.stopRing(); this.state = 'idle'; this.wait = rand(2, 4.5) * this.dial(); this.cur = null; Phone.rebuildLog(); OS.refresh(); },
