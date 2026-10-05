@@ -379,7 +379,7 @@ const OS = {
     if (!c) { $$('.ringcard', m).forEach(o => { o.classList.add('out'); setTimeout(() => o.remove(), 200); }); return; }
     m.replaceChildren(h('div', { class: 'ringcard' },
       h('div', { class: 'pic' }, h('span', { class: 'pulse' }), h('span', { class: 'pulse p2' }), h('div', { class: 'face', html: portraitSVG(c.caller, 'neutral', false) })),
-      h('div', { class: 'nm' }, c.caller.name),
+      h('div', { class: 'nm' }, c.caller.full || c.caller.name),
       h('div', { class: 'sub' }, 'Incoming Call', h('span', { class: 'dots' }, h('i', {}, '.'), h('i', {}, '.'), h('i', {}, '.'))),
       c.flag ? h('div', { class: 'flag', html: this.glyph('warning') + '<span>Bait Detector: smells like a scambaiter</span>' }) : null,
       h('div', { class: 'btns' },
