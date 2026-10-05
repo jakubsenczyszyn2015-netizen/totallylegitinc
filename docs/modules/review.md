@@ -14,8 +14,10 @@ overlay: `review.js` loads after `game.js` / `ui.js` and
 review up on every client.
 
 ## What happens
-1. Everyone is re-seated round the red table (`P.review` = seat index, middle seats first: `[4,5,6,7,2,3,0,1]`
-   by player order, so the solo player gets a clear view), looking between the projector and The Boss.
+1. Everyone is re-seated round the red table (`P.review` = seat index, front seats first: `[6,7,4,5,2,3,0,1]`
+   by player order, so the solo player has no chair backs in the way) and turned to face the screen with
+   The Boss in view when the field of view allows. While seated the review camera sits up to the avatars'
+   seated eye height and leans back 0.2 m (a `Loop` hook on top of player.js's review camera).
    The room lights dim (scene light intensities scaled down; the review room's fill light moves in front
    of the screen and becomes the projector glow), a vignette fades in, the HUD stats hide
    (`body.rv-on`). Players can look around while seated (drag, or click to capture the mouse; ±85° yaw).
@@ -33,7 +35,8 @@ review up on every client.
    on (`TTS.speak`, a low slow voice); his mouth flaps (`W.boss.talking`) and he points / facepalms /
    nods. Lines: an intro, call-analysis comments, then `res.lines` from `reviewLines` (game.js; the last
    line is said with the verdict).
-4. **Fired:** 12 `FX.fire` patches round the table and walls (burn until the review ends), a red
+4. **Fired:** The Boss turns red (`placeBoss(true, true)`; he stays calm until the verdict), 12 `FX.fire`
+   patches round the table, under the screen and along the walls (burn until the review ends), a red
    `FX.tint`, a flash, `FX.shake`, a boom and a siren for ~7 s, the projector glow turns orange and
    flickers, big blurry CSS flames rise along the bottom of the screen. ~6 s later the
    **termination report** slides in.
