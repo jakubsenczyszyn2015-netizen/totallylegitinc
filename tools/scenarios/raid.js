@@ -1,6 +1,6 @@
 /* Raid scenario: heat gauge (HUD + LegitOS pill), the weapons in BonkMart, a forced police raid (door burst, chase,
    mace, taser, foam darts, sniper scope, coworkers ducking, The Boss hiding), an arrest with the mugshot, dizzy cops
-   running out and the "raid repelled" banner. RAID_ONLY=heat,shop,raid,arrest,end,lineup runs some parts.
+   running out and the "raid repelled" banner. RAID_ONLY=banner,heat,shop,raid,arrest,end,lineup,net runs some parts.
    Waits are in game time (software rendering is slow); screenshots freeze the frame loop. */
 module.exports = async page => {
   const only = (process.env.RAID_ONLY || '').split(',').filter(Boolean), want = k => !only.length || only.includes(k);
@@ -153,6 +153,35 @@ module.exports = async page => {
       await gw(0.5);
       await page.shot('r19-fp-' + id);
     }
+  }
+  if (want('net')) {   // multiplayer through the real handlers: as a client (snapshot, cuffs on a teammate, the result), then as the host (a client's hit)
+    const c0 = await ev(() => {
+      if (Raid.on) Raid.abort(); RAID.tag = 0; const P = window.__tli.P;
+      Net.active = true; Net.isHost = false; Net.myId = 'me'; Net.players.set('me', Net.me());
+      Net.players.set('p2', { name: 'Remote Rita', color: '#ef4444', x: 14.2, y: 0, z: 0.7, ry: -Math.PI / 2, seat: -1, talk: false, personal: 0, ext: {} });
+      syncAvatars(Net.players, Net.myId); __stand(12.2, -0.7, 18, 0); P.third = true;
+      Net.handlers.get('raid:go')({ n: 7, k: 2, s: 4242 }, 'host');
+      window.__snap = x0 => Net.applyShared({ raid: { h: 50, on: 1, n: 7, s: 4242, l: 60, c: [[x0, -0.2, Math.PI / 2, 1, 4], [x0 + 0.5, 1.0, Math.PI / 2, 6, 4]] } });
+      W.camOverride = { pos: [11.4, 1.95, -1.3], look: [15.2, 0.9, 0.5] };
+      return { on: Raid.on, cops: Raid.cops.length };
+    });
+    console.log('client raid from raid:go: ' + JSON.stringify(c0));
+    for (let i = 0; i < 6; i++) { await ev(k => { __snap(19 - k * 0.65); return true; }, i); await gw(0.12); }
+    const w0 = await ev(() => { Net.handlers.get('raid:arrest')({ id: 'p2', c: 1 }, 'host'); return window.__tli.G.wallet; });
+    await gw(0.6);
+    await page.shot('r20-net-teammate-cuffed');
+    const cl = await ev(() => ({ cuffs: Raid.cuffM.has('p2'), copX: +Raid.cops[0].x.toFixed(2) }));
+    await ev(() => { Net.handlers.get('raid:end')({ n: 7, ok: 1, k: 2 }, 'host'); Net.applyShared({ raid: { h: 0, on: 0, n: 7, s: 4242, l: 0, c: [] } }); return true; });
+    await gw(0.3);
+    const cr = await ev(w => ({ on: Raid.on, cops: Raid.cops.length, hazard: window.__tli.G.wallet - w }), w0);
+    console.log('client: ' + JSON.stringify(cl) + ' after end: ' + JSON.stringify(cr));
+    const host = await ev(() => {
+      Net.isHost = true; Raid.lastEnd = -999; Raid.start(2); const c = Raid.cops[0];
+      Net.handlers.get('raid:hit')({ c: 0, d: 4, s: 1, kb: [2, 0], k: 'zap' }, 'p2');
+      const r = { st: c.st, hp: c.hp, shared: JSON.stringify(Raid.shared()).length }; Raid.abort(); return r;
+    });
+    console.log('host got a client hit: ' + JSON.stringify(host));
+    await ev(() => { Net.players.clear(); syncAvatars(Net.players, 'me'); Net.active = false; Net.isHost = false; W.camOverride = null; RAID.tag = 0.8; return true; });
   }
   const st = await ev(() => ({ heat: Raid.heat, on: Raid.on, cops: Raid.cops.length, items: Object.keys(RAID_W).length, shop: Shop.list('goods').filter(i => i.section === 'Weapons & personal safety').length }));
   console.log('raid state: ' + JSON.stringify(st));
