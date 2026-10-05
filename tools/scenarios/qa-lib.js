@@ -10,7 +10,12 @@ module.exports = page => {
       if (!ok) fails.push(name); return !!ok;
     },
     /* screenshot after two fresh frames (software GL under load can lag a second behind the game state) */
-    async shot(name) { await page.eval(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(() => setTimeout(() => r(true), 50))))); return page.shot(name); },
+    async shot(name) {
+      await page.eval(() => new Promise(res => { const raf = window.requestAnimationFrame; window.__raf = raf; raf(() => { window.__cbs = []; window.requestAnimationFrame = cb => { window.__cbs.push(cb); return 0; }; raf(() => setTimeout(() => res(true), 30)); }); }));
+      const f = await page.shot(name);
+      await page.eval(() => { if (window.__raf) { window.requestAnimationFrame = window.__raf; for (const cb of window.__cbs || []) window.__raf(cb); window.__cbs = []; } return true; });
+      return f;
+    },
     log(...a) { console.log('     ' + a.map(x => typeof x === 'string' ? x : JSON.stringify(x)).join(' ')); },
     /* real key events (the game's keydown/keyup listeners), not just the Keys map */
     async press(code, ms = 80, target) {
