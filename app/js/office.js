@@ -449,7 +449,7 @@ function drawLeaderboard(g, w, hh, roster) {
     if (p.me) { g.fillStyle = 'rgba(255,255,255,.07)'; rrect(g, 36, y - 56, w - 72, 84, 12); g.fill(); }
     if (p.empty) { g.textAlign = 'left'; g.fillStyle = 'rgba(255,190,170,.35)'; g.font = '46px ' + FONT.slab; g.fillText('{ ' + ranks[k] + ' }', 52, y); g.font = 'italic 700 30px ' + FONT.menu; g.fillText('Keep pushing.', 300, y - 4); return; }
     g.textAlign = 'left'; g.fillStyle = rc[k] || '#d9a0a0'; g.font = '46px ' + FONT.slab; g.fillText('{ ' + ranks[k] + ' }', 52, y);
-    const col = SHIRTS[hashStr(p.name || '?') % SHIRTS.length]; g.fillStyle = col; g.beginPath(); g.arc(300, y - 15, 28, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '32px ' + FONT.chunky; g.textAlign = 'center'; g.fillText((p.name || '?')[0].toUpperCase(), 300, y - 3);
+    const col = p.color || SHIRTS[hashStr(p.name || '?') % SHIRTS.length]; g.fillStyle = col; g.beginPath(); g.arc(300, y - 15, 28, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '32px ' + FONT.chunky; g.textAlign = 'center'; g.fillText((p.name || '?')[0].toUpperCase(), 300, y - 3);
     g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = '800 38px ' + FONT.menu; g.fillText(p.name || 'Agent', 346, y - 10, 380);
     g.fillStyle = '#ffb3a8'; g.font = 'italic 700 22px ' + FONT.menu; g.fillText(k === 0 && p.personal > 0 ? 'Crushing it.' : 'Keep pushing.', 348, y + 18);
     g.textAlign = 'right'; g.fillStyle = '#8dff8a'; g.font = '50px ' + FONT.chunky; g.fillText(money(p.personal || 0), w - 56, y + 2);

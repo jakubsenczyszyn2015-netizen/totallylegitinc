@@ -38,7 +38,7 @@ function seatForReview(idx) {
 /* where this player spawns: W.spawn.players (office module) by player order, else the classic spot */
 function spawnSpot() {
   const S = W.spawn && W.spawn.players; if (!S || !S.length) return null;
-  let i = 0; if (Net.active) { const ids = [...Net.players.keys()].sort(); i = Math.max(0, ids.indexOf(Net.myId)); }
+  let i = 0; if (Net.active) i = Math.max(0, [...Net.players.keys()].indexOf(Net.myId));   // join order (host first): sorted ids could give a joiner the host's spot
   return S[i % S.length];
 }
 function freeSpot(x, z) {

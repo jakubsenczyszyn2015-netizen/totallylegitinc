@@ -31,8 +31,8 @@ const Game = {
   canControl() { return (G.phase === 'day' || G.phase === 'lobby') && !P.seated && !G.paused && !P.cam && P.review < 0 && !UI.settingsOpen; },
   deskTaken(i) { for (const [id, p] of Net.players) if (id !== Net.myId && p.seat === i) return true; return false; },
   roster() {
-    if (!Net.active) return [{ name: settings.name, personal: G.personal, me: true }];
-    return [...Net.players].map(([id, p]) => ({ name: p.name, personal: id === Net.myId ? G.personal : (p.personal || 0), me: id === Net.myId })).sort((a, b) => b.personal - a.personal);
+    if (!Net.active) return [{ name: settings.name, personal: G.personal, me: true, color: settings.color }];
+    return [...Net.players].map(([id, p]) => ({ name: p.name, personal: id === Net.myId ? G.personal : (p.personal || 0), me: id === Net.myId, color: id === Net.myId ? settings.color : p.color })).sort((a, b) => b.personal - a.personal);
   },
   netState() { return { phase: G.phase, mode: G.mode, day: G.day, quota: G.quota, team: G.team, timeLeft: Math.round(G.timeLeft * 10) / 10, dayLen: G.dayLen, bank: G.bank }; },
   authority() { return !Net.active || Net.isHost; },
