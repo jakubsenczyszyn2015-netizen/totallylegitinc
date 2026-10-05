@@ -98,3 +98,18 @@ body.raid-busted #hotbar,body.raid-busted #keyhint,body.raid-busted #crosshair,b
 #raid-scope i{position:absolute;left:50%;top:50%;width:68vmin;height:68vmin;transform:translate(-50%,-50%);border-radius:50%;box-shadow:inset 0 0 0 5px #0b0e15,inset 0 0 40px rgba(0,0,0,.55);
   background:linear-gradient(#0b0e15,#0b0e15) center/2px 100% no-repeat,linear-gradient(#0b0e15,#0b0e15) center/100% 2px no-repeat}
 #raid-scope i::after{content:'';position:absolute;left:50%;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 6px #ff3b3b}
+
+/* ---------- seated at the computer: an officer is closing in on your desk ---------- */
+#raid-near{position:fixed;left:50%;top:1rem;z-index:9790;display:flex;align-items:center;gap:.8rem;padding:.5rem .6rem .5rem .55rem;transform:translateX(-50%);
+  background:linear-gradient(#1b2547,#101731);border:3px solid var(--ink);border-radius:16px;box-shadow:0 6px 0 rgba(0,0,0,.35);color:#fff;font-family:'Roboto',sans-serif;
+  animation:rnin .35s cubic-bezier(.2,1.5,.5,1) both,rnflash .77s steps(1) .35s infinite}
+#raid-near.hidden{display:none}
+#raid-near .rn-lamp{flex:none;width:2.6rem;height:2.6rem;border-radius:50%;background:#e03131;border:3px solid var(--ink);display:grid;place-items:center;animation:rhsiren .77s steps(1) infinite}
+#raid-near .rn-lamp svg{width:78%;height:78%}
+#raid-near .rn-t b{display:block;font:400 1.3rem/1.05 'Lilita One',var(--font-d);letter-spacing:.05em;color:var(--yellow);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill}
+#raid-near .rn-t small{display:block;font-weight:800;font-size:.8rem;color:#c9d4ff}
+#raid-near button{pointer-events:auto;cursor:pointer;padding:.55rem .9rem;border:3px solid var(--ink);border-radius:11px;background:var(--yellow);color:var(--ink);
+  font:400 1rem/1 'Lilita One',var(--font-d);letter-spacing:.03em;box-shadow:0 4px 0 var(--ink)}
+#raid-near button:hover{filter:brightness(1.08)} #raid-near button:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+@keyframes rnin{0%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(.8)}100%{opacity:1;transform:translateX(-50%)}}
+@keyframes rnflash{0%{border-color:#ff2a3c;box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 24px rgba(255,40,60,.65)}50%{border-color:#2f6bff;box-shadow:0 6px 0 rgba(0,0,0,.35),0 0 24px rgba(47,107,255,.65)}}

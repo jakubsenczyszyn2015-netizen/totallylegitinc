@@ -220,6 +220,7 @@ const RaidSnd = {
   squeak(pos) { const v = FXSnd.vol(pos); FXSnd.tone(950, 1600, 0.08, 'triangle', 0.13 * v); FXSnd.tone(1600, 1150, 0.09, 'triangle', 0.1 * v, 0.07); },
   boing(pos) { const v = FXSnd.vol(pos); FXSnd.tone(170, 560, 0.1, 'sine', 0.32 * v); FXSnd.tone(560, 150, 0.4, 'sine', 0.26 * v, 0.09); this.squeak(pos); },
   fanfare() { [523, 659, 784, 1047, 1319].forEach((fq, i) => FXSnd.tone(fq, fq, i === 4 ? 0.5 : 0.16, 'triangle', 0.12, i * 0.11)); },
+  beep() { for (let i = 0; i < 2; i++) FXSnd.tone(1320, 1320, 0.09, 'square', 0.05, i * 0.16); },
   alarm() { for (let i = 0; i < 3; i++) { FXSnd.tone(880, 880, 0.16, 'square', 0.06, i * 0.36); FXSnd.tone(660, 660, 0.16, 'square', 0.06, i * 0.36 + 0.18); } }
 };
 
@@ -393,7 +394,8 @@ const COP_LINES = {
   dizzy: ['Seeing... stars...', 'Officer down! Ish!', 'Who turned off gravity?', 'Five more minutes...'],
   out: ['Retreat!', 'Calling for backup! From home!', 'Above my pay grade!', 'I quit!', 'Not worth it!'],
   leave: ['Paperwork can wait.', 'Shift\'s over, folks.', 'We\'ll be back.', 'Keep the change.'],
-  block: ['Hey! No fair!', 'A shield?!', 'Customer support?!']
+  block: ['Hey! No fair!', 'A shield?!', 'Customer support?!'],
+  spook: ['Sorry, sir! Didn\'t see you there!', 'Evening, sir! Big fan!', 'Is that... the owner?!', 'Sir! Yes, sir!']
 };
 const NPC_DUCK = ['Not again!', 'I just work here!', 'I\'m only an intern!', 'Hide the headsets!', 'I saw nothing!', 'Is this a drill?', 'Tell my plant I love it.'];
 const BOSS_HIDE = ['I have never met these people.', 'This is a legitimate business!', 'Tell them I\'m on vacation.', 'I am a lamp. Lamps can\'t be arrested.'];
@@ -519,7 +521,12 @@ const Raid = {
   simCop(c, dt, T) {
     c.stT -= dt; c.sayT -= dt;
     let tx = null, tz = null, sp = 0, key = null;
-    if (c.st === 0) { if (this.t >= c.wait) { tx = 18.2; tz = c.z * 0.4; sp = RAID.speed * 0.9; key = 'door'; if (c.x < 19.0) this.setSt(c, 1); } }
+    if (c.st === 0) {
+      if (this.t >= c.wait && !c.spook && this.balloon()) {   // BonkMart's inflatable boss in the lobby: every officer salutes it first
+        const b = this.balloon().position; c.spook = 1; c.wait = this.t + 1.15; c.face = { x: b.x, z: b.z }; const m = { c: c.i }; Net.emit('raid:spook', m); this.onSpook(m);
+      }
+      if (this.t >= c.wait) { tx = 18.2; tz = c.z * 0.4; sp = RAID.speed * 0.9; key = 'door'; if (c.x < 19.0) this.setSt(c, 1); }
+    }
     else if (c.st === 1) {
       if ((c.retT -= dt) <= 0) { c.retT = 0.4; c.tgt = this.pick(c, T); }
       const g = c.tgt && T.includes(c.tgt) ? c.tgt : null;
@@ -550,7 +557,7 @@ const Raid = {
     if (stuck || !blocked(c.x, c.z + mz)) c.z += mz; else { c.vz *= 0.3; c.kz *= -0.3; }
     c.sp = Math.hypot(c.vx, c.vz);
     if (c.st !== 3) {
-      let ry = c.ry; if (c.sp > 0.35) ry = Math.atan2(-c.vx, -c.vz); else if (c.st === 6 && c.face) ry = Math.atan2(-(c.face.x - c.x), -(c.face.z - c.z));
+      let ry = c.ry; if (c.sp > 0.35) ry = Math.atan2(-c.vx, -c.vz); else if ((c.st === 6 || c.st === 0) && c.face) ry = Math.atan2(-(c.face.x - c.x), -(c.face.z - c.z));
       let dr = ry - c.ry; dr = Math.atan2(Math.sin(dr), Math.cos(dr)); c.ry += dr * Math.min(1, dt * 10);
     }
   },
@@ -598,6 +605,13 @@ const Raid = {
     poseAvatar(c.av, false, t, c.st === 3 ? 0 : c.sp); avTagScale(c.av, W.camera);
     const tg = c.av.tag; if (tg.visible) tg.material.opacity *= clamp((W.camera.position.distanceTo(g.position) - 2.5) / 2.5, 0, 1);
     c.av.head.getWorldPosition(c.head);
+  },
+  /* the inflatable boss (BonkMart chaos goods) standing in the lobby, or null */
+  balloon() { return typeof Chaos !== 'undefined' && Chaos.st && Chaos.st.boss && Chaos.bossObj && Chaos.bossObj.visible !== false ? Chaos.bossObj : null; },
+  onSpook(m) {
+    const c = this.cops[m.c | 0]; if (!c) return; c.spookT = W.t + 1.3;
+    c.av.play('wave', { dur: 1.1 }); c.av.setMood('surprised', 1.4);
+    if (c.i === 0) FX.bubble(c.av, pick(COP_LINES.spook), 2.2);
   },
   onBlock(m) {
     const c = this.cops[m.c | 0]; if (c) { c.av.head.getWorldPosition(_rV); FX.spawn('stars', [_rV.x, _rV.y + 0.3, _rV.z], { n: 6 }); FX.spawn('word', [_rV.x, _rV.y + 0.75, _rV.z], { w: 'BLOCKED!', c: '#7fd4ff' }); FX.bubble(c.av, pick(COP_LINES.block), 1.8); RaidSnd.boing(_rV); }
@@ -1058,7 +1072,14 @@ const RaidUI = {
     if (st && st.parentNode) st.parentNode.insertBefore(E.pill, st);
     E.glow = h('div', { id: 'raid-glow' }); E.alert = h('div', { id: 'raid-alert' }); E.bust = h('div', { id: 'raid-bust', class: 'hidden' });
     E.scope = h('div', { id: 'raid-scope' }, h('i'));
-    document.body.append(E.glow, E.scope, E.alert, E.bust);
+    /* seated at the computer the 3D office is not drawn: warn when an officer closes in on your desk */
+    E.near = h('div', { id: 'raid-near', class: 'hidden' }, h('i', { class: 'rn-lamp', html: COP_ICON }),
+      h('div', { class: 'rn-t' }, h('b', {}, 'OFFICER INCOMING!'), E.nearTxt = h('small')),
+      h('button', { onclick: () => {
+        if (!P.seated) return; standUp(); const cv = W.renderer && W.renderer.domElement;
+        try { const r = cv && cv.requestPointerLock && cv.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {}
+      } }, 'Stand up & run'));
+    document.body.append(E.glow, E.scope, E.alert, E.bust, E.near);
   },
   set(k, el, v, prop) { if (this._k[k] === v) return; this._k[k] = v; if (prop === 'html') el.innerHTML = v; else if (prop) el.style[prop] = v; else el.textContent = v; },
   word(h) { return h >= 95 ? 'SIRENS!' : h >= RAID.risk ? 'Raid risk!' : h >= 50 ? 'Hot' : h >= 25 ? 'Warm' : 'Chill'; },
@@ -1082,6 +1103,10 @@ const RaidUI = {
       this.set('t', E.title, 'HEAT'); this.set('w', E.word, this.word(ht) + ' ' + pct + '%'); this.set('f', E.fill, pct + '%', 'width'); this.set('c', E.cops, '', 'html');
       this.set('pt', E.ptxt, 'HEAT'); this.set('pv', E.pval, pct + '%'); this.set('pf', E.pfill, pct + '%', 'width');
     }
+    let nd = 1e9; const dk = on && P.seated && !Raid.bust && W.desks[P.seat];
+    if (dk) for (const c of Raid.cops) if (c.st === 1 || c.st === 6) nd = Math.min(nd, Math.hypot(c.x - dk.stand.x, c.z - dk.stand.z));
+    const nv = nd < 9; if (nv !== this._nv) { this._nv = nv; E.near.classList.toggle('hidden', !nv); if (nv) RaidSnd.beep(); }
+    if (nv) this.set('nd', E.nearTxt, nd < 1.8 ? 'Right behind your chair!' : Math.round(nd) + ' m from your desk and closing', '');
     if (this._k.col2 !== col) { this._k.col2 = col; E.hud.style.setProperty('--heat', col); E.pill.style.setProperty('--heat', col); }
   },
   /* big banner: 'raid' | 'win' | 'lose' */
@@ -1128,6 +1153,7 @@ Net.on('raid:hit', d => {
 });
 Net.on('raid:arrest', d => { if (d && d.id != null) Raid.onArrest({ id: String(d.id), c: d.c | 0 }); });
 Net.on('raid:block', d => { if (d && d.id != null) Raid.onBlock({ id: String(d.id), c: d.c | 0 }); });
+Net.on('raid:spook', d => { if (d) Raid.onSpook({ c: d.c | 0 }); });
 Net.on('raid:shot', d => {
   if (!d || !Shots.W[d.k] || !Array.isArray(d.o) || d.o.length !== 3 || !Array.isArray(d.v)) return;
   const vs = d.v.slice(0, 8).filter(v => Array.isArray(v) && v.length === 3).map(v => v.map(x => clamp(+x || 0, -60, 60)));

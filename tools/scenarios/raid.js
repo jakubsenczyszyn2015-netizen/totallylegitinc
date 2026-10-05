@@ -1,6 +1,6 @@
 /* Raid scenario: heat gauge (HUD + LegitOS pill), the weapons in BonkMart, a forced police raid (door burst, chase,
    mace, taser, foam darts, sniper scope, coworkers ducking, The Boss hiding), an arrest with the mugshot, dizzy cops
-   running out and the "raid repelled" banner. RAID_ONLY=banner,heat,shop,raid,arrest,end,lineup,net runs some parts.
+   running out and the "raid repelled" banner. RAID_ONLY=banner,heat,shop,raid,arrest,end,lineup,desk,spook,net runs some parts.
    Waits are in game time (software rendering is slow); screenshots freeze the frame loop. */
 module.exports = async page => {
   const only = (process.env.RAID_ONLY || '').split(',').filter(Boolean), want = k => !only.length || only.includes(k);
@@ -81,19 +81,20 @@ module.exports = async page => {
     await ev(() => { const n = __near(); __face(n.c.x, n.c.z, 1.25); Props.startUse(); return n.d; });
     await gw(0.3);
     await page.shot('r07-mace');
-    // step back and tase the next one (first person)
-    await ev(() => { P.third = false; __stand(12.6, 0.5, 18, 0); __sel('taser'); return true; });
-    await gw(0.3);
-    await until('window.__near() && window.__near().d < 4', 5);
-    await ev(() => { const n = __near(); __face(n.c.x, n.c.z, 1.1); Props.startUse(); return true; });
-    await gw(0.06);
+    // back off a few metres and tase the nearest one (first person)
+    await ev(() => { P.third = false; __sel('taser'); const n = __near(); __stand(n.c.x - 3.4, n.c.z + 0.3, n.c.x, n.c.z); const m = __near(); __face(m.c.x, m.c.z, 1.15); RaidW.cd = {}; Props.startUse(); return m.d; });
+    await gw(0.05);
     await page.shot('r08-taser');
-    await gw(0.6);
-    await ev(() => { __sel('foam'); const n = __near(); if (n) __face(n.c.x, n.c.z, 1.0); Props.startUse(); return true; });
-    await gw(0.12);
+    await gw(0.5);
+    // foam darts in flight towards the next one
+    await ev(() => { __sel('foam'); const n = __near(); __stand(n.c.x - 4.6, n.c.z - 0.2, n.c.x, n.c.z); const m = __near(); __face(m.c.x, m.c.z, 1.15); RaidW.cd = {}; Props.startUse(); return m.d; });
+    await gw(0.09);
     await page.shot('r09-foam');
-    // coworkers under their desks, The Boss hiding behind his
-    await ev(() => { P.third = true; const n = W.npcs[0], d = W.desks[n.desk], dx = d.stand.x - d.x, dz = d.stand.z - d.z, l = Math.hypot(dx, dz) || 1; W.camOverride = { pos: [d.stand.x + dx / l * 0.5, 1.8, d.stand.z + dz / l * 0.5 + 0.35], look: [d.x, 0.4, d.z] }; return true; });
+    // coworkers under their desks (side view over the cubicle wall), The Boss hiding behind his
+    await ev(() => {
+      P.third = true; const n = W.npcs[0], d = W.desks[n.desk], g = n.group.position, fx = d.x - d.stand.x, fz = d.z - d.stand.z, l = Math.hypot(fx, fz) || 1, ux = fx / l, uz = fz / l;
+      W.camOverride = { pos: [d.stand.x - ux * 0.9 - uz * 0.75, 2.05, d.stand.z - uz * 0.9 + ux * 0.75], look: [d.x - ux * 0.1, 0.45, d.z - uz * 0.1] }; return true;
+    });
     await gw(0.4);
     await page.shot('r10-coworkers-duck');
     await ev(() => { const b = W.boss.group.position; W.camOverride = { pos: [16.9, 1.7, 2.4], look: [b.x, 0.7, b.z] }; return true; });
@@ -154,6 +155,27 @@ module.exports = async page => {
       await gw(0.5);
       await page.shot('r19-fp-' + id);
     }
+  }
+  if (want('desk')) {   // seated at the computer: the "officer incoming" warning, then stand up from it
+    await ev(() => { if (Raid.on) Raid.abort(); Raid.lastEnd = -999; RAID.tag = 0; window.__tli.P.third = false; return true; });
+    await page.sit();
+    await ev(() => { __noCalls(); return Raid.start(2); });
+    const warned = await until('RaidUI._nv', 25);
+    await gw(0.5);
+    await page.shot('r21-desk-warning');
+    const stood = await ev(() => { document.querySelector('#raid-near button').click(); return !window.__tli.P.seated; });
+    console.log('desk warning: ' + warned + ', stood up from it: ' + stood);
+    await ev(() => { Raid.abort(); RAID.tag = 0.8; return true; });
+  }
+  if (want('spook')) {   // BonkMart's inflatable boss in the lobby: officers salute it before storming in
+    await ev(() => { if (Raid.on) Raid.abort(); Raid.lastEnd = -999; RAID.tag = 0; Chaos.boss(true, { quiet: true }); Chaos.bossT = 9; __stand(17.2, -1.2, 22, 0); P.third = false; return true; });
+    await gw(0.5);
+    await ev(() => { W.camOverride = { pos: [19.2, 1.75, -1.9], look: [22.6, 1.25, 0.5] }; return Raid.start(3); });
+    await until('Raid.t > 2.0', 6);
+    await page.shot('r22-spook');
+    const sp = await ev(() => Raid.cops.map(c => !!c.spook));
+    console.log('spooked: ' + JSON.stringify(sp));
+    await ev(() => { Raid.abort(); Chaos.boss(false); W.camOverride = null; RAID.tag = 0.8; return true; });
   }
   if (want('net')) {   // multiplayer through the real handlers: as a client (snapshot, cuffs on a teammate, the result), then as the host (a client's hit)
     const c0 = await ev(() => {
