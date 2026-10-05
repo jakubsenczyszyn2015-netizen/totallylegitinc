@@ -11,7 +11,7 @@ const Review = (() => {
   const SCR = { x: 19.94, y: 1.8, z0: -7.4, z1: -3.4 };  // the projector screen (office.md)
   const BOSS_VOICE = { seed: 11, pitch: 0.55, rate: 0.92 };
   const PAL = ['#3b82f6', '#e8590c', '#2f9e44', '#c2255c', '#7048e8', '#f08c00', '#0c8599', '#5c940d'];
-  const FIRE_SPOTS = [[14.6, 0.8, -5.3, 0.75], [16.3, 0.8, -5.65, 0.7], [17.45, 0.8, -5.0, 0.6], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
+  const FIRE_SPOTS = [[14.6, 0.8, -5.3, 0.75], [19.4, 0, -5.95, 0.85], [19.35, 0, -4.6, 0.75], [19.25, 0, -2.85, 1.3], [19.3, 0, -8.35, 1.25],
     [18.2, 0, -3.3, 1.0], [17.4, 0, -8.5, 1.05], [12.5, 0, -8.4, 1.1], [11.0, 0, -3.0, 1.2], [15.9, 0, -2.9, 0.95], [19.05, 0, -6.55, 0.8], [18.7, 0, -4.4, 0.75]];
   const LINES = {
     intro: ['Sit. Down. This will not take long.', 'Phones down. Eyes on the screen.', 'Welcome to your daily performance review. Try to look ashamed.', 'I made slides. Nobody leaves until I have shown you the slides.'],
@@ -21,7 +21,7 @@ const Review = (() => {
     filler: [['Gary from Accounts', 'Is the printer supposed to smell like that?'], ['Desk 31', 'Hello? Hello? I think my headset is a banana.'], ['The intern', 'Do we get paid in money or in exposure?']]
   };
   const R = { on: false, res: null, t: 0, ev: [], slide: null, drawT: 0, dimK: 1, dimDir: 0, lights: null, proj: null, fires: [], fired: false,
-    alarmT: null, fireT: 0, subT: 0, sheet: null, yaw0: 0, el: {}, tv: 0, sheetAt: 0, n: 0 };
+    alarmT: null, fireT: 0, subT: 0, sheet: null, yaw0: 0, el: {}, tv: 0, sheetAt: 0, marks: null };
   const pool = [], mine = [];   // quote candidates: host pool {id, name, text, s}; a client's own best lines
 
   /* ---------- quotes: lines players said on calls ---------- */
@@ -317,16 +317,16 @@ const Review = (() => {
     requestAnimationFrame(() => R.el.dim && R.el.dim.classList.add('on'));
     document.body.classList.add('rv-on');
   }
-  function at(t, fn, must) { R.ev.push({ t, fn, must: !!must }); }
+  function at(t, fn) { R.ev.push({ t, fn }); }
   /* run fn after dt seconds of review time (keeps the queue sorted; pauses with the game) */
   function later(dt, fn) { const res = R.res, e = { t: R.t + dt, fn: () => { if (R.on && R.res === res) fn(); } }; let i = R.ev.length; while (i > 0 && R.ev[i - 1].t > e.t) i--; R.ev.splice(i, 0, e); }
   function start(res) {
     stop(true);
-    R.on = true; R.res = res; R.t = 0; R.ev = []; R.slide = null; R.fired = false; R.fires = []; R.alarmT = null; R.sheet = null; R.n++;
+    R.on = true; R.res = res; R.t = 0; R.ev = []; R.slide = null; R.fired = false; R.fires = []; R.alarmT = null; R.sheet = null;
     R.recs = recsOf(res);
     const real = (res.quotes || []).slice(0, 3);
     R.quotes = real.concat(shuffle(LINES.filler.slice()).slice(0, 3 - real.length).map(f => ({ name: f[0], text: f[1], filler: true })));
-    // seat: the middle of the table, looking between the screen and The Boss
+    // seat: front seats first, facing the screen (and The Boss)
     const idx = P.review >= 0 ? P.review : 0;
     seatForReview(SEAT_PREF[idx % SEAT_PREF.length]);
     aim();
@@ -335,21 +335,21 @@ const Review = (() => {
     // timeline
     let t = 0.2;
     R.marks = { title: t };
-    at(t, () => showSlide('title', 0.9), true); const intro = pick(LINES.intro); at(t + 0.6, () => say(intro));
+    at(t, () => showSlide('title', 0.9)); const intro = pick(LINES.intro); at(t + 0.6, () => say(intro));
     t += Math.max(4.6, sayDur(intro) + 1.1);
-    R.marks.calls = t; at(t, () => showSlide('calls', 0.5 + R.quotes.length * 1.15 + 0.5), true);
+    R.marks.calls = t; at(t, () => showSlide('calls', 0.5 + R.quotes.length * 1.15 + 0.5));
     const c1 = real.length ? pick(LINES.calls) : LINES.silent; at(t + 0.4, () => say(c1));
     at(t + 1.2, () => W.boss && W.boss.play('point'));
     const c2 = pick(LINES.react); if (real.length) at(t + 0.6 + sayDur(c1) + 0.3, () => say(c2));
     t += Math.max(8.5, 0.9 + sayDur(c1) + (real.length ? sayDur(c2) + 0.5 : 0));
-    R.marks.chart = t; at(t, () => showSlide('chart', 2.5), true);
+    R.marks.chart = t; at(t, () => showSlide('chart', 2.5));
     const lines = (res.lines || []).slice(0, -1); let lt = t + 0.4;
     for (const l of lines) { at(lt, () => say(l)); lt += sayDur(l) + 0.25; }
     t = Math.max(t + 6.5, lt + 0.3);
     R.tv = R.marks.verdict = t;
-    at(t, () => verdict(), true);
+    at(t, () => verdict());
     R.sheetAt = R.marks.sheet = t + (res.pass ? 5.2 : 6.2);
-    at(R.sheetAt, () => showSheet(), true);
+    at(R.sheetAt, () => showSheet());
     R.ev.sort((x, y) => x.t - y.t);
   }
   /* face the screen, with The Boss in view too when the field of view allows it */
@@ -403,6 +403,7 @@ const Review = (() => {
 
   /* ---------- report sheets (ref: a ranked table on cream paper) ---------- */
   const fmtDays = d => d + (d === 1 ? ' DAY' : ' DAYS');
+  const fmtDur = s => s >= 3600 ? Math.floor(s / 3600) + ':' + fmtTime(s % 3600).padStart(5, '0') : fmtTime(s);
   function sheetRows(kind) {
     const recs = R.recs, lead = recs[0] ? recs[0].total : 0, me = settings.name;
     return recs.map((r, i) => {
@@ -412,7 +413,7 @@ const Review = (() => {
       const cell = (cap, v, cls) => h('div', { class: 'cell' }, h('div', { class: 'cap' }, cap), h('div', { class: 'v ' + (cls || '') }, v));
       const cells = kind === 'eval'
         ? [cell('Today', money(r.today), 'money'), cell('Total earned', money(r.total), 'money'), cell('Avg / day', money(r.total / Math.max(1, r.days)))]
-        : [cell('Total earned', money(r.total), 'money'), cell('Time / days', fmtTime(r.secs) + ' / ' + r.days + 'D'), cell('Avg / day', money(r.total / Math.max(1, r.days)))];
+        : [cell('Total earned', money(r.total), 'money'), cell('Time / days', fmtDur(r.secs) + ' / ' + r.days + 'D'), cell('Avg / day', money(r.total / Math.max(1, r.days)))];
       const bar = h('div', { class: 'bar' }, h('b')); requestAnimationFrame(() => setTimeout(() => { bar.firstChild.style.width = (pct * 100).toFixed(1) + '%'; }, 250 + i * 120));
       return h('div', { class: 'row' + (i === 0 ? ' top' : ''), style: { animationDelay: (0.35 + i * 0.1) + 's' } },
         h('div', { class: 'rank' }, '#' + (i + 1)),
