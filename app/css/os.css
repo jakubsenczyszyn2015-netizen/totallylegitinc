@@ -86,6 +86,9 @@
 #tb-power .tile svg{width:62%;height:62%}
 #tb-power.active{background:rgba(255,255,255,.13)}
 #tb-run{display:flex;overflow:hidden;flex:1;min-width:0}
+/* many windows open: the buttons shrink instead of running off the taskbar */
+#tb-run .tbtn{flex:0 1 auto;min-width:calc(var(--tb) * .42)}
+#tb-run .tbtn .tile{width:min(calc(var(--tb) * .56),calc(100% - 4px));height:auto;aspect-ratio:1}
 #tb-tray{display:flex;align-items:stretch;flex:none}
 #tb-wallet{display:flex;align-items:center;gap:.45em;align-self:center;margin-right:calc(var(--u) * 1.6);padding:.32em .7em .32em .45em;border-radius:99px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);
   font:900 max(11px,calc(var(--u) * 1.6))/1 'Roboto',sans-serif;color:#9fe0ff;white-space:nowrap}
