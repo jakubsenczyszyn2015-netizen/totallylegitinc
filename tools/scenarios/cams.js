@@ -116,6 +116,12 @@ module.exports = async page => {
     await gw(0.6);
     console.log('held photo icon: ' + await ev(() => { const sl = document.querySelector('.hb-slot.carry'); return !!(sl && sl.querySelector('svg')); }));
     await page.shot('c26-photo-held');
+    // third person: the photo in your avatar's hand shows its picture too (the same path remote players use)
+    await ev(() => { window.__tli.P.third = true; return true; }); await gw(0.4);
+    const tp = await ev(i => { const a = Props.held.get('me'), m = a && a.obj && a.obj.children[0] && a.obj.children[0].children[0]; return !!(m && m.material[2] && m.material[2].map === Photos.get(i).tex); }, id);
+    console.log('third-person photo dressed: ' + tp); if (!tp) throw new Error('held photo shows no picture');
+    await page.shot('c27-photo-held-third');
+    await ev(() => { window.__tli.P.third = false; return true; });
   }
   if (want('photo')) {   // a photo from a fake remote player through the real Net handlers
     const r = await ev(() => {

@@ -2,7 +2,9 @@
 
 Extra cameras rendered into 2D canvases (the webcam, the security cameras, instant photos), the **Camera**
 app, the **CCTV** app and the **Bonk SnapCam** instant camera (`ItemDefs.polaroid`) with its photo props.
-Everything is generated in code. Scenario: `tools/scenarios/cams.js` (`CAMS_ONLY=webcam,fx,cctv,photo`).
+Everything is generated in code. Scenario: `tools/scenarios/cams.js` (`CAMS_ONLY=webcam,fx,cctv,photo` runs parts; it asserts
+the SnapCam fired, the photo can be picked up, the held photo shows its picture and a photo from a fake remote player
+arrives through the real `cam:photo` / `prop:throw` handlers).
 
 Load order: `apps/camera.js` and `apps/cctv.js` load before `cams.js`, so they only touch `Cams` lazily.
 
@@ -44,9 +46,10 @@ are seated and said a line on the call in the last few seconds (length of the li
 
 ## Camera app (`OS.apps.camera`, free, pinned to the taskbar)
 Live 480x270 view from the little webcam on top of your monitor looking back at you (`CamApp`): your avatar
-typing / leaning back at the desk, the keyboard in front, the cubicle and aisle behind you, teammates walking past
-or leaning in. The virtual lens sits just behind the monitor and its near plane (0.2 m) clips the monitor away, which
-gives a webcam-like wide framing. `▲ Show` opens a strip of effects (saved in `settings.camFx`):
+typing / leaning back at the desk (head in the middle of the frame, keyboard at the bottom), the cubicle and aisle
+behind you, teammates walking past or leaning in beside your head. The virtual lens sits a little behind and above
+the real webcam (desk-local `[-0.012, 1.63, -0.44]`, looking down at `[0, 1.12, 0.8]`, fov 70) and its near plane
+(0.32 m) clips the monitor and the partition away, which gives the slightly high, wide webcam framing. `▲ Show` opens a strip of effects (saved in `settings.camFx`):
 
 | id | effect |
 |---|---|
@@ -85,14 +88,19 @@ For the raid module: push a label provider so officers get red brackets and the 
 instant-film grade, vignette, orange date stamp, a handwritten caption that names who is in the shot:
 "Dana, hard at work", "The Boss (burn after viewing)", or the room), white screen flash (`FX.flash`), shutter
 "ka-chick" + flash whine + ejection motor, then the photo is launched out of the camera front as a physics prop.
+Onlookers (and you in third person) see a bright glint at the camera.
 `throwable: false` (F does nothing with the camera). The just-taken photo slides in at the bottom right of the HUD
 ("Developing...", shots left). Photos develop over ~5 s (fade up from murky brown) on everyone's screen.
 
 ### Photo props (`PropTypes.photo`)
-A thin card (0.14 x 0.17 m) that lies flat; `Props.step` is wrapped so photos in the air get strong drag, reduced
-gravity, a side-to-side flutter and rocking spin (fixed-step, deterministic on every client). They land on desks
+A thin card (0.16 x 0.195 m) that lies flat; `Props.step` is wrapped so photos in the air get strong drag, reduced
+gravity and a side-to-side drift, and their face is steered towards a tilted "up" that swings with the drift, so they
+rock down like a falling leaf and land picture-up (fixed-step, deterministic on every client). They land on desks
 and floors, can be picked up (E, "Pick up the photo (by Dana)"), carried, thrown (F) and dropped (G) like any prop
-(the prop id is the photo id). While you carry a photo it is shown big at the bottom right of the HUD.
+(the prop id is the photo id). While you carry a photo it is shown big at the bottom right of the HUD, the hotbar's
+carry slot shows a polaroid icon (`PropIcons.photo`), and the photo in your avatar's hand (third person, and what
+other players see) shows the real picture: `HeldSync.attach` is wrapped and every player publishes the id of the
+photo they carry with `Net.addMe('photo')` (`Net.players.get(id).ext.photo`, `0` = none).
 
 ```js
 Photos.get(id)            // {id, card (canvas), cv (displayed canvas), tex, by, cap, dev (0..1 developed), url}
@@ -108,6 +116,9 @@ SnapCam.use()             // take a picture as the local player (the item's use)
 | `cam:photoReq` | `{id}` (to the host) | a client saw a photo prop it has no picture for (late join); the host answers `cam:photo` to that player |
 The host keeps the last 32 photos' dataURLs for late joiners. Photo textures are kept while a prop uses them
 (LRU of 32 otherwise) and cleared on `game:begin` / `quit`.
+
+### Per-player data
+`Net.addMe('photo')` — the id of the photo you are carrying (or `0`), so others can dress the card in your hand.
 
 ## Bus events
 None new. Listens to `call:line` (mouth flaps), `world:built`, `game:begin`, `quit`, and `raid:start`

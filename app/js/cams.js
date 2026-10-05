@@ -238,6 +238,22 @@ const PhotoHud = {
 };
 Loop.add(() => PhotoHud.update());
 
+/* ---------- a photo in someone's hand shows its picture (yourself in third person, remote players) ---------- */
+Net.addMe('photo', () => (Props.carry && Props.carry.type === 'photo' ? Props.carry.id : 0));
+if (typeof HeldSync !== 'undefined') {
+  const _attach = HeldSync.attach;
+  HeldSync.attach = function (key, av, id) {
+    const a = _attach.apply(this, arguments);
+    if (!a || !a.obj || id !== 'prop:photo') return a;
+    const pl = key !== 'me' && Net.players.get(key), pid = key === 'me' ? Props.carry && Props.carry.id : pl && pl.ext && pl.ext.photo;
+    if (!pid || typeof pid !== 'string' || (a.photoId === pid && a.photoObj === a.obj)) return a;
+    let p = Photos.get(pid);
+    if (!p) { p = Photos.add(pid, null, {}); if (Net.active && !Net.isHost && !Photos.asked.has(pid)) { Photos.asked.add(pid); Net.emit('cam:photoReq', { id: pid }, { host: true }); } }
+    const card = a.obj.children[0] && a.obj.children[0].children[0]; if (card) card.material = PhotoArt.mats(p);
+    a.photoId = pid; a.photoObj = a.obj; return a;
+  };
+}
+
 /* =====================================================================
    BONK SNAPCAM — the instant camera item (ItemDefs.polaroid)
    ===================================================================== */
