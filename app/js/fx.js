@@ -454,7 +454,7 @@ const FX = (() => {
   function Fire(pos, scale, secs, o) {
     o = o || {};
     const e = { x: pos.x, y: pos.y, z: pos.z, sc: scale || 1, t: 0, dur: secs == null ? 10 : secs, acc: [0, 0, 0, 0, 0], snd: 0, smoke: o.smoke !== false, dead: false, kind: 'fire' };
-    e.stop = () => { e.dur = Math.min(e.dur, e.t + 0.01); };
+    e.stop = () => { e.dur = e.dur <= 0 ? e.t + 0.01 : Math.min(e.dur, e.t + 0.01); };
     emitters.push(e); return e;
   }
   function stepFire(e, dt) {
