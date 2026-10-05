@@ -32,22 +32,24 @@ module.exports = async page => {
   }
   await page.startSolo('week');
   if (want('hud')) {
-    await ev(() => { const T = window.__tli; T.UI.dayCard('Monday', 'Team quota $400'); return true; });
+    // the harness renders a frame every few hundred ms under load: skip the fade-ins and keep the card up for the shot
+    await ev(() => { const T = window.__tli; document.head.append(Object.assign(document.createElement('style'), { textContent: '#daycard,#daycard *,.toast{transition:none!important;animation:none!important}' }));
+      document.getElementById('daycard').classList.remove('hidden'); T.UI.dayCard('Monday', 'Team quota $400'); clearTimeout(T.UI._dc); return true; });
     await page.wait(700);
     await shot('ui-11-daycard');
-    await page.wait(2600);
+    await ev(() => { const T = window.__tli; document.getElementById('daycard').classList.remove('on'); T.UI.hintUntil = now() + 60; return true; });
     // stand in front of a free desk so the interaction prompt shows
     await ev(() => { const T = window.__tli, d = T.W.desks.find(x => !x.npc); const P = T.P; P.pos.x = d.stand.x; P.pos.z = d.stand.z; const dx = d.seat.x - d.stand.x, dz = d.seat.z - d.stand.z; P.yaw = Math.atan2(-dx, -dz); P.pitch = -0.35; T.G.personal = 150; T.G.team = 150; return true; });
     await page.wait(900);
     const st = await ev(() => ({ prompt: !document.getElementById('hud-prompt').classList.contains('hidden'), hint: document.getElementById('hud-hint').className, keyhint: getComputedStyle(document.getElementById('keyhint') || document.body).display }));
     await shot('ui-12-hud-walk');
     check('prompt + full controls panel, props keyhint folded in', st.prompt && !/mini|hidden/.test(st.hint) && st.keyhint === 'none', st);
-    await ev(() => { const T = window.__tli; T.UI.hintUntil = 0; T.G.timeLeft = 42; setTimeout(() => T.UI.hud(), 50); toast('Motivational posters: +$10 synergy bonus.', 'good'); toast('Agent Kim closed a scam: +$250', 'good'); toast('You got baited: -$120', 'bad'); toast('Room code copied.'); T.Call.state = 'ringing'; return true; });
+    await ev(() => { const T = window.__tli; T.UI.hintUntil = 0; T.G.timeLeft = 42; setTimeout(() => T.UI.hud(), 50); toast('Motivational posters: +$10 synergy bonus.', 'good'); toast('Agent Kim closed a scam: +$250', 'good'); toast('You got baited: -$120', 'bad'); toast('Room code copied.'); T.Call.ring(false); return true; });
     await page.wait(700);
     const mini = await ev(() => document.getElementById('hud-hint').className);
     await shot('ui-13-hud-mini-toasts');
     check('controls panel collapses to the H tab', /mini/.test(mini), { mini });
-    await ev(() => { window.__tli.Call.state = 'idle'; return true; });
+    await ev(() => { window.__tli.Call.decline(); return true; });
     // H opens it again
     await ev(() => { window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyH' })); return true; });
     const reopened = await ev(() => document.getElementById('hud-hint').className);
