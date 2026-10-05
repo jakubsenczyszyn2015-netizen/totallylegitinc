@@ -339,7 +339,7 @@ const OS = {
     if (!w) return;
     if (+w.el.style.zIndex !== this.z || !w.el.classList.contains('focus')) {
       if (this.z > 4000) { this.z = 20; [...this.wins.values()].sort((a, b) => a.el.style.zIndex - b.el.style.zIndex).forEach(o => { o.el.style.zIndex = ++this.z; }); }
-      w.el.style.zIndex = ++this.z;
+      w.el.style.zIndex = w.def.top ? 8950 : ++this.z;   // def.top: stays above the fake pop-ups (BugBuster)
       for (const o of this.wins.values()) o.el.classList.toggle('focus', o === w);
       this.taskbar();
     }

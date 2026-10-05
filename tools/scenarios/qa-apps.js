@@ -93,7 +93,11 @@ module.exports = async page => {
   await page.eval(() => { document.querySelector('#os-wins .popup .pbtn').click(); return true; });
   await page.wait(200);
   Q.check('popup counter matches the DOM', await page.eval(() => window.__tli.OS.popups === document.querySelectorAll('#os-wins .popup').length));
-  await page.eval(() => { window.__tli.OS.launch('antivirus', true); document.querySelector('.win[data-app=antivirus] .bb-scan').click(); return true; });
+  await page.eval(() => { window.__tli.OS.launch('antivirus', true); return true; });
+  await page.wait(300);
+  const reach = await page.eval(() => { const b = document.querySelector('.win[data-app=antivirus] .bb-scan'), r = b.getBoundingClientRect(), e = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return !!(e && e.closest('.win[data-app=antivirus]')); });
+  Q.check('BugBuster floats above the pop-ups (Scan now is clickable)', reach);
+  await page.eval(() => { document.querySelector('.win[data-app=antivirus] .bb-scan').click(); return true; });
   await Q.waitFor(() => !!document.querySelector('.win[data-app=antivirus] .bb-q'), 20000, 400);
   await Q.shot('apps-23-bugbuster-results');
   await page.eval(() => { document.querySelector('.win[data-app=antivirus] .bb-q').click(); return true; });

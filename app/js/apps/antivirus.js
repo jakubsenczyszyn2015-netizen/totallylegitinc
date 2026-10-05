@@ -139,7 +139,7 @@ const BugBuster = (() => {
   }
 
   OS.apps[ID] = {
-    desktop: true, order: 74, available: owned, title: 'BugBuster', icon: 'bug', color: '#1f9d55', w: 470, h: 540, x: 0.5, y: 0.04, cls: 'bbwin',
+    desktop: true, order: 74, available: owned, title: 'BugBuster', icon: 'bug', color: '#1f9d55', w: 470, h: 540, x: 0.5, y: 0.04, cls: 'bbwin', top: true,
     render(b, w) {
       w.ui = {};
       b.append(

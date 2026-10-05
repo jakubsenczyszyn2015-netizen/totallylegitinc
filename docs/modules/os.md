@@ -19,6 +19,7 @@ OS.apps.myapp = {
   w: 420, h: 520,                                    // window size in px (h optional = auto height)
   x: 0.3, y: 0.05,                                   // default position as a fraction of the desktop area
   cls: 'myapp',                                      // extra class on the window (.win.myapp) for your CSS
+  top: true,                                         // optional: stays above the fake alert pop-ups (BugBuster uses it)
   render(body, win) {}, refresh(body, win) {}, onClose(win) {},
   direct() {}                                        // instead of a window, just run this (e.g. Settings)
 };
