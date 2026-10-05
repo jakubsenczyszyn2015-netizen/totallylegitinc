@@ -54,6 +54,7 @@ const Customize = {
     if (this.renderer) return;
     try { this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true }); } catch (e) { this.renderer = null; return; }
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    this.renderer.outputEncoding = THREE.sRGBEncoding; this.renderer.toneMapping = THREE.ACESFilmicToneMapping;   // same colour pipeline as the game (colours are linear)
     const S = this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(26, 1, 0.1, 30);
     S.add(new THREE.HemisphereLight(0xfff1dc, 0x485070, 0.62));
