@@ -2,7 +2,8 @@
    and the pause / start menu entries. The multiplayer vote is in mp-clockout.js.
    Run: tools/harness.js tools/scenarios/clockout.js 1280x720 <outdir> */
 module.exports = async page => {
-  const shot = async n => { await page.wait(1300); await page.shot(n); };   // software WebGL: give the compositor time to catch up
+  // software WebGL on a busy machine can drop to ~1 fps: wait until a few frames were drawn before each screenshot
+  const shot = async n => { await page.eval(() => new Promise(r => { let k = 0; const f = () => { if (++k >= 3) { Loop.remove(f); r(true); } }; Loop.add(f); })); await page.wait(150); await page.shot(n); };
   const ok = (name, v, d) => { console.log((v ? 'OK   ' : 'FAIL ') + name + (d !== undefined ? '  ' + JSON.stringify(d) : '')); if (!v) page.errors.push('check failed: ' + name); };
   await page.startSolo('week');
   await page.eval(() => { G.team = 150; return true; });
@@ -47,6 +48,7 @@ module.exports = async page => {
   await page.eval(() => { Game.retryDay(); return true; });
   await page.wait(800);
   await page.sit();
+  for (let i = 0; i < 60 && !await page.eval(() => OS.open && document.getElementById('os-boot').classList.contains('hidden')); i++) await page.wait(250);
   await page.eval(() => { OS.power(true); return true; });
   await page.wait(300);
   ok('LegitOS start menu entry', await page.eval(() => { const b = document.querySelector('#powermenu .pm-item.co'); return b && b.textContent; }));
