@@ -64,9 +64,12 @@ module.exports = async page => {
     await page.shot('rv-05b-fire-look');
     await seek(M.sheet + 0.05); await gw(1.4);
     await page.shot('rv-06-termination');
-    const after = await ev(() => { const T = window.__tli; T.Game.retryDay(); return { phase: T.G.phase, review: document.getElementById('review').className, on: Review.on, fx: FX.stats(), p: T.P.review }; });
+    await ev(() => { window.__tli.Game.retryDay(); return true; });
+    await gw(0.4);
+    const after = await ev(() => { const T = window.__tli; return { phase: T.G.phase, review: document.getElementById('review').className, on: Review.on, fx: FX.stats(), p: T.P.review, tint: document.getElementById('fx-tint').style.opacity }; });
     console.log('after retry: ' + JSON.stringify(after));
     if (after.phase !== 'day' || after.on) throw new Error('retry did not restart the day');
+    if (after.fx && after.fx.fires) throw new Error('fires still burning after the retry');
   }
 
   if (want('b')) {

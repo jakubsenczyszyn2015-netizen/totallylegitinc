@@ -358,7 +358,7 @@ const Review = (() => {
     const ang = (x, z) => Math.atan2(z - P.pos.z, x - P.pos.x);
     const sL = ang(SCR.x, SCR.z0), sR = ang(SCR.x, SCR.z1), bA = ang(BOSS_REVIEW.x, BOSS_REVIEW.z) - 0.2;
     const c = clamp((Math.min(bA, sL) + sR) / 2, sR - hf, sL + hf);
-    P.yaw = R.yaw0 = Math.atan2(-Math.cos(c), -Math.sin(c)); P.pitch = Math.atan2(SCR.y - 1.25, Math.hypot(dx, SCR.z0 / 2 + SCR.z1 / 2 - P.pos.z)) * 0.75;
+    P.yaw = R.yaw0 = Math.atan2(-Math.cos(c), -Math.sin(c)); P.pitch = Math.atan2(SCR.y - 1.35, Math.hypot(dx, SCR.z0 / 2 + SCR.z1 / 2 - P.pos.z)) * 0.75;
   }
   function verdict() {
     const res = R.res; showSlide('verdict', 1.2);
@@ -471,6 +471,8 @@ const Review = (() => {
   /* ---------- per frame ---------- */
   Loop.add(dt => {
     if (!R.on) return;
+    // seated eye height (player.js keeps the review camera at 1.2 m): sit up and lean back a little to see over the table
+    if (P.review >= 0 && !P.cam) { const c = W.camera.position; c.y += 0.15; c.x += Math.sin(P.yaw) * 0.2; c.z += Math.cos(P.yaw) * 0.2; }
     if (G.paused && !Net.active) return;
     R.t += dt;
     while (R.ev.length && R.ev[0].t <= R.t) { const e = R.ev.shift(); try { e.fn(); } catch (er) { console.error('review step', er); } }
