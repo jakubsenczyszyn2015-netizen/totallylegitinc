@@ -740,7 +740,8 @@ const Raid = {
     if (!s || Net.isHost || G.phase === 'menu') return;
     this.heat = clamp(+s.h || 0, 0, RAID.max); const C = Array.isArray(s.c) ? s.c : [];
     if (s.on && (!this.on || this.n !== s.n)) this.begin({ n: s.n, k: C.length, s: s.s }, this.on || this.n === s.n);
-    else if (!s.on && this.on) this.over({ n: this.n, ok: -1 });
+    else if (!s.on && this.on) { if (!this._offT) this._offT = W.t; else if (W.t - this._offT > 1.5) this.over({ n: this.n, ok: -1 }); }   // give 'raid:end' (with the result) time to arrive
+    if (s.on || !this.on) this._offT = 0;
     if (this.on) this.left = +s.l || 0;
     if (!C.length) { if (this.cops.length) this.clearCops(); return; }
     if (this.seed !== (s.s | 0)) { this.clearCops(); this.seed = s.s | 0; }
@@ -962,6 +963,7 @@ const RaidW = {
     }
     this.swingT = 0; this.swingK = W_SWING[id] || 1; Props.act(id === 'shield' ? 'punch' : 'slap'); SFX.whoosh();
     if (!best) return;
+    best = { kind: best.kind, ref: best.kind === 'cop' ? best.ref : { id: best.ref.id, n: best.ref.n }, x: best.x, z: best.z, top: best.top };   // targets are pooled
     setTimeout(() => {
       if (id === 'hammer') RaidSnd.boing(_rV.set(best.x, 1.4, best.z)); else if (id === 'baton') { SFX.punch(); SFX.bonk(); } else SFX.punch();
       FX.shake(0.2, 0.15); this.strike(best, w, fx, fz, id === 'hammer' && Math.random() < 0.5);
