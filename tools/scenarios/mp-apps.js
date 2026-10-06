@@ -93,4 +93,22 @@ module.exports = async mp => {
   await A.eval(() => { AI.raw = window.__raw; settings.provider = window.__key[0]; settings.apiKey = window.__key[1]; return true; });
   await mp.waitFor(B, () => !Net.hostAI, 3000).catch(() => {});
   mp.check('client learns that the host dropped the key', !(await B.eval(() => Net.hostAI)));
+
+  // ---- a whole scam on a client (offline caller brain): the money reaches the team, the host and the 3rd player
+  const team0 = await A.eval(() => G.team); await toasts(A);
+  await B.eval(() => { if (Call.state === 'live') Call.hangup(); Call.state = 'idle'; Call.wait = 999; return true; });
+  await B.ring(false); await B.answer();
+  await B.eval(() => { Call.setScheme('prize'); return true; });
+  const first = await B.eval(() => Call.cur.caller.first);
+  for (const l of ['Hi ' + first + ', my name is Steve from the prize office, reference 55.', 'Congratulations, you won a jet ski!', 'There is a small release fee of 20 dollars.', 'Can you pay that today?', 'Shall we go ahead and pay?', 'Would you like to confirm the payment now?']) {
+    if ((await B.eval(() => Call.state)) !== 'live') break;
+    await B.say(l);
+  }
+  const res = await B.eval(() => ({ result: Call.cur && Call.cur.result, personal: G.personal }));
+  await mp.wait(900);
+  const team1 = await A.eval(() => G.team);
+  mp.check('client scam paid (offline brain)', res.result === 'paid', res);
+  mp.check('the scam money reaches the host\'s team total', res.result !== 'paid' || team1 === team0 + res.personal, { team0, team1, bob: res.personal });
+  if (C) mp.check('Cara sees the new team total', (await C.eval(() => G.team)) === team1);
+  mp.check('host toast for Bob\'s scam', res.result !== 'paid' || (await toasts(A)).some(t => /Bob closed a scam/.test(t)));
 };
