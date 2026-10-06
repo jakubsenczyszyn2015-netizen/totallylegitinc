@@ -35,8 +35,8 @@ module.exports = async mp => {
   mp.check('host sees Bob talking (voice indicator)', talk);
   mp.check('voice mesh connected host <-> Bob', await A.eval(id => Voice.nodes.has(id), ids.Bob));
   // walking: put Bob in front of Alice, Alice looks at him
-  await A.teleport(4, 2, Math.PI / 2, 0);
-  await B.teleport(-1.5, 2, -Math.PI / 2, 0);
+  await A.teleport(4.5, 0, Math.PI / 2, 0);   // the main aisle (z = 0) has nothing to bump into
+  await B.teleport(-1.5, 0, -Math.PI / 2, 0);
   await B.key('KeyW', 500);
   await mp.wait(400);
   const pos = await A.eval(id => { const a = W.avatars.get(id); return a && [+a.av.group.position.x.toFixed(2), +a.av.group.position.z.toFixed(2)]; }, ids.Bob);
