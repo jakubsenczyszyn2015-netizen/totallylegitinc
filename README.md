@@ -20,6 +20,10 @@ geometry, canvas textures, inline SVG, CSS and Web Audio. There are no art files
    pause menu or the LegitOS start menu; in multiplayer everyone votes and the majority decides). Then The Boss
    reviews you.
 
+Every closed scam also raises the team's **heat**. Let it boil over and the police raid the office: cartoon cops
+storm through the front door and chase whoever is nearest. Fight back with BonkMart's slapstick self-defence range,
+hide, or get booked in the lobby.
+
 Modes: **Work week** (Monday to Friday, three save slots, quota rises each day) and **Endless calls** (no quota,
 no review, the total is saved). Between calls: Cosmic Cookie, LuckyBonk Casino, Chatterbox, Doodle Pro, the
 Camera / CCTV apps, the Bonk SnapCam and a lot of throwable office supplies.
@@ -52,6 +56,12 @@ Click the game to capture the mouse. At the desk the mouse drives the LegitOS de
   GitHub **Actions → Build Windows exe → Artifacts**.
 - `app/index.html` also runs in a browser if `app/vendor` exists (host the folder; some browsers block pointer lock or
   storage for `file://` pages).
+
+## Performance
+**Settings → Graphics and data → Graphics quality.** *Medium* is the default. *Low* is meant for weak laptops: lower
+render resolution, no shadows or colour grade, half the particles and fire, slower extra cameras (Camera / CCTV) and
+desk screens, no blurred CSS effects, and no anti-aliasing from the next start. Hiding the coworkers at the other
+desks helps too.
 
 ## Multiplayer
 One player picks **Multiplayer → Host a room** and shares the 5-letter room code (big and copyable in the lobby
