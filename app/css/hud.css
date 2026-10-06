@@ -14,6 +14,7 @@
 .hb-emoji{font-size:1.8rem;line-height:1;font-family:'Lilita One',var(--font-d);color:#fff;text-shadow:0 2px 0 var(--ink)}
 .hb-slot b{position:absolute;right:.2rem;bottom:.02rem;font-family:'Lilita One',var(--font-d);font-weight:400;font-size:1.02rem;color:#fff;-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;line-height:1.1}
 .hb-bar{position:absolute;left:.3rem;bottom:.3rem;height:.32rem;border-radius:9px;background:#ff8a12;box-shadow:0 0 0 2px var(--ink);text-decoration:none;max-width:calc(100% - 2.2rem)}
+.hb-more{align-self:center;padding:.2rem .45rem;border-radius:10px;background:rgba(15,19,29,.85);border:2px solid var(--ink);font-family:'Lilita One',var(--font-d);font-size:1rem;color:var(--yellow);text-shadow:0 2px 0 var(--ink)}
 .hb-name{min-height:1.6rem;display:flex;flex-direction:column;align-items:center;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s}
 .hb-name.on{opacity:1;transform:none}
 .hb-name b{font-family:'Lilita One',var(--font-d);font-weight:400;font-size:1.35rem;color:#fff;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;letter-spacing:.02em}

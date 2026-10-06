@@ -331,7 +331,16 @@ const Props = {
     this.sel = i; const d = ItemDefs[s[i]]; if (d && d.equip) try { d.equip(); } catch (e) {}
     this.vmEquip = 0; SFX.click(); this.refreshHeld(); HUDBar.flashName();
   },
-  cycle(dir) { const n = this.slots.length; if (n > 1) this.select((this.sel + dir + n) % n); },
+  cycle(dir) {
+    const n = this.slots.length; if (n < 2) return;
+    // more kinds of items than slots: scrolling on past the last slot rotates the inventory, so every item can be reached
+    if (dir > 0 && this.sel === n - 1 && this.hidden()) { const ids = Inv.all().filter(id => id !== 'paper' && ItemDefs[id] && ItemDefs[id].hotbar !== false), f = this.slots[1];
+      if (ids.includes(f)) { const o = ItemDefs[this.slots[this.sel]]; if (this.useDown) this.endUse(); if (o && o.unequip) try { o.unequip(); } catch (e) {}
+        const v = Inv.items[f]; delete Inv.items[f]; Inv.items[f] = v; this.slots = this.slotList(); this.sel = -1; this.select(n - 1); Bus.emit('inv:change', f, v); return; } }
+    this.select((this.sel + dir + n) % n);
+  },
+  /* item kinds that do not fit the hotbar (scroll past the last slot to reach them) */
+  hidden() { return Math.max(0, Inv.all().filter(id => id !== 'paper' && ItemDefs[id] && ItemDefs[id].hotbar !== false).length - (HB_N - 1)); },
   heldId() { return this.carry ? 'prop:' + this.carry.type + (this.carry.item ? ':' + this.carry.item : '') : (this.slots[this.sel] || 'paper'); },
   refreshHeld() { this.slots = this.slotList(); if (this.sel >= this.slots.length) this.sel = 0; this._vmKey = null; HUDBar.render(); },
 
@@ -749,6 +758,7 @@ const HUDBar = {
       if (id) { const ic = h('span', { class: 'hb-ic' }); ic.innerHTML = propIcon(id); slot.append(ic, h('b', {}, String(n))); if (id === 'soda' && Props.sodaLeft > 0) slot.append(h('u', { class: 'hb-bar', style: { width: Math.round(Props.sodaLeft / SODA_SECS * 100) + '%' } })); }
       kids.push(slot);
     }
+    const more = Props.hidden(); if (more) kids.push(h('div', { class: 'hb-more', title: 'Scroll past the last slot for more items' }, '+' + more));
     if (Props.carry) { const c = Props.carry, ic = h('span', { class: 'hb-ic' }); ic.innerHTML = propIcon(c.item || (c.type === 'paper' ? 'paper' : c.type)); kids.push(h('div', { class: 'hb-slot carry sel' }, h('i', {}, 'G'), ic)); }
     box.replaceChildren(...kids); this.nameHTML();
   },
@@ -765,7 +775,7 @@ const HUDBar = {
     const vis = G.phase !== 'menu' && !P.seated && P.review < 0 && !G.paused && G.phase !== 'review';
     this.el.classList.toggle('hidden', !vis); this.keys.classList.toggle('hidden', !vis);
     document.body.classList.toggle('hb-on', vis);
-    const key = Props.slots.join() + '|' + Props.sel + '|' + Props.slots.map(id => Inv.count(id)).join() + '|' + Math.ceil(Props.sodaLeft * 10) + '|' + (Props.carry ? Props.carry.id : '');
+    const key = Props.slots.join() + '|' + Props.sel + '|' + Props.hidden() + '|' + Props.slots.map(id => Inv.count(id)).join() + '|' + Math.ceil(Props.sodaLeft * 10) + '|' + (Props.carry ? Props.carry.id : '');
     if (key !== this._key) { this._key = key; this.render(); }
   }
 };
