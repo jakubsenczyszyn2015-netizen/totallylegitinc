@@ -37,10 +37,24 @@ const Net = {
   share(key, get, set) { this.shared.set(key, { get, set }); },
   addMe(key, get) { this.meExt.set(key, get); },
   isAuth() { return !this.active || this.isHost; },
+  /* did this message come from the host? (relayed messages carry the original sender's id; the host only ever hears clients) */
+  fromHost(from) { return !this.active || (this.isHost ? from === this.myId : !this.hostConn || from === this.hostConn.peer); },
   _x(d, fromId) { const fn = this.handlers.get(d.k); if (fn) { try { fn(d.p, fromId); } catch (e) { console.error('Net handler "' + d.k + '" failed', e); } } },
   sharedState() { if (!this.shared.size) return undefined; const o = {}; for (const [k, v] of this.shared) { try { o[k] = v.get(); } catch (e) {} } return o; },
   applyShared(x) { if (!x) return; for (const k in x) { const v = this.shared.get(k); if (v) { try { v.set(x[k]); } catch (e) { console.error('Net shared "' + k + '" failed', e); } } } },
 
+  /* untrusted numbers / colours / per-player extras from other players */
+  num(v, lim) { v = +v; return Number.isFinite(v) ? clamp(v, -lim, lim) : 0; },
+  col(v) { return typeof v === 'string' && /^#[0-9a-f]{3,8}$/i.test(v) ? v : '#3b82f6'; },
+  cleanExt(e) {   // only the keys this game registers with addMe, small values
+    const o = {};
+    for (const k of this.meExt.keys()) {
+      const v = e[k]; if (v == null) continue;
+      if (typeof v === 'string') o[k] = v.slice(0, 160); else if (typeof v === 'number') o[k] = Number.isFinite(v) ? v : 0;
+      else if (typeof v === 'boolean') o[k] = v; else if (typeof v === 'object') { try { if (JSON.stringify(v).length <= 400) o[k] = v; } catch (er) {} }
+    }
+    return o;
+  },
   plObj() { const o = {}; for (const [id, p] of this.players) o[id] = p; return o; },
 
   async host() {
@@ -99,7 +113,7 @@ const Net = {
   /* ----- host side ----- */
   onConn(conn) {
     if (!this.isHost) { try { conn.close(); } catch (e) {} return; }
-    conn.on('data', d => { conn._rx = Date.now(); this.hostRecv(conn, d); });
+    conn.on('data', d => { conn._rx = Date.now(); try { this.hostRecv(conn, d); } catch (e) { console.warn('Net: bad message from ' + conn.peer, e); } });
     conn.on('close', () => this.drop(conn.peer)); conn.on('error', () => this.drop(conn.peer));
   },
   hostRecv(conn, d) {
@@ -108,12 +122,12 @@ const Net = {
       if (this.players.size >= 6) { conn.send({ t: 'full' }); setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); return; }
       const name = String(d.name || 'Agent').slice(0, 18);
       this.conns.set(id, conn);
-      this.players.set(id, { name, color: String(d.color || '#3b82f6').slice(0, 9), x: 8, y: 0, z: 0, ry: 0, seat: -1, talk: false, personal: 0 });
+      this.players.set(id, { name, color: this.col(d.color), x: 8, y: 0, z: 0, ry: 0, seat: -1, talk: false, personal: 0 });
       conn.send({ t: 'welcome', id, g: Game.netState(), hostAI: AI.hasKey(), pl: this.plObj(), x: this.sharedState() });
       toast(name + ' joined.', 'good'); SFX.join(); syncAvatars(this.players, this.myId); return;
     }
     const p = this.players.get(id); if (!p) return;
-    if (d.t === 'pos') { if (d.ext && typeof d.ext === 'object') p.ext = d.ext; p.x = +d.x || 0; p.y = +d.y || 0; p.z = +d.z || 0; p.ry = +d.ry || 0; p.seat = d.seat | 0; p.talk = !!d.talk; p.personal = +d.personal || 0; if (d.name) p.name = String(d.name).slice(0, 18); if (d.color) p.color = String(d.color).slice(0, 9); }
+    if (d.t === 'pos') { if (d.ext && typeof d.ext === 'object') p.ext = this.cleanExt(d.ext); p.x = this.num(d.x, 200); p.y = this.num(d.y, 50); p.z = this.num(d.z, 200); p.ry = this.num(d.ry, 50); p.seat = clamp(d.seat | 0, -99, 999); p.talk = !!d.talk; p.personal = clamp(this.num(d.personal, 1e9), 0, 1e9); if (d.name) p.name = String(d.name).slice(0, 18); if (d.color) p.color = this.col(d.color); }
     else if (d.t === 'earn') Game.addTeam(clamp(+d.amt || 0, -500, 2000), id);
     else if (d.t === 'x' && typeof d.k === 'string') {
       const m = { t: 'x', k: d.k, p: d.p, from: id };
@@ -121,12 +135,14 @@ const Net = {
       this._x(m, id);
       if (!d.host && !d.to) this.broadcast(m, id);
     }
-    else if (d.t === 'throw') { if (Array.isArray(d.o) && Array.isArray(d.v) && d.o.length === 3 && d.v.length === 3) { spawnBall(d.o.map(Number), d.v.map(Number), false); this.broadcast({ t: 'throw', o: d.o, v: d.v }, id); } }
+    else if (d.t === 'throw') { if (Array.isArray(d.o) && Array.isArray(d.v) && d.o.length === 3 && d.v.length === 3) { const o = d.o.map(x => this.num(x, 60)), v = d.v.map(x => this.num(x, 30)); spawnBall(o, v, false); this.broadcast({ t: 'throw', o, v }, id); } }
     else if (d.t === 'ai') {
       const back = m => { try { conn.send(Object.assign({ t: 'air', rid: d.rid }, m)); } catch (e) {} };
       if (!AI.hasKey() || !Array.isArray(d.messages)) return back({ ok: false, err: 'the host has no AI key' });
-      const msgs = d.messages.slice(-18).map(m => ({ role: ['system', 'user', 'assistant'].includes(m.role) ? m.role : 'user', content: String(m.content || '').slice(0, 6000) }));
-      AI.raw(msgs).then(text => back({ ok: true, text })).catch(e => back({ ok: false, err: e.message }));
+      if ((conn._ai || 0) >= 3) return back({ ok: false, err: 'the host AI is busy' });
+      const msgs = d.messages.slice(-18).map(m => (m && typeof m === 'object' ? m : {})).map(m => ({ role: ['system', 'user', 'assistant'].includes(m.role) ? m.role : 'user', content: String(m.content || '').slice(0, 6000) }));
+      conn._ai = (conn._ai || 0) + 1; const done = () => { conn._ai--; };
+      AI.raw(msgs).then(text => { done(); back({ ok: true, text }); }).catch(e => { done(); back({ ok: false, err: e.message }); });
     }
   },
   drop(id) {
