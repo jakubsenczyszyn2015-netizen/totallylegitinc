@@ -724,6 +724,7 @@ const Raid = {
     for (let i = this.later.length - 1; i >= 0; i--) if (W.t >= this.later[i].t) { const f = this.later[i].fn; this.later.splice(i, 1); try { f(); } catch (e) { console.error('raid timer', e); } }
     RaidWords.update(dt); RaidBolts.update(dt); Shots.update(dt); RaidLights.update(t);
     if (G.phase === 'menu') return;
+    if (G.paused && !Net.active) { if (this.on) RaidSnd.sirenVol(0.0001); if ((this.uiT += dt) > 0.2) { this.uiT = 0; RaidUI.tick(); } return; }   // solo pause freezes the raid
     const auth = Net.isAuth();
     if (auth && G.phase === 'day') {
       if (!this.on) this.heat = Math.max(0, this.heat - RAID.cool * dt);
