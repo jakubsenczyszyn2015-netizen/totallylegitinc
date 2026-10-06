@@ -403,9 +403,9 @@ const Props = {
 const _vmBox = new THREE.Box3(), _pQ = new THREE.Quaternion(), _pAx = new THREE.Vector3(), _pE = new THREE.Euler(), _pHand = new THREE.Vector3(), _pAim = new THREE.Vector3(), _pEye = new THREE.Vector3(), _pV = new THREE.Vector3();
 function aimDir() {
   const cp = Math.cos(P.pitch), fx = -Math.sin(P.yaw) * cp, fy = Math.sin(P.pitch), fz = -Math.cos(P.yaw) * cp;
-  if (!P.third || !W.camera) return _pAim.set(fx, fy, fz);
-  // third person: from the hand towards the point under the crosshair
-  const c = W.camera.position, d = Math.min(25, Space.ray(c.x, c.y, c.z, fx, fy, fz, 25, 0)), hp = Props.handPos();
+  if (!W.camera) return _pAim.set(fx, fy, fz);
+  // from the hand towards the point under the crosshair (first person too: the hand sits right of the eye, so a throw parallel to the view always passed ~25 cm right of what you aimed at, e.g. every bin)
+  const c = W.camera.position, r = Space.ray(c.x, c.y, c.z, fx, fy, fz, 25, 0), d = P.third ? Math.min(25, r) : clamp(r, 1.2, 25), hp = Props.handPos();
   return _pAim.set(c.x + fx * d - hp.x, c.y + fy * d - hp.y, c.z + fz * d - hp.z).normalize();
 }
 function eyePos() { return _pEye.set(P.pos.x, P.pos.y + P.eye, P.pos.z); }
