@@ -76,14 +76,16 @@ module.exports = async page => {
   await page.stand(); await page.wait(400);
   const room = await page.eval(() => window.__tli.W.rooms.floor);
   await page.teleport((room.x0 + room.x1) / 2, (room.z0 + room.z1) / 2, 0, 0);
+  await Q.fast(true);   // game logic at full speed (missiles take game time); Q.shot still draws
   for (const id of ['chaos_pizza', 'chaos_boss', 'chaos_stapler', 'chaos_rival', 'chaos_strike']) {
-    await Q.waitFor(() => !Chaos.busy(), 40000, 500);
+    await Q.waitFor(() => !Chaos.busy(), 150000, 500);
     const ok = await page.eval(id => { const it = Shop.get(id); const st = BonkMart.state(it)[0]; return st === 'buy' ? BonkMart.buy(id) : st; }, id);
     Q.check('chaos ' + id + ' bought', ok === true, ok);
     await page.wait(id === 'chaos_strike' ? 4500 : id === 'chaos_rival' ? 3500 : 1500);
     await Q.shot('eco-07-' + id);
     if (/strike|rival/.test(id)) await page.wait(6000);
   }
+  await Q.fast(false);
   const fps = await page.eval(() => new Promise(r => { let n = 0, t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 2000) requestAnimationFrame(f); else r({ fps: Math.round(n / 2), calls: window.__tli.W.renderer.info.render.calls, tris: window.__tli.W.renderer.info.render.triangles, fx: FX.stats() }); }; requestAnimationFrame(f); }));
   Q.log('after chaos', fps);
 
@@ -92,7 +94,11 @@ module.exports = async page => {
   const slots = await page.eval(() => Props.slots.slice());
   Q.log('hotbar', slots);
   const allItems = await page.eval(() => window.__tli.Inv.all().filter(id => ItemDefs[id] && ItemDefs[id].hotbar !== false));
-  Q.check('every carried item fits on the hotbar', allItems.every(id => slots.includes(id)), { allItems, slots });
+  Q.check('the hotbar grows to 9 slots when you carry many kinds of items', slots.length === Math.min(9, allItems.length + 1), { allItems, slots });
+  // a full hotbar: whatever you buy next still lands on it (moved to the front), so it can be selected
+  const front = await page.eval(() => { const T = window.__tli; while (T.Inv.count('soda')) T.Inv.take('soda'); const full = Props.slotList().length; const ok = BonkMart.buy('soda'); return { full, ok, has: Props.slots.includes('soda') }; });
+  Q.check('a bought snack lands on a full hotbar', front.ok && front.has, front);
+  slots.splice(0, slots.length, ...(await page.eval(() => Props.slots.slice())));
   for (let i = 0; i < slots.length; i++) {
     const id = slots[i];
     const out = await page.eval(async (i, id) => {
