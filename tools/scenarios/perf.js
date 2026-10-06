@@ -33,8 +33,8 @@ module.exports = async page => {
       const texs = new Set(); T.W.scene.traverse(o => { for (const m of o.material ? [].concat(o.material) : []) for (const k of ['map', 'emissiveMap', 'alphaMap']) if (m[k]) texs.add(m[k]); });
       const v0 = new Map([...texs].map(x => [x, x.version])), cams = typeof Cams !== 'undefined' ? Cams.list : [], f0 = cams.map(c => c.frames);
       for (let i = 0; i < 30; i++) { t += dt; T.Game.tick(dt); updateWorld(dt, t); T.Loop.run(dt, t); T.Loop.runRender(dt, t); }
-      let upKB = 0, rbKB = 0, camFps = 0;
-      for (const x of texs) if (x.version !== v0.get(x) && x.image && x.image.width) upKB += (x.version - v0.get(x)) * x.image.width * x.image.height * 4 / 1024;
+      let upKB = 0, rbKB = 0, camFps = 0; const upBy = {};
+      for (const x of texs) if (x.version !== v0.get(x) && x.image && x.image.width) { const k = x.image.width + 'x' + x.image.height, d = x.version - v0.get(x); upKB += d * x.image.width * x.image.height * 4 / 1024; upBy[k] = (upBy[k] || 0) + d * 2; }
       cams.forEach((c, i) => { const d = c.frames - (f0[i] || 0); camFps += d; rbKB += d * c.w * c.h * 4 / 1024; });
       gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       S.hooks.clear(); S.on = true;
@@ -51,7 +51,7 @@ module.exports = async page => {
       const hooks = [...S.hooks].sort((x, y) => y[1] - x[1]).slice(0, 6).map(([k, v]) => (v / n).toFixed(2) + 'ms ' + k);
       return { update: +(upd / n).toFixed(2), worstUpdate: +worst.toFixed(1), renderMedian: +ren[n >> 1].toFixed(1), renderMin: +ren[0].toFixed(1), calls: Math.round(calls / n), tris: Math.round(tris / n),
         textures: R.info.memory.textures, geometries: R.info.memory.geometries, programs: (R.info.programs || []).length, fx: typeof FX !== 'undefined' && FX.stats ? FX.stats() : undefined,
-        texUploadKBs: Math.round(upKB * 2), camFrames: camFps * 2, camReadbackKBs: Math.round(rbKB * 2), hooks };
+        texUploadKBs: Math.round(upKB * 2), texUploadsPerS: upBy, camFrames: camFps * 2, camReadbackKBs: Math.round(rbKB * 2), hooks };
     }, N);
     console.log('PERF [' + Q + '] ' + name + ' ' + JSON.stringify(r, null, 1).replace(/\n\s*/g, ' '));
     if (shotDir) await page.shot('perf-' + Q + '-' + name);
