@@ -241,6 +241,7 @@ const FX = (() => {
     return L;
   }
   let ready = false, layers = null, CUT, SOFT, ADD, dec = null, light = null;
+  let lowQ = false; Bus.on('quality', q => { lowQ = q === 'low'; });   // low quality: half the particle budget and fire emission
   const streams = [], emitters = [], bubbles = [];
   /* scratch particle description, filled by p() and consumed by add() (no per-particle allocations) */
   const Q = {};
@@ -250,7 +251,9 @@ const FX = (() => {
   }
   function add() {
     const L = Q.L; if (!L) return -1;
-    let i = L.n; if (i >= L.cap) i = Math.floor(Math.random() * L.cap); else L.n++;   // full: overwrite a random one
+    if (lowQ && L === SOFT && Q.ttl > 1.5 && Math.random() < 0.5) return -1;   // low: half of the big lingering smoke / gas puffs (overdraw)
+    const cap = lowQ ? L.cap >> 1 : L.cap;
+    let i = L.n; if (i >= cap) i = Math.floor(Math.random() * cap); else L.n++;   // full: overwrite a random one
     const d = L.d, o = i * K, c0 = rgb(Q.c0 || '#ffffff'), c1 = rgb(Q.c1 || Q.c0 || '#ffffff');
     d[o] = Q.x; d[o + 1] = Q.y; d[o + 2] = Q.z; d[o + 3] = Q.vx; d[o + 4] = Q.vy; d[o + 5] = Q.vz; d[o + 6] = -Q.delay; d[o + 7] = Q.ttl;
     d[o + 8] = Q.s0; d[o + 9] = Q.s1; d[o + 10] = Q.grow; d[o + 11] = Q.rot; d[o + 12] = Q.rv;
@@ -302,8 +305,8 @@ const FX = (() => {
       i++;
     }
     L.geo.instanceCount = L.n;
-    for (const a of [L.aPos, L.aVel]) { a.updateRange.count = L.n * 3; a.needsUpdate = true; }
-    for (const a of [L.aCol, L.aMisc]) { a.updateRange.count = L.n * 4; a.needsUpdate = true; }
+    L.aPos.updateRange.count = L.aVel.updateRange.count = L.n * 3; L.aCol.updateRange.count = L.aMisc.updateRange.count = L.n * 4;
+    L.aPos.needsUpdate = L.aVel.needsUpdate = L.aCol.needsUpdate = L.aMisc.needsUpdate = true;
   }
   function kill(L, i) {
     const last = --L.n; if (i === last) return;
@@ -460,7 +463,7 @@ const FX = (() => {
   function stepFire(e, dt) {
     e.t += dt; const on = e.dur <= 0 || e.t < e.dur;   // dur <= 0: burn until stop()
     if (!on) { e.dead = true; return; }
-    const sc = e.sc, k = Math.min(1, e.t * 3) * (e.dur > 0 ? Math.min(1, (e.dur - e.t) * 1.5) : 1);
+    const sc = e.sc, k = Math.min(1, e.t * 3) * (e.dur > 0 ? Math.min(1, (e.dur - e.t) * 1.5) : 1) * (lowQ ? 0.5 : 1);
     const emit = (j, rate, fn) => { e.acc[j] += dt * rate * k; while (e.acc[j] >= 1) { e.acc[j]--; fn(); } };
     emit(0, 16 * Math.sqrt(sc) + 6, () => {   // big flame patches
       const a = Math.random() * 6.28, r = Math.sqrt(Math.random()) * 0.32 * sc;

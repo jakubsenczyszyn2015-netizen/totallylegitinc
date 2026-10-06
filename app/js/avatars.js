@@ -734,6 +734,10 @@ class AvatarRig {
       mouth = this.mouthT === 'closed' ? (F[2] === 'smile' ? 'grin' : 'neutral') : this.mouthT;
     }
     const ny = this.cur[AVC.ny], look = ny > 0.3 ? -1 : ny < -0.3 ? 1 : 0;
+    // skip the canvas redraw + texture upload for office faces nobody can make out (hidden, or over 14 m from the camera) once
+    // they have been drawn; your own face always draws (the webcam shows it) and the face catches up as soon as it is close
+    const cp = W.camera && W.camera.position, gp = this.group.position;
+    if (this.face.key && this !== W.me && cp && this.group.parent === W.scene && (!this.group.visible || (gp.x - cp.x) * (gp.x - cp.x) + (gp.z - cp.z) * (gp.z - cp.z) > 196)) return;
     this.face.draw(eye, F[1], mouth, look, F[3] ? 1 : 0);
   }
   starsUpdate(t, on) {

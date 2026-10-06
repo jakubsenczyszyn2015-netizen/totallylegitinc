@@ -68,10 +68,11 @@ const Cams = (() => {
   Loop.addRender((dt, t) => {
     api.t = t;
     if (!cams.length || !W.renderer || G.phase === 'menu') return;
-    let budget = (OS.open && P.seated && !P.cam) ? 2 : 1;
+    const low = settings.quality === 'low';   // low quality: half the frame rate, one render (and GPU read-back) per frame
+    let budget = (OS.open && P.seated && !P.cam && !low) ? 2 : 1;
     while (budget-- > 0) {
       let best = null, bo = 0;
-      for (const c of cams) { if (!c.isOn()) continue; const o = (t - c.last) * c.fps; if (o >= 1 && o > bo) { bo = o; best = c; } }
+      for (const c of cams) { if (!c.isOn()) continue; const o = (t - c.last) * c.fps * (low ? 0.5 : 1); if (o >= 1 && o > bo) { bo = o; best = c; } }
       if (!best) break; best.last = t; try { draw(best); } catch (e) { best.on = false; console.error('Cams render failed', e); }
     }
   });

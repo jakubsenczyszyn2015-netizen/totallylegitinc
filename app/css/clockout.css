@@ -1,0 +1,70 @@
+/* clock out early — vote panel (top centre), confirm box, pause / start-menu buttons (js/clockout.js) */
+
+/* ---------- vote panel: over the walking HUD, the desktop and the pause menu ---------- */
+#co-vote{--p:1;position:fixed;left:50%;top:.9rem;transform:translateX(-50%);z-index:64;width:min(27.5rem,94vw);padding:.65rem .75rem .72rem;
+  background:linear-gradient(180deg,rgba(46,37,40,.97),rgba(27,21,23,.97));border:3px solid var(--ink);border-radius:19px;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.07),0 6px 0 rgba(0,0,0,.45),0 18px 40px rgba(0,0,0,.35);color:var(--cream);font-family:var(--font-b);
+  animation:cvIn .35s cubic-bezier(.2,1.5,.4,1);user-select:none}
+@keyframes cvIn{from{opacity:0;transform:translate(-50%,-14px) scale(.92)}}
+.cv-top{display:flex;align-items:center;gap:.7rem}
+.cv-ic,.co-hic{flex:none;width:2.9rem;height:2.9rem;border-radius:14px;display:grid;place-items:center;color:#fff;
+  background:linear-gradient(#ffb547,#f08c00);border:3px solid var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 3px 0 var(--ink)}
+.cv-ic svg,.co-hic svg{width:1.75rem;height:1.75rem;fill:#fff;filter:drop-shadow(0 2px 0 rgba(15,19,29,.45))}
+.cv-main{flex:1;min-width:0}
+.cv-main small{display:block;font-weight:800;font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;color:#ffc27a}
+.cv-title{font-family:var(--font-c);font-size:1.18rem;line-height:1.12;color:var(--cream);text-shadow:0 2px 0 var(--ink)}
+.cv-title b{font-weight:400;color:var(--gold)}
+.cv-meta{display:flex;align-items:center;gap:.5rem;margin-top:.28rem}
+.cv-pips{display:flex;gap:.22rem}
+.cv-pips i{width:.82rem;height:.82rem;border-radius:50%;background:#1a1415;border:2px solid #5a4b4e}
+.cv-pips i.y{background:var(--green);border-color:var(--ink);box-shadow:0 0 7px rgba(39,192,122,.65)}
+.cv-pips i.n{background:var(--red);border-color:var(--ink)}
+.cv-n{font-weight:800;font-size:.8rem;color:var(--warm-muted);white-space:nowrap}
+.cv-time{flex:none;width:3.3rem;height:3.3rem;border-radius:50%;display:grid;place-items:center;border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);
+  background:conic-gradient(var(--gold) calc(var(--p) * 360deg),#3a3034 0)}
+.cv-time b{width:2.4rem;height:2.4rem;border-radius:50%;display:grid;place-items:center;background:#1c1617;font-family:var(--font-c);font-weight:400;font-size:1.25rem;color:#fff}
+#co-vote.hurry .cv-time{background:conic-gradient(#ff5a4a calc(var(--p) * 360deg),#3a3034 0);animation:cvPulse .5s ease-in-out infinite alternate}
+@keyframes cvPulse{to{transform:scale(1.08)}}
+.cv-btns{display:flex;gap:.5rem;margin-top:.62rem}
+.cv-b{flex:1;display:flex;align-items:center;justify-content:center;gap:.45rem;padding:.4em .6em .44em;border:3px solid var(--ink);border-radius:12px;
+  font-family:var(--font-c);font-size:1rem;line-height:1.1;box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 3px 0 var(--ink);transition:transform .08s,filter .12s,opacity .15s}
+.cv-b:hover{filter:brightness(1.08)}
+.cv-b:active{transform:translateY(2px);box-shadow:inset 0 2px 0 rgba(255,255,255,.4),0 1px 0 var(--ink)}
+.cv-b.yes{background:linear-gradient(#5beb94,#22b35e);color:var(--ink)}
+.cv-b.no{background:linear-gradient(#f0554b,#c9281f);color:#fff}
+.cv-b kbd{min-width:1.9em;padding:.04em .32em;border-radius:6px;background:linear-gradient(#fffaf0,#ead6ab);color:var(--ink);border:2px solid var(--ink);box-shadow:0 2px 0 var(--ink);
+  font-family:var(--font-c);font-weight:400;font-size:.78rem;text-align:center}
+.cv-b.on::after{content:"✓";display:grid;place-items:center;width:1.25rem;height:1.25rem;border-radius:50%;background:#fff;color:var(--ink);border:2px solid var(--ink);font-family:var(--font-b);font-weight:800;font-size:.75rem}
+#co-vote.voted .cv-b:not(.on){opacity:.5;filter:saturate(.4)}
+.cv-res{display:none}
+#co-vote.res .cv-top,#co-vote.res .cv-btns{display:none}
+#co-vote.res .cv-res{display:flex;flex-direction:column;align-items:center;gap:.1rem;padding:.15rem 0 .1rem}
+.cv-res b{font-family:var(--font-c);font-weight:400;font-size:2.1rem;line-height:1.05;text-transform:uppercase;letter-spacing:.03em;color:#fff;
+  -webkit-text-stroke:7px var(--ink);paint-order:stroke fill;transform:rotate(-2deg);animation:cvStamp .4s cubic-bezier(.2,1.8,.4,1)}
+@keyframes cvStamp{from{transform:rotate(-8deg) scale(1.6);opacity:0}}
+#co-vote.pass .cv-res b{color:#6ff0a2}
+#co-vote.fail .cv-res b{color:#ff8a7e}
+#co-vote.pass{border-color:#0d3b22;background:linear-gradient(180deg,rgba(28,74,48,.97),rgba(20,40,29,.97))}
+#co-vote.fail{background:linear-gradient(180deg,rgba(80,30,28,.97),rgba(42,20,20,.97))}
+.cv-res small{font-weight:800;font-size:.86rem;color:#eadbc0}
+/* keep the "phone is ringing" banner clear of the panel */
+body.co-voting #hud-ring{top:9.2rem}
+
+/* ---------- confirm box ---------- */
+#co-confirm{z-index:66}
+.co-m{width:min(27rem,100%)}
+.co-m header{justify-content:flex-start;gap:.8rem}
+.co-m .body{gap:.8rem}
+.co-q{font-family:var(--font-c);font-size:1.32rem;line-height:1.2;color:var(--cream)}
+.co-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}
+.co-stat{padding:.45rem .5rem .5rem;border-radius:12px;background:#141011;border:2.5px solid var(--warm-line);text-align:center}
+.co-stat small{display:block;font-weight:800;font-size:.64rem;letter-spacing:.12em;text-transform:uppercase;color:var(--warm-dim)}
+.co-stat b{font-family:var(--font-c);font-weight:400;font-size:1.4rem;color:#fff}
+.co-stat.ok b{color:#4be07f} .co-stat.bad b{color:#ff8a7e} .co-stat.q b{color:var(--gold)}
+.co-acts{justify-content:flex-end;margin-top:.2rem}
+
+/* ---------- pause menu + LegitOS start menu ---------- */
+#pause .btn.co-btn{background:linear-gradient(#ffc061,#f08c00);color:var(--ink);box-shadow:inset 0 2px 0 rgba(255,255,255,.5),0 4px 0 var(--ink)}
+.co-bi{display:grid;place-items:center}
+.co-bi svg{width:1.25rem;height:1.25rem;fill:currentColor}
+.pm-item.co-pm:disabled{opacity:.5;cursor:default}
