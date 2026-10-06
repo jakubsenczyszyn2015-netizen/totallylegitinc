@@ -100,7 +100,9 @@ Net messages: `prop:throw` `{id, t, i, o, v, s}`, `prop:take` `{id}`.
 * Hotbar: slot 1 is always `paper` (endless), slots 2–9 (`HB_N` = 9) are `Inv.all()` items that have an `ItemDefs`
   entry (`hotbar: false` hides one); 6 slots show, more appear when you carry more kinds of items.
   `Props.select(i)`, `Props.cycle(dir)`, `Props.sel`, `Props.slots`. `Props.toFront(id)` moves an item that would
-  not fit to the front of the inventory (call it after giving a bought / picked-up item).
+  not fit to the front of the inventory (call it after giving a bought / picked-up item). With more than 8 kinds,
+  `Props.hidden()` counts the ones that do not fit (a `+N` chip on the hotbar) and scrolling past the last slot
+  rotates the next hidden item in.
 * Extended `ItemDefs` contract (all optional except `name`):
 ```js
 ItemDefs.myItem = {
