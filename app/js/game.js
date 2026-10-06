@@ -82,7 +82,7 @@ const Game = {
   },
   async joinRoom(code) {
     const w = await Net.join(code);
-    this.begin(w.g.mode, 0); this.applyNet(w.g);
+    this.begin(w.g.mode, 0); this.applyNet(w.g); Net.applyShared(w.x);   // after begin: game:begin clears props, photos, paintings…
     if (w.g.phase === 'day') { G.phase = 'day'; this.enterDay(true); } else { G.phase = 'lobby'; this.boardText(); if (w.g.phase === 'review') toast('A review is in progress. You will join the next day.'); }
   },
   startShift() { if (G.phase === 'lobby' && this.authority()) this.startDay(); },

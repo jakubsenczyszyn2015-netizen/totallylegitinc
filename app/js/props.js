@@ -165,7 +165,7 @@ const Props = {
     if (b.def.inst) { const j = W.balls.indexOf(b); if (j >= 0) W.balls.splice(j, 1); } else W.scene.remove(b.m);
     this.ver++;
   },
-  clear() { for (const b of [...this.bodies]) this.remove(b); this.carry = null; for (const c of this.cushions) W.scene.remove(c.m); this.cushions = []; },
+  clear() { for (const b of [...this.bodies]) this.remove(b); this.carry = null; for (const c of this.cushions) W.scene.remove(c.m); this.cushions = []; this._lastShared = undefined; },
   /* too many props: drop the oldest resting paper balls first */
   cap() {
     if (this.bodies.length <= this.MAX) return;

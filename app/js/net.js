@@ -84,7 +84,7 @@ const Net = {
       peer.on('error', e => { if (!done) fail(e.type === 'peer-unavailable' ? 'No room found with that code.' : (e.message || e.type)); else this.peerErr(e); });
     });
     this.active = true; this.isHost = false; this.hostAI = !!welcome.hostAI;
-    this.bind(); Voice.start(); this.applyPl(welcome.pl); this.applyShared(welcome.x);
+    this.bind(); Voice.start(); this.applyPl(welcome.pl);   // the shared state (welcome.x) is applied by Game.joinRoom once the world is reset
     return welcome;
   },
   bind() {
