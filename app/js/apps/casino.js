@@ -672,7 +672,7 @@ const Casino = (() => {
     w.fx.append(ban); setTimeout(() => ban.remove(), 2400);
     if (mega) OS.cashFx('+' + money(payout));                  // the huge desktop money pop-up for the really big ones
   }
-  Net.on('casino:big', d => { if (d && d.name) toast(d.name + ' just won ' + money(d.amt || 0) + ' on LuckyBonk ' + (d.game || 'Casino') + '!', 'good'); });
+  Net.on('casino:big', d => { if (d && d.name) toast(String(d.name).slice(0, 18) + ' just won ' + money(clamp(+d.amt || 0, 0, 1e9)) + ' on LuckyBonk ' + String(d.game || 'Casino').slice(0, 20) + '!', 'good'); });
 
   /* shop picture: art(ctx, w, h) — a neon chip stack */
   function art(g, w, ht) {

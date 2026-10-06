@@ -734,6 +734,10 @@ class AvatarRig {
       mouth = this.mouthT === 'closed' ? (F[2] === 'smile' ? 'grin' : 'neutral') : this.mouthT;
     }
     const ny = this.cur[AVC.ny], look = ny > 0.3 ? -1 : ny < -0.3 ? 1 : 0;
+    // skip the canvas redraw + texture upload for office faces nobody can make out (hidden, or over 14 m from the camera) once
+    // they have been drawn; your own face always draws (the webcam shows it) and the face catches up as soon as it is close
+    const cp = W.camera && W.camera.position, gp = this.group.position;
+    if (this.face.key && this !== W.me && cp && this.group.parent === W.scene && (!this.group.visible || (gp.x - cp.x) * (gp.x - cp.x) + (gp.z - cp.z) * (gp.z - cp.z) > 196)) return;
     this.face.draw(eye, F[1], mouth, look, F[3] ? 1 : 0);
   }
   starsUpdate(t, on) {
@@ -834,7 +838,10 @@ const Avatars = {
   refreshMe() { _avLookOk = false; const L = avMyLook(); settings.color = L.shirt; saveSettings(); if (W.me) W.me.setLook(L); },
   lookFromSeed, normLook, packLook, unpackLook, OPT: AV_OPT, ACTIONS: AV_ACTIONS, MOODS: AV_MOODS
 };
-Net.on('av:act', (p, from) => { if (!p || !AV_ACT[p.a]) return; const av = avatarOf(p.id || from); if (av) av.play(p.a, p.o || undefined); });
+Net.on('av:act', (p, from) => {
+  if (!p || !AV_ACT[p.a]) return; const av = avatarOf(p.id || from), o = p.o && typeof p.o === 'object' ? p.o : null;
+  if (av) av.play(p.a, o ? { dur: o.dur ? clamp(+o.dur || 1, 0.1, 12) : undefined, hold: o.hold != null ? clamp(+o.hold || 0, 0, 12) : undefined, loop: !!o.loop } : undefined);
+});
 Net.on('av:stun', (p, from) => { if (!p) return; const av = avatarOf(p.id || from); if (av) av.stun(clamp(+p.s || 2, 0.2, 10)); });
 Net.addMe('look', () => packLook(avMyLook()));
 Net.addMe('mood', () => Avatars.tmood || Avatars.mood);

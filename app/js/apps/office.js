@@ -17,13 +17,18 @@ OS.apps.payroll = {
         week ? h('div', { class: 'pay-note' }, pct >= 1 ? 'Quota hit. The Boss is almost smiling.' : money(G.quota - G.team) + ' to go before the review') : h('div', { class: 'pay-note' }, 'No quota. Just vibes and invoices.')),
       h('div', { class: 'pay-list' }, rows.map((p, i) => h('div', { class: 'pay-row' + (p.me ? ' me' : '') },
         h('span', { class: 'pay-rank' }, '#' + (i + 1)),
-        h('span', { class: 'pay-av', style: { background: p.me ? settings.color : SHIRTS[hashStr(p.name) % SHIRTS.length] } }, (p.name || '?').trim().charAt(0).toUpperCase() || '?'),
+        h('span', { class: 'pay-av', style: { background: p.me ? settings.color : p.color || SHIRTS[hashStr(p.name) % SHIRTS.length] } }, (p.name || '?').trim().charAt(0).toUpperCase() || '?'),
         h('div', { class: 'pay-who' }, h('b', {}, p.name + (p.me ? ' (you)' : '')), h('div', { class: 'pay-mini' }, h('i', { style: { width: (Math.max(0, p.personal) / top * 100).toFixed(1) + '%' } }))),
         h('span', { class: 'pay-amt' }, money(p.personal))))),
       h('div', { class: 'pay-stats' }, stat('phone', '#2f7cf6', 'Calls', G.stats.calls), stat('check', '#1fa463', 'Scams', G.stats.scams), stat('warning', '#e5383b', 'Baited', G.stats.baited)),
       week ? h('p', { class: 'muted' }, 'Banked across the whole run: ' + money(G.bank)) : null);
   }
 };
+/* keep an open Payroll live: teammates' earnings arrive over the network without a local refresh */
+Loop.add((() => { let t = 0, sig = ''; return dt => {
+  if ((t += dt) < 0.5) return; t = 0; const w = OS.open && OS.wins.get('payroll'); if (!w) { sig = ''; return; }
+  const s = G.team + '|' + G.quota + '|' + Game.roster().map(p => p.name + p.personal).join(); if (s !== sig) { sig = s; OS.apps.payroll.refresh(w.body, w); }
+}; })());
 
 /* the Boss's mugshot for the memo header (our own cartoon) */
 const OS_BOSS_FACE = '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect width="64" height="64" fill="#cfe0f0"/>'

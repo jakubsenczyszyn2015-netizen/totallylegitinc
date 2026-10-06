@@ -31,8 +31,8 @@ const Game = {
   canControl() { return (G.phase === 'day' || G.phase === 'lobby') && !P.seated && !G.paused && !P.cam && P.review < 0 && !UI.settingsOpen; },
   deskTaken(i) { for (const [id, p] of Net.players) if (id !== Net.myId && p.seat === i) return true; return false; },
   roster() {
-    if (!Net.active) return [{ name: settings.name, personal: G.personal, me: true }];
-    return [...Net.players].map(([id, p]) => ({ name: p.name, personal: id === Net.myId ? G.personal : (p.personal || 0), me: id === Net.myId })).sort((a, b) => b.personal - a.personal);
+    if (!Net.active) return [{ name: settings.name, personal: G.personal, me: true, color: settings.color }];
+    return [...Net.players].map(([id, p]) => ({ name: p.name, personal: id === Net.myId ? G.personal : (p.personal || 0), me: id === Net.myId, color: id === Net.myId ? settings.color : p.color })).sort((a, b) => b.personal - a.personal);
   },
   netState() { return { phase: G.phase, mode: G.mode, day: G.day, quota: G.quota, team: G.team, timeLeft: Math.round(G.timeLeft * 10) / 10, dayLen: G.dayLen, bank: G.bank }; },
   authority() { return !Net.active || Net.isHost; },
@@ -82,7 +82,7 @@ const Game = {
   },
   async joinRoom(code) {
     const w = await Net.join(code);
-    this.begin(w.g.mode, 0); this.applyNet(w.g);
+    this.begin(w.g.mode, 0); this.applyNet(w.g); Net.applyShared(w.x);   // after begin: game:begin clears props, photos, paintings…
     if (w.g.phase === 'day') { G.phase = 'day'; this.enterDay(true); } else { G.phase = 'lobby'; this.boardText(); if (w.g.phase === 'review') toast('A review is in progress. You will join the next day.'); }
   },
   startShift() { if (G.phase === 'lobby' && this.authority()) this.startDay(); },
@@ -171,6 +171,8 @@ const Game = {
       else G.timeLeft = Math.max(0, G.timeLeft - dt);
     }
     if (!(G.paused && !Net.active)) Call.tick(dt);
+    // two players sat down at the same desk at the same moment: the higher id gives way
+    if (P.seated && Net.active) for (const [id, p] of Net.players) if (id !== Net.myId && p.seat === P.seat && id < Net.myId) { standUp(); toast((p.name || 'Someone') + ' got to that desk first.'); break; }
   },
   pause(on) {
     if (G.phase === 'menu') return;

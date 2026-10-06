@@ -58,7 +58,8 @@ const Voice = {
     if (this.analyser && this.real) {
       this.analyser.getByteTimeDomainData(this.buf); let m = 0;
       for (let i = 0; i < this.buf.length; i += 4) m = Math.max(m, Math.abs(this.buf[i] - 128));
-      const tr = this.stream.getAudioTracks()[0]; this.talking = !!(tr && tr.enabled) && m > 9;
+      const tr = this.stream.getAudioTracks()[0], on = !!(tr && tr.enabled); if (on && m > 9) this._loudT = now();
+      this.talking = on && now() - (this._loudT || -9) < 0.35;   // hold briefly: speech is choppy and others only sample it ~15 times a second
     } else this.talking = false;
   }
 };

@@ -11,31 +11,58 @@ declarations are shared globals across all files.
 ## Files and load order
 
 ```
-core.js       helpers (h, $, clamp, rand, pick, money…), Store, settings, toast, and the
-              extension points: Bus, Loop, Shop, Inv, ItemDefs
-audio.js      AudioSys, SFX (procedural sounds), TTS (caller voices), STT (speech input)
-net.js        Net — PeerJS multiplayer (host authoritative) + generic messages
-voice.js      Voice — proximity voice chat
-data.js       SCHEMES, callers (PERSONAS, makeCaller, portraitSVG), BOSS lines, UPGRADES
-ai.js         LLM provider calls + prompt building
-brain.js      built-in offline caller AI (offlineReply)
-world.js      renderer, scene, office build, desks, boss (W, P, Keys, box/mat/canvasTex helpers)
-office.js     extra office build-out
-avatars.js    character models, animation, name tags, remote-player sync, W.me, avatarOf()
-fx.js         particles and screen effects
-props.js      physics props, held items, punching, item behaviour
-player.js     local movement, camera, sitting, throwing, interaction (updateWorld)
-os.js         the desktop OS shell (windows, taskbar, icons)
-apps/*.js     desktop apps (each registers OS.apps.<id>)
-call.js       the phone call state machine (Call)
-game.js       G (state), Game (day cycle, money, saves)
-ui.js         menus, settings, HUD, review overlay
-customize.js  character creator
-cams.js       render-to-texture cameras
-review.js     performance review room
-raid.js       police raids
-main.js       input, main loop, boot
+core.js        helpers (h, $, clamp, rand, pick, money…), Store, settings, toast, and the
+               extension points: Bus, Loop, Shop, Inv, ItemDefs
+audio.js       AudioSys, SFX (procedural sounds), TTS (caller voices), STT (speech input)
+net.js         Net — PeerJS multiplayer (host authoritative) + generic messages
+voice.js       Voice — proximity voice chat
+data.js        SCHEMES, callers (PERSONAS, makeCaller, portraitSVG), BOSS lines, UPGRADES
+ai.js          LLM provider calls + prompt building
+brain.js       built-in offline caller AI (offlineReply)
+world.js       renderer, colour pipeline, static batcher, shell, desks, boss (W, P, Keys, box/mat/canvasTex)
+office.js      office build-out: furniture, desk screens, leaderboard, projector, fans, grade, menu camera
+avatars.js     character models, animation, name tags, remote-player sync, W.me, avatarOf()
+fx.js          particles, decals, screen effects (FX)
+props.js       physics props, held items + hotbar, melee, item behaviour (Props)
+player.js      local movement, camera, sitting, throwing, interaction (updateWorld)
+os.js          LegitOS desktop shell (windows, taskbar, icons, start menu, pop-ups)
+apps/office.js      Settings, Payroll, Memo          apps/phone.js     Phone window
+apps/schemes.js     scheme apps + Playbook           apps/remote.js    NosyViewer
+apps/shop.js        BonkMart Market + Chaos goods    apps/cookie.js    Cosmic Cookie
+apps/casino.js      LuckyBonk Casino                 apps/chat.js      Chatterbox
+apps/paint.js       Doodle Pro                       apps/browser.js   Browser
+apps/antivirus.js   BugBuster                        apps/wallpapers.js Wallpapers
+apps/script.js      call Script                      apps/camera.js    Camera (webcam)
+apps/cctv.js        CCTV console
+call.js        the phone call state machine (Call)
+game.js        G (state), Game (day cycle, money, saves)
+ui.js          title screen, menus, settings, pause, walking HUD, day card
+customize.js   character creator
+cams.js        render-to-texture cameras, Bonk SnapCam photos
+review.js      performance review room, firing, end reports
+clockout.js    clock out early: punch clock, pause / start-menu buttons, multiplayer vote
+raid.js        police raids
+main.js        input, main loop, boot
 ```
+Styles (`app/css`): `fonts.css`, `style.css` (menus, HUD, toasts), `os.css`, `phone.css`, `shop.css`, `games.css`,
+`tools.css`, `camera.css`, `hud.css` (hotbar, key hints, screen effects), `review.css`, `raid.css`, `clockout.css`,
+`customize.css`.
+
+### Module docs
+Each module documents its public API in `docs/modules/`:
+[office](modules/office.md) (world.js + office.js) ·
+[avatars](modules/avatars.md) (avatars.js, customize.js) ·
+[props](modules/props.md) (fx.js, props.js, player.js, hud.css) ·
+[os](modules/os.md) (os.js, apps/office.js, apps/wallpapers.js) ·
+[phone](modules/phone.md) (call.js, data.js, brain.js, ai.js, apps/phone.js, schemes.js, remote.js, script.js) ·
+[shop](modules/shop.md) (apps/shop.js) ·
+[games](modules/games.md) (cookie.js, casino.js) ·
+[tools](modules/tools.md) (chat.js, paint.js, browser.js, antivirus.js) ·
+[cams](modules/cams.md) (cams.js, camera.js, cctv.js) ·
+[review](modules/review.md) (review.js) ·
+[ui](modules/ui.md) (ui.js, style.css, clockout.js) ·
+[raid](modules/raid.md) (raid.js, raid.css).
+Scenarios for each live in `tools/scenarios/<module>.js`.
 
 **Rule for top-level code:** at load time a file may only touch things from files loaded before
 it — in practice `core.js` registries (`Bus`, `Loop`, `Shop`, `Inv`, `ItemDefs`), `Net.on`,
@@ -69,8 +96,17 @@ the load order, or inside `Bus.on('boot', …)`).
 | `call:end` | `{result, call}` | the call ended (`paid`, `baited`, `hung`, `you`, `timeout`, `cut`) |
 | `player:sit` / `player:stand` | `deskIndex` / | the local player sat down / stood up |
 | `inv:change` | `id, count` | the local inventory changed |
+| `quality` | `q` | graphics quality changed (`'low'|'med'|'high'`) |
+| `fonts:ready` | | the bundled fonts finished loading (redraw canvas text) |
+| `door` | `{id, open}` | a door opened / closed |
+| `shop:buy` | `{id, price, item}` | something was bought at BonkMart |
 
-Add new events freely (document them here) — e.g. `raid:start`, `prop:hit`.
+Module events (see the module docs): `prop:bin`, `fx`, `look:change`, `wallpaper`, `review:slide`,
+`review:fire`, `review:report`, `review:end`, `call:code`, `call:remote`, `cookie:click`, `cookie:milestone`,
+`casino:result`, `chat:prank`, `chat:pranked`, `paint:hang`, `paint:hung`, `antivirus:block`, `antivirus:clean`,
+`raid:heat`, `raid:start`, `raid:arrest`, `raid:end`.
+
+Add new events freely (document them here).
 
 ### Loop — per-frame hooks
 `Loop.add(fn)` → `fn(dt, t)` every frame after `updateWorld`. `Loop.addRender(fn)` → after the main
@@ -80,6 +116,7 @@ render (use for extra cameras). `Loop.remove(fn)`. Errors are logged once and sw
 Host is authoritative; clients send requests, the host decides and relays. Up to 6 players.
 - `Net.active`, `Net.isHost`, `Net.myId`, `Net.players` (Map id → `{name, color, x, y, z, ry, seat, talk, personal, ext}`)
 - `Net.isAuth()` — true for the host or in singleplayer. Use it to decide who simulates shared things.
+- `Net.fromHost(from)` — in a handler: did this message come from the host? Guard host-only decisions with it.
 - `Net.on(type, (payload, fromId) => …)` — one handler per type.
 - `Net.emit(type, payload, {host, to})` — send to everyone else (the host relays client messages).
   **The sender's handler is not called** — apply the change locally first.
@@ -89,6 +126,8 @@ Host is authoritative; clients send requests, the host decides and relays. Up to
 - `Net.addMe(key, () => value)` — extra per-player data sent with your position; other players
   see it as `Net.players.get(id).ext[key]`. Use for look, held item, pose.
 Everything new that others should see (props, effects, raids, chat) **must** sync through these.
+Payloads come from other players: clamp numbers, cap strings, ignore unknown ids. Multiplayer test rig and
+scenarios: `docs/modules/multiplayer.md` (`tools/harness-mp.js`).
 In singleplayer `Net.active` is false and `Net.emit` does nothing.
 
 ### Shop — store catalog
@@ -121,10 +160,28 @@ OS.apps.myapp = {
 avatar for any player id (yourself included). `W.avatars` holds remote players.
 
 ### World
-`W.scene`, `W.camera`, `W.renderer`, `W.desks[i]` (`{i, x, z, rot, npc, seat, eye, stand}`),
+`W.scene`, `W.camera`, `W.renderer`, `W.desks[i]` (`{i, x, z, rot, npc, seat, eye, stand, screen}`),
 `W.colliders` (axis-aligned boxes `{x0,x1,z0,z1,y1}` used by `blocked(x, z)`), `W.interact`
-(`{pos, label(), act()}` — press E), `W.bins`, `REVIEW_SEATS`, `placeBoss()`, `setBoard(lines)`.
+(`{pos, label(), act()}` — press E; `label()` returning null hides the prompt), `W.bins`, `REVIEW_SEATS`,
+`placeBoss()`, `setBoard(lines)`, `W.rooms`, `W.spawn`, `W.doors.main/boss`, `W.leaderboard`, `W.projector`,
+`W.setDeskScreen(i, mode)`, `W.camOverride`, `W.setCeiling(v)`, `W.updateShadows()` (see [office](modules/office.md)).
 `P` is the local player (`pos`, `yaw`, `pitch`, `seated`, `seat`, `review`, `speed`).
+
+### Other module APIs (details in the module docs)
+- `FX` particles / decals / screen effects, `Props` physics props and held items ([props](modules/props.md)).
+- `OS` — `OS.apps`, `OS.launch/close/refresh`, `OS.glyphs`, `OS.popup`, `OS.power()` start menu ([os](modules/os.md)).
+- `Cams.create()` render-to-texture cameras, `Photos` ([cams](modules/cams.md)); `Review` ([review](modules/review.md)).
+- `UI` menus / HUD, `ClockOut` clock out early + the multiplayer vote ([ui](modules/ui.md)).
+
+### Performance rules
+Share geometries and materials (`boxGeo`, `mat`, `rboxGeo`, `mergeGeos`), batch static geometry through `S.*`
+during the build, use `InstancedMesh` for repeated things, keep canvas textures small and redraw them only when
+they change and only while they can be seen, avoid allocations in per-frame code, and skip work for hidden things
+(the main 3D render is skipped while the desktop covers the screen: check `OS.open && P.seated && !P.cam` before
+redrawing anything that is only seen in 3D). Listen to `Bus.on('quality')` or read `settings.quality`; `'low'` must be
+genuinely light: it lowers the pixel ratio, turns off shadows, the CSS colour grade (`body.q-low`) and anti-aliasing
+(next start), halves the particle budget and fire emission, renders the extra cameras at half rate and the desk screens
+at 5 Hz. Measure with `tools/scenarios/perf.js` (see [ui](modules/ui.md#performance)) before and after a change.
 
 ## Art direction
 

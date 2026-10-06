@@ -166,7 +166,7 @@ const Props = {
     if (b.def.inst) { const j = W.balls.indexOf(b); if (j >= 0) W.balls.splice(j, 1); } else W.scene.remove(b.m);
     this.ver++;
   },
-  clear() { for (const b of [...this.bodies]) this.remove(b); this.carry = null; for (const c of this.cushions) W.scene.remove(c.m); this.cushions = []; },
+  clear() { for (const b of [...this.bodies]) this.remove(b); this.carry = null; for (const c of this.cushions) W.scene.remove(c.m); this.cushions = []; this._lastShared = undefined; },
   /* too many props: drop the oldest resting paper balls first */
   cap() {
     if (this.bodies.length <= this.MAX) return;
@@ -442,7 +442,7 @@ function onHitMsg(m, from, mine) {
   const me = m.id === Net.myId || (!Net.active && m.id === 'me');
   if (me) {
     const seated = P.seated || P.review >= 0;
-    if (!seated) { P.kx = (+d[0] || 0) * f; P.kz = (+d[1] || 0) * f; P.vy = Math.max(P.vy, 2.8); P.stunT = s; }
+    if (!seated) { P.kx = clamp(+d[0] || 0, -1, 1) * f; P.kz = clamp(+d[1] || 0, -1, 1) * f; P.vy = Math.max(P.vy, 2.8); P.stunT = s; }
     if (W.me && W.me.stun) W.me.stun(s); if (W.me && W.me.play) W.me.play('hit');
     FX.shake(seated ? 0.4 : 0.7, 0.35); FX.flash('#ffffff', 0.18, 0.35); (m.sl ? SFX.slap : SFX.punch)();
     const sp = seated && W.me ? W.me.group.position : P.pos;
@@ -467,7 +467,8 @@ Net.on('act', (p, from) => { if (!p || typeof p.a !== 'string') return; const av
 Net.on('prop:throw', d => {
   if (!d || typeof d.id !== 'string' || !Array.isArray(d.o) || !Array.isArray(d.v) || d.o.length !== 3 || d.v.length !== 3) return;
   const t = PropTypes[d.t] ? d.t : 'paper';
-  Props.spawn(t, d.o.map(Number), d.v.map(x => clamp(+x || 0, -30, 30)), { id: d.id, item: typeof d.i === 'string' ? d.i : null, spin: Array.isArray(d.s) ? d.s.map(Number) : null });
+  const n = (x, l) => (Number.isFinite(+x) ? clamp(+x, -l, l) : 0);
+  Props.spawn(t, d.o.map(x => n(x, 80)), d.v.map(x => n(x, 30)), { id: d.id.slice(0, 40), item: typeof d.i === 'string' ? d.i.slice(0, 40) : null, spin: Array.isArray(d.s) && d.s.length === 3 ? d.s.map(x => n(x, 20)) : null });
 });
 Net.on('prop:take', d => { if (d && d.id) Props.remove(Props.byId.get(String(d.id))); });
 Net.share('props', () => Props.shared(), s => Props.applyShared(s));
@@ -504,7 +505,7 @@ const Cushions = {
     }
   }
 };
-Net.on('whoopee', d => { if (d && d.id && Array.isArray(d.p)) Cushions.add(String(d.id), +d.p[0], +d.p[1], +d.p[2], d.d == null ? -1 : d.d | 0); });
+Net.on('whoopee', d => { if (d && d.id && Array.isArray(d.p) && d.p.length === 3 && d.p.every(Number.isFinite)) Cushions.add(String(d.id).slice(0, 40), clamp(d.p[0], -80, 80), clamp(d.p[1], 0, 5), clamp(d.p[2], -80, 80), d.d == null ? -1 : d.d | 0); });
 Net.on('whoopee:pop', (d, from) => { if (d && d.id) Cushions.pop(String(d.id), typeof d.n === 'number' ? d.n : from); });
 
 /* ---------- items ---------- */

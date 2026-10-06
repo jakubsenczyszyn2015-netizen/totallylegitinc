@@ -449,7 +449,7 @@ function drawLeaderboard(g, w, hh, roster) {
     if (p.me) { g.fillStyle = 'rgba(255,255,255,.07)'; rrect(g, 36, y - 56, w - 72, 84, 12); g.fill(); }
     if (p.empty) { g.textAlign = 'left'; g.fillStyle = 'rgba(255,190,170,.35)'; g.font = '46px ' + FONT.slab; g.fillText('{ ' + ranks[k] + ' }', 52, y); g.font = 'italic 700 30px ' + FONT.menu; g.fillText('Keep pushing.', 300, y - 4); return; }
     g.textAlign = 'left'; g.fillStyle = rc[k] || '#d9a0a0'; g.font = '46px ' + FONT.slab; g.fillText('{ ' + ranks[k] + ' }', 52, y);
-    const col = SHIRTS[hashStr(p.name || '?') % SHIRTS.length]; g.fillStyle = col; g.beginPath(); g.arc(300, y - 15, 28, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '32px ' + FONT.chunky; g.textAlign = 'center'; g.fillText((p.name || '?')[0].toUpperCase(), 300, y - 3);
+    const col = p.color || SHIRTS[hashStr(p.name || '?') % SHIRTS.length]; g.fillStyle = col; g.beginPath(); g.arc(300, y - 15, 28, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '32px ' + FONT.chunky; g.textAlign = 'center'; g.fillText((p.name || '?')[0].toUpperCase(), 300, y - 3);
     g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = '800 38px ' + FONT.menu; g.fillText(p.name || 'Agent', 346, y - 10, 380);
     g.fillStyle = '#ffb3a8'; g.font = 'italic 700 22px ' + FONT.menu; g.fillText(k === 0 && p.personal > 0 ? 'Crushing it.' : 'Keep pushing.', 348, y + 18);
     g.textAlign = 'right'; g.fillStyle = '#8dff8a'; g.font = '50px ' + FONT.chunky; g.fillText(money(p.personal || 0), w - 56, y + 2);
@@ -688,15 +688,21 @@ function buildOffice() {
 }
 
 /* ---------- per-frame: fans, clock, screens, leaderboard, dust ---------- */
-let _scrT = 0, _autoT = 0, _lbT = 0;
+let _scrT = 0, _autoT = 0, _lbT = 0, _tzT = -1, _tz = 0;
 Loop.add((dt, t) => {
   for (const f of FANS) { f.blades.rotation.z -= dt * f.sp; f.head.rotation.y = Math.sin(t * 0.45 + f.ph) * 0.55; }
-  if (CLOCK) { const d = new Date(), s = d.getSeconds() + d.getMilliseconds() / 1000, m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60; CLOCK.s.rotation.z = -s / 60 * Math.PI * 2; CLOCK.m.rotation.z = -m / 60 * Math.PI * 2; CLOCK.h.rotation.z = -h / 12 * Math.PI * 2; }
+  if (CLOCK) {   // local time without a Date object per frame (the time-zone offset is refreshed once a minute)
+    if (t - _tzT > 60 || _tzT < 0) { _tzT = t; _tz = new Date().getTimezoneOffset() * 60000; }
+    const ms = Date.now() - _tz, s = ms / 1000 % 60, m = ms / 60000 % 60, h = ms / 3600000 % 12;
+    CLOCK.s.rotation.z = -s / 60 * Math.PI * 2; CLOCK.m.rotation.z = -m / 60 * Math.PI * 2; CLOCK.h.rotation.z = -h / 12 * Math.PI * 2;
+  }
   if (!SCR.mesh) return;
-  _scrT += dt; if (_scrT > 0.1) { _scrT = 0; SCR.t = t; if (!(OS.open && P.seated && !P.cam)) drawScreens(t); }
+  const hid = OS.open && P.seated && !P.cam;   // the desktop covers the 3D view (the main render is skipped)
+  // the screen atlas (1024x512 canvas + upload): 10x a second, 5x on low quality, not while hidden or in the review room
+  _scrT += dt; if (_scrT > (settings.quality === 'low' ? 0.2 : 0.1)) { _scrT = 0; SCR.t = t; if (!hid && P.review < 0) drawScreens(t); }
   _autoT += dt; if (_autoT > 0.2) { _autoT = 0; autoScreens(); }
-  _lbT += dt; if (_lbT > 1 && W.leaderboard) { _lbT = 0; W.leaderboard.update(); }
-  if (DUST.pts) {
+  _lbT += dt; if (_lbT > 1 && W.leaderboard && !hid && P.review < 0) { _lbT = 0; W.leaderboard.update(); }   // 1024x576 redraw with the countdown
+  if (DUST.pts && !hid) {
     const a = DUST.pts.geometry.attributes.position, b = DUST.base;
     for (let i = 0; i < a.count; i++) { const k = i * 4; a.array[i * 3] = b[k] + Math.sin(t * 0.13 + b[k + 3]) * 0.25; a.array[i * 3 + 1] = b[k + 1] + Math.sin(t * 0.21 + b[k + 3] * 2) * 0.15; a.array[i * 3 + 2] = b[k + 2] + Math.cos(t * 0.11 + b[k + 3]) * 0.25; }
     a.needsUpdate = true;

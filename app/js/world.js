@@ -228,7 +228,7 @@ W.updateShadows = () => { if (W.renderer) W.renderer.shadowMap.needsUpdate = tru
 
 function initWorld() {
   const canvas = $('#gl');
-  W.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  W.renderer = new THREE.WebGLRenderer({ canvas, antialias: settings.quality !== 'low', powerPreference: 'high-performance' });   // MSAA can only be chosen here: low applies on the next start
   const R = W.renderer;
   R.outputEncoding = THREE.sRGBEncoding; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.0;
   R.shadowMap.autoUpdate = false; R.shadowMap.type = THREE.PCFShadowMap;

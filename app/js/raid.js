@@ -657,11 +657,18 @@ const Raid = {
   },
   bustUpdate(dt, t) {
     if (this.book && this.book.av.group.visible) poseAvatar(this.book.av, false, t, 0);
+    if (this.bust || this._hid) this.hideBooked();
     const b = this.bust; if (!b) return; b.t += dt;
     if (!W.camOverride) W.camOverride = { pos: [21.05, 1.52, 0.04], look: [23.3, 1.22, 0] };   // keep the mugshot camera even if someone released it
     if (W.me) W.me.group.visible = true; const ho = Props.held.get('me'); if (ho && ho.obj) ho.obj.visible = false;
     if (!b.snap && b.t > 1.5) { b.snap = true; RaidSnd.shutter(); FX.flash('#ffffff', 0.3, 0.95); RaidUI.snap(); }
     if (b.t > 3.8 || G.phase !== 'day' || P.review >= 0) this.release();
+  },
+  /* two teammates booked at once share the mugshot spot: while I am booked, hide whoever else stands on it */
+  hideBooked() {
+    let any = false;
+    for (const a of W.avatars.values()) { const g = a.av.group, hide = !!this.bust && Math.hypot(g.position.x - 23.3, g.position.z) < 0.9; if (hide !== !!a.rbHid) { a.rbHid = hide; g.visible = !hide; } any = any || hide; }
+    this._hid = any;
   },
   /* handcuffs on an arrested player's avatar (everyone sees them) */
   cuffUpdate() {
@@ -762,7 +769,7 @@ const Raid = {
     if (this.seed !== (s.s | 0)) { this.clearCops(); this.seed = s.s | 0; }
     for (let i = 0; i < C.length; i++) {
       const e = C[i]; if (!Array.isArray(e)) continue; let c = this.cops[i];
-      if (!c) { if (e[3] === 5) continue; c = this.cops[i] = this.makeCop(i); c.x = +e[0]; c.z = +e[1]; }
+      if (!c) { c = this.cops[i] = this.makeCop(i); c.x = +e[0]; c.z = +e[1]; }   // (a cop that already left is made too and hidden by setSt: no holes in the list)
       c.tx = +e[0]; c.tz = +e[1]; c.tr = +e[2]; c.hp = +e[4]; if ((e[3] | 0) !== c.st) this.setSt(c, e[3] | 0);
     }
   },
@@ -1145,16 +1152,16 @@ const RaidUI = {
 /* =====================================================================
    NETWORK + LIFECYCLE
    ===================================================================== */
-Net.on('raid:go', d => { if (d && !Net.isHost && typeof d.n === 'number') Raid.begin({ n: d.n | 0, k: clamp(d.k | 0, 1, 6), s: d.s | 0 }); });
-Net.on('raid:end', d => { if (d && !Net.isHost && Raid.on) Raid.over({ n: d.n | 0, ok: d.ok ? 1 : 0, k: d.k | 0 }); });
+Net.on('raid:go', (d, from) => { if (d && !Net.isHost && Net.fromHost(from) && typeof d.n === 'number') Raid.begin({ n: d.n | 0, k: clamp(d.k | 0, 1, 6), s: d.s | 0 }); });
+Net.on('raid:end', (d, from) => { if (d && !Net.isHost && Net.fromHost(from) && Raid.on) Raid.over({ n: d.n | 0, ok: d.ok ? 1 : 0, k: d.k | 0 }); });
 Net.on('raid:heat', d => { if (d && Net.isHost) { Raid.heat = clamp(Raid.heat + clamp(+d.a || 0, -30, 30), 0, RAID.max); Bus.emit('raid:heat', Raid.heat); } });
 Net.on('raid:hit', d => {
   if (!d || !Net.isHost) return; const c = Raid.cops[d.c | 0], kb = Array.isArray(d.kb) ? d.kb : [0, 0];
   if (c) Raid.hurt(c, clamp(+d.d || 0, 0, 4), clamp(+d.s || 0, 0, 4), clamp(+kb[0] || 0, -9, 9), clamp(+kb[1] || 0, -9, 9), typeof d.k === 'string' ? d.k.slice(0, 10) : 'hit');
 });
-Net.on('raid:arrest', d => { if (d && d.id != null) Raid.onArrest({ id: String(d.id), c: d.c | 0 }); });
-Net.on('raid:block', d => { if (d && d.id != null) Raid.onBlock({ id: String(d.id), c: d.c | 0 }); });
-Net.on('raid:spook', d => { if (d) Raid.onSpook({ c: d.c | 0 }); });
+Net.on('raid:arrest', (d, from) => { if (d && d.id != null && Net.fromHost(from)) Raid.onArrest({ id: String(d.id), c: d.c | 0 }); });
+Net.on('raid:block', (d, from) => { if (d && d.id != null && Net.fromHost(from)) Raid.onBlock({ id: String(d.id), c: d.c | 0 }); });
+Net.on('raid:spook', (d, from) => { if (d && Net.fromHost(from)) Raid.onSpook({ c: d.c | 0 }); });
 Net.on('raid:shot', d => {
   if (!d || !Shots.W[d.k] || !Array.isArray(d.o) || d.o.length !== 3 || !Array.isArray(d.v)) return;
   const vs = d.v.slice(0, 8).filter(v => Array.isArray(v) && v.length === 3).map(v => v.map(x => clamp(+x || 0, -60, 60)));
