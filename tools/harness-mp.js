@@ -94,7 +94,7 @@ function makePage(name, mp) {
       // software WebGL is slow and 2-3 windows share the CPU: skip drawing the main canvas except right before a screenshot
       // (render-to-texture passes such as webcam / photo shots still run), so the game logic and the network keep a decent frame rate
       const R = W.renderer, draw = R.render.bind(R); window.__mpDraw = 2;
-      R.render = (sc, cam) => { if (window.__mpDraw > 0 || R.getRenderTarget()) draw(sc, cam); };
+      R.render = (sc, cam) => { if (window.__mpDraw > 0 || R.getRenderTarget() || (typeof RaidUI !== 'undefined' && RaidUI.grab)) draw(sc, cam); };   // (the raid mugshot grabs one drawn frame)
       Loop.add(() => { if (window.__mpDraw > 0) window.__mpDraw--; });
       return true;
     }, name, mp.port, idx);
