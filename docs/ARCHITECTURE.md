@@ -33,7 +33,6 @@ ui.js         menus, settings, HUD, review overlay
 customize.js  character creator
 cams.js       render-to-texture cameras
 review.js     performance review room
-clockout.js   clock out early (solo confirm, multiplayer majority vote, hallway time clock)
 raid.js       police raids
 main.js       input, main loop, boot
 ```
