@@ -302,4 +302,3 @@ kbd{background:var(--ink);border:2px solid var(--navy3);border-bottom-width:4px;
 
 /* ---------- low graphics quality: drop costly full-screen CSS effects (the canvas grade is in office.js) ---------- */
 body.q-low .rv-flames i{filter:none}
-body.q-low .rv-flames{mix-blend-mode:normal}
