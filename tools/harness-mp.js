@@ -17,6 +17,9 @@
    page API (like tools/harness.js): page.name, page.eval(fn, ...args), page.shot(name), page.wait(ms), page.key(code, ms),
      page.sit(desk), page.stand(), page.teleport(x, z, yaw, pitch), page.ring(baiter), page.answer(), page.say(text),
      page.id() (the player's Net id), page.errors / page.logs
+   The main canvas is only drawn for the frames before a screenshot (and the frame the raid mugshot grabs): software WebGL
+   in 2-4 windows would starve the game logic and the network otherwise. MP_PEER_PORT=<port> uses a PeerJS server you run;
+   MP_LOG=1 echoes every window's console. Scenarios and findings: docs/modules/multiplayer.md.
    The process exits with code 1 on uncaught page errors or failed checks. */
 const { app, BrowserWindow, session } = require('electron');
 const path = require('path'), fs = require('fs');
