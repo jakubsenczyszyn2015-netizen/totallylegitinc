@@ -61,7 +61,7 @@ Each module documents its public API in `docs/modules/`:
 [cams](modules/cams.md) (cams.js, camera.js, cctv.js) ·
 [review](modules/review.md) (review.js) ·
 [ui](modules/ui.md) (ui.js, style.css, clockout.js) ·
-raids (raid.js, `docs/modules/raid.md`, written by the raid module).
+[raid](modules/raid.md) (raid.js, raid.css).
 Scenarios for each live in `tools/scenarios/<module>.js`.
 
 **Rule for top-level code:** at load time a file may only touch things from files loaded before
@@ -96,7 +96,6 @@ the load order, or inside `Bus.on('boot', …)`).
 | `call:end` | `{result, call}` | the call ended (`paid`, `baited`, `hung`, `you`, `timeout`, `cut`) |
 | `player:sit` / `player:stand` | `deskIndex` / | the local player sat down / stood up |
 | `inv:change` | `id, count` | the local inventory changed |
-
 | `quality` | `q` | graphics quality changed (`'low'|'med'|'high'`) |
 | `fonts:ready` | | the bundled fonts finished loading (redraw canvas text) |
 | `door` | `{id, open}` | a door opened / closed |
@@ -104,9 +103,10 @@ the load order, or inside `Bus.on('boot', …)`).
 
 Module events (see the module docs): `prop:bin`, `fx`, `look:change`, `wallpaper`, `review:slide`,
 `review:fire`, `review:report`, `review:end`, `call:code`, `call:remote`, `cookie:click`, `cookie:milestone`,
-`casino:result`, `chat:prank`, `chat:pranked`, `paint:hang`, `paint:hung`, `antivirus:block`, `antivirus:clean`.
+`casino:result`, `chat:prank`, `chat:pranked`, `paint:hang`, `paint:hung`, `antivirus:block`, `antivirus:clean`,
+`raid:heat`, `raid:start`, `raid:arrest`, `raid:end`.
 
-Add new events freely (document them here) — e.g. `raid:start`.
+Add new events freely (document them here).
 
 ### Loop — per-frame hooks
 `Loop.add(fn)` → `fn(dt, t)` every frame after `updateWorld`. `Loop.addRender(fn)` → after the main
@@ -174,8 +174,11 @@ avatar for any player id (yourself included). `W.avatars` holds remote players.
 Share geometries and materials (`boxGeo`, `mat`, `rboxGeo`, `mergeGeos`), batch static geometry through `S.*`
 during the build, use `InstancedMesh` for repeated things, keep canvas textures small and redraw them only when
 they change and only while they can be seen, avoid allocations in per-frame code, and skip work for hidden things
-(the main 3D render is skipped while the desktop covers the screen). `settings.quality === 'low'` turns off
-shadows, the CSS colour grade, anti-aliasing and halves particle budgets; check `tools/scenarios/perf.js`.
+(the main 3D render is skipped while the desktop covers the screen: check `OS.open && P.seated && !P.cam` before
+redrawing anything that is only seen in 3D). Listen to `Bus.on('quality')` or read `settings.quality`; `'low'` must be
+genuinely light: it lowers the pixel ratio, turns off shadows, the CSS colour grade (`body.q-low`) and anti-aliasing
+(next start), halves the particle budget and fire emission, renders the extra cameras at half rate and the desk screens
+at 5 Hz. Measure with `tools/scenarios/perf.js` (see [ui](modules/ui.md#performance)) before and after a change.
 
 ## Art direction
 

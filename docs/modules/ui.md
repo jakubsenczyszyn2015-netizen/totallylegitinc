@@ -81,7 +81,36 @@ Host authority:
 `view` (current vote as everyone sees it, or null), `result`, `VOTE_S` (30), `COOL_S` (60), `clock` (punch-clock
 meshes / canvases). Host internals: `hostStart(id)`, `hostCast(id, yes)`, `hostUpdate()`.
 
-## Performance notes (see `tools/scenarios/perf.js`)
-`PERF_Q=low|med|high PERF_ONLY=floor,desk,fire,strike` prints JS ms per frame, render ms, draw calls and triangles
-for the heavy scenes plus the six most expensive `Loop` hooks. Software WebGL in the harness is slow: compare JS ms
-and draw calls between runs, not fps.
+## Performance
+Probe: `tools/scenarios/perf.js` (`PERF_Q=low|med|high`, `PERF_ONLY=floor,desk,fire,strike`, `PERF_N` frames). Scenes: the
+call floor with every NPC in view, the desktop with Phone + Camera + CCTV + Cosmic Cookie open, the review fire (12 fires)
+and a self-airstrike. Per scene it prints the JS update ms per frame (`Game.tick` + `updateWorld` + Loop hooks + Net) with the
+six heaviest Loop hooks, the render ms (software WebGL: noisy, compare only within one run), draw calls, triangles,
+particle counts (`FX.stats()`), canvas-texture uploads per second (`texUploadKBs`, `texUploadsPerS` by size) and the extra
+camera renders + GPU read-backs per second (`camFrames`, `camReadbackKBs`).
+
+What the scene costs (med): ~65 draw calls and ~240k triangles on the floor (static geometry is batched, NPC avatars ~6.8k
+triangles each), 1-2 ms of JS per frame. The expensive parts are GPU-side: canvas textures re-uploaded every frame or
+so, render-to-texture cameras with synchronous read-backs, big transparent particles and full-screen CSS filters.
+
+Optimisations of the polish pass (each a small change in the owning file):
+| where | change |
+|---|---|
+| `office.js` | desk-screen atlas (1024x512) redrawn at 10 Hz, 5 Hz on low; screens, leaderboard (1024x576, 1 Hz) and dust skip while the desktop covers the view, screens + leaderboard also in the review room; wall clock without a `Date` per frame |
+| `avatars.js` | face canvases (256x256) are not redrawn / uploaded for office avatars that are hidden or over 14 m away (your own face always draws for the webcam) |
+| `fx.js` | low: half the particle cap per layer, half the fire emission, half of the long-lived smoke / gas puffs; no array literals per frame |
+| `cams.js` | low: extra cameras at half their frame rate and one render + read-back per frame |
+| `world.js` | low: the renderer is created without MSAA (applies on the next start) |
+| `style.css` | low: the review's foreground flames lose their `blur()`; the last-minute timer pulse uses `text-shadow` instead of an animated `filter` |
+
+Before / after (same probe, 1280x720; upload and camera numbers are deterministic, render ms is not):
+| scene | before | after |
+|---|---|---|
+| floor, med | 21.0 MB/s uploads, 1.6 ms JS | 20.5 MB/s (by design: live screens), 1.1-1.5 ms JS |
+| floor, low | 16.0 MB/s uploads | 8-12.5 MB/s |
+| desk (4 windows), med | 5.1 MB/s uploads, 26 camera frames/s (8.5 MB/s read-back) | 1.5 MB/s, 26 frames/s |
+| desk (4 windows), low | 6.0 MB/s uploads, 24 camera frames/s (7.5 MB/s read-back) | 2-3.5 MB/s, 14 frames/s (4.7 MB/s) |
+| review fire, med | 23.5 MB/s uploads | 2-6 MB/s |
+| review fire, low | 283 particles, 23.5 MB/s uploads | 113 particles, 3-3.5 MB/s |
+| airstrike, low | 210 smoke particles | 160-190 |
+Low vs med on the floor: 63 vs 65 draw calls, render resolution x0.75, no shadow pass, no CSS grade.
