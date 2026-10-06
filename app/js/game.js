@@ -171,6 +171,8 @@ const Game = {
       else G.timeLeft = Math.max(0, G.timeLeft - dt);
     }
     if (!(G.paused && !Net.active)) Call.tick(dt);
+    // two players sat down at the same desk at the same moment: the higher id gives way
+    if (P.seated && Net.active) for (const [id, p] of Net.players) if (id !== Net.myId && p.seat === P.seat && id < Net.myId) { standUp(); toast((p.name || 'Someone') + ' got to that desk first.'); break; }
     G.clips += G.clipBots * dt;
   },
   pause(on) {
