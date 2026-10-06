@@ -2,7 +2,9 @@
    triangles in the heavy scenes: the call floor with every NPC, the desktop with several windows (Camera + CCTV),
    the review fire and a self-airstrike.  PERF_Q=low|med|high sets the quality, PERF_ONLY=floor,desk,fire,strike
    runs some scenes, PERF_N sets the number of benched frames.  Software WebGL in the harness is slow and the machine
-   may be shared, so compare update ms / draw calls between runs rather than absolute render times. */
+   may be shared, so compare update ms / draw calls between runs rather than absolute render times.
+   texUploadKBs = canvas-texture uploads per second, camFrames / camReadbackKBs = extra camera renders and their GPU
+   read-backs per second (both counted over a 0.5 s warm-up at 60 fps). */
 module.exports = async page => {
   const ev = page.eval, Q = process.env.PERF_Q || 'med', MS = +process.env.PERF_MS || 3000;
   const want = k => !process.env.PERF_ONLY || process.env.PERF_ONLY.split(',').includes(k);
@@ -26,6 +28,14 @@ module.exports = async page => {
     const r = await ev(n => {
       const T = window.__tli, S = window.__perf, R = T.W.renderer, gl = R.getContext(), px = new Uint8Array(4), dt = 1 / 60;
       let t = _t, upd = 0, ren = [], calls = 0, tris = 0, worst = 0;
+      // warm up: 0.5 s of simulation (+ the extra cameras, no main render) so fires / particles reach their steady state;
+      // meanwhile count the canvas-texture uploads it asks for and the render-to-texture camera frames (GPU read-backs)
+      const texs = new Set(); T.W.scene.traverse(o => { for (const m of o.material ? [].concat(o.material) : []) for (const k of ['map', 'emissiveMap', 'alphaMap']) if (m[k]) texs.add(m[k]); });
+      const v0 = new Map([...texs].map(x => [x, x.version])), cams = typeof Cams !== 'undefined' ? Cams.list : [], f0 = cams.map(c => c.frames);
+      for (let i = 0; i < 30; i++) { t += dt; T.Game.tick(dt); updateWorld(dt, t); T.Loop.run(dt, t); T.Loop.runRender(dt, t); }
+      let upKB = 0, rbKB = 0, camFps = 0;
+      for (const x of texs) if (x.version !== v0.get(x) && x.image && x.image.width) upKB += (x.version - v0.get(x)) * x.image.width * x.image.height * 4 / 1024;
+      cams.forEach((c, i) => { const d = c.frames - (f0[i] || 0); camFps += d; rbKB += d * c.w * c.h * 4 / 1024; });
       gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
       S.hooks.clear(); S.on = true;
       for (let i = 0; i < n; i++) {
@@ -40,7 +50,8 @@ module.exports = async page => {
       S.on = false; ren.sort((x, y) => x - y);
       const hooks = [...S.hooks].sort((x, y) => y[1] - x[1]).slice(0, 6).map(([k, v]) => (v / n).toFixed(2) + 'ms ' + k);
       return { update: +(upd / n).toFixed(2), worstUpdate: +worst.toFixed(1), renderMedian: +ren[n >> 1].toFixed(1), renderMin: +ren[0].toFixed(1), calls: Math.round(calls / n), tris: Math.round(tris / n),
-        textures: R.info.memory.textures, geometries: R.info.memory.geometries, programs: (R.info.programs || []).length, particles: typeof FX !== 'undefined' && FX.count ? FX.count() : undefined, hooks };
+        textures: R.info.memory.textures, geometries: R.info.memory.geometries, programs: (R.info.programs || []).length, fx: typeof FX !== 'undefined' && FX.stats ? FX.stats() : undefined,
+        texUploadKBs: Math.round(upKB * 2), camFrames: camFps * 2, camReadbackKBs: Math.round(rbKB * 2), hooks };
     }, N);
     console.log('PERF [' + Q + '] ' + name + ' ' + JSON.stringify(r, null, 1).replace(/\n\s*/g, ' '));
     if (shotDir) await page.shot('perf-' + Q + '-' + name);
@@ -67,8 +78,9 @@ module.exports = async page => {
   if (want('fire')) {
     await ev(() => { const T = window.__tli; T.G.team = 50; T.Game.endDay(); return true; });
     await page.wait(400);
-    await ev(() => { Review.seek(Review.state.marks.verdict + 0.05); return true; });
-    await page.wait(2600);
+    // the review clock advances by at most 0.05 s per (slow) harness frame: seek past the ignition so every fire burns
+    await ev(() => { Review.seek(Review.state.marks.verdict + 2.5); return true; });
+    await page.wait(1500);
     await measure('fire');
     await ev(() => { window.__tli.Game.retryDay(); const dc = document.getElementById('daycard'); if (dc) dc.classList.remove('on'); window.__tli.G.timeLeft = 9999; return true; });
     await page.wait(800);
