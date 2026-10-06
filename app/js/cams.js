@@ -342,7 +342,7 @@ Shop.add({
   desc: 'Instant camera with a 5-shot film pack. Catch coworkers napping, frame the boss, pin evidence to the fridge. Photos pop out, flutter down and can be passed around.',
   owned: () => false, available: () => true,
   art(g, w, hh) { SnapCam.art(g, w, hh); },
-  buy() { Inv.give('polaroid', SnapCam.shots); toast('Bonk SnapCam added to your hotbar (' + Inv.count('polaroid') + ' shots).', 'good'); if (typeof Game !== 'undefined') Game.saveProgress(); }
+  buy() { Inv.give('polaroid', SnapCam.shots); Props.toFront('polaroid'); toast('Bonk SnapCam added to your hotbar (' + Inv.count('polaroid') + ' shots).', 'good'); if (typeof Game !== 'undefined') Game.saveProgress(); }
 });
 /* shop picture: the camera with a photo popping out */
 SnapCam.art = (g, w, hh) => {

@@ -18,7 +18,7 @@ Load order: `fx.js` (Space, FX, extra SFX) → `props.js` (PropArt, PropTypes, P
 | `F` | **throw** the selected item (slot 1 = endless paper balls) or the carried prop |
 | `G` | drop the carried prop |
 | `Q` / right click | **punch** (every third one is a slap) |
-| `1`–`6` / mouse wheel | select a hotbar slot |
+| `1`–`9` / mouse wheel | select a hotbar slot |
 | `C` | toggle the **third-person** camera (first person is always the default) |
 
 A small key list sits at the bottom right (`#keyhint`); the old `#hud-hint` is moved up above the hotbar.
@@ -97,8 +97,10 @@ Bus events: `prop:bin` (body) when your paper ball lands in a bin.
 Net messages: `prop:throw` `{id, t, i, o, v, s}`, `prop:take` `{id}`.
 
 ## Items, hotbar, held items
-* Hotbar: slot 1 is always `paper` (endless), slots 2–6 are `Inv.all()` items that have an `ItemDefs`
-  entry (`hotbar: false` hides one). `Props.select(i)`, `Props.cycle(dir)`, `Props.sel`, `Props.slots`.
+* Hotbar: slot 1 is always `paper` (endless), slots 2–9 (`HB_N` = 9) are `Inv.all()` items that have an `ItemDefs`
+  entry (`hotbar: false` hides one); 6 slots show, more appear when you carry more kinds of items.
+  `Props.select(i)`, `Props.cycle(dir)`, `Props.sel`, `Props.slots`. `Props.toFront(id)` moves an item that would
+  not fit to the front of the inventory (call it after giving a bought / picked-up item).
 * Extended `ItemDefs` contract (all optional except `name`):
 ```js
 ItemDefs.myItem = {
@@ -151,7 +153,7 @@ New `P` fields: `vx, vz` (walk velocity), `kx, kz` (knockback), `stunT`, `third`
   dizzy wobble while stunned.
 
 ## HUD (`hud.css`)
-`#hotbar` (bottom centre: name + hint label, 6 chunky slots with key number, count and soda level),
+`#hotbar` (bottom centre: name + hint label, 6–9 chunky slots with key number, count and soda level),
 `#keyhint` (bottom right), `#fx-flash`, `#fx-tint`. `body.hb-on` is set while the hotbar shows (toasts move up).
 
 ## Testing

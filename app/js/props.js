@@ -132,6 +132,7 @@ const PropTypes = {
   item: { name: 'item', r: 0.06, bounce: 0.3, fric: 0.5 }   // anything from another module's ItemDefs (b.item)
 };
 
+const HB_N = 9;   // hotbar slots: paper + up to 8 kinds of items (keys 1-9)
 const Props = {
   bodies: [], byId: new Map(), seq: 0, ver: 1, acc: 0, H: 1 / 120, MAX: 70,
   carry: null, sel: 0, slots: ['paper'], useDown: false, useT: 0, throwT: 0, punchT: 0, punchN: 0, sodaLeft: 0, _own: false,
@@ -293,7 +294,7 @@ const Props = {
   pickup(b) {
     if (!b || !Game.canControl() || this.carry) return;
     this.remove(b); this._taken.set(b.id, now()); Net.emit('prop:take', { id: b.id }); SFX.click();
-    if (b.item && ItemDefs[b.item]) { Inv.give(b.item); const k = this.slots.indexOf(b.item); if (k >= 0) this.select(k); toast('Picked up: ' + ItemDefs[b.item].name, 'good'); return; }
+    if (b.item && ItemDefs[b.item]) { Inv.give(b.item); this.toFront(b.item); const k = this.slots.indexOf(b.item); if (k >= 0) this.select(k); toast('Picked up: ' + ItemDefs[b.item].name, 'good'); return; }
     this.carry = { type: b.type, id: b.id, item: b.item }; this.vmKick = 0; this.refreshHeld();
   },
   drop() {
@@ -319,9 +320,11 @@ const Props = {
   },
 
   /* ----- hotbar ----- */
-  slotList() { return ['paper', ...Inv.all().filter(id => id !== 'paper' && ItemDefs[id] && ItemDefs[id].hotbar !== false)].slice(0, 6); },
+  slotList() { return ['paper', ...Inv.all().filter(id => id !== 'paper' && ItemDefs[id] && ItemDefs[id].hotbar !== false)].slice(0, HB_N); },
+  /* an item you just bought / picked up that would not fit the hotbar moves to the front of the inventory, so it can be selected */
+  toFront(id) { if (!Inv.count(id) || this.slotList().includes(id)) return; const n = Inv.items[id], rest = Object.assign({}, Inv.items); delete rest[id]; Inv.items = Object.assign({ [id]: n }, rest); Bus.emit('inv:change', id, n); },
   select(i) {
-    const s = this.slots; i = ((i % 6) + 6) % 6; if (i >= s.length) return;
+    const s = this.slots; i = ((i % HB_N) + HB_N) % HB_N; if (i >= s.length) return;
     if (this.carry) this.drop();
     if (i === this.sel) return;
     const old = ItemDefs[s[this.sel]]; if (this.useDown) this.endUse(); if (old && old.unequip) try { old.unequip(); } catch (e) {}
@@ -574,7 +577,7 @@ const SHOP_ITEMS = [
 SHOP_ITEMS.forEach((s, i) => Shop.add({
   id: s[0], tab: 'goods', section: 'Snacks & pranks', name: ItemDefs[s[0]].name, desc: s[4], price: s[1], icon: PropIcons[s[0]], emoji: s[3], color: s[2],
   owned: () => false, available: () => true, repeatable: true, sort: 100 + i,
-  buy() { Inv.give(s[0]); toast(ItemDefs[s[0]].name + ' added to your hotbar.', 'good'); if (typeof Game !== 'undefined') Game.saveProgress(); }
+  buy() { Inv.give(s[0]); Props.toFront(s[0]); toast(ItemDefs[s[0]].name + ' added to your hotbar.', 'good'); if (typeof Game !== 'undefined') Game.saveProgress(); }
 }));
 
 /* ---------- first-person view model ---------- */
@@ -733,12 +736,12 @@ const HUDBar = {
   build() {
     if (this.el) return; const hud = $('#hud'); if (!hud) return;
     this.el = h('div', { id: 'hotbar' }, h('div', { class: 'hb-name' }), h('div', { class: 'hb-slots' }));
-    this.keys = h('div', { id: 'keyhint' }, ...[['LMB', 'use'], ['F', 'throw'], ['Q', 'punch'], ['E', 'pick up'], ['G', 'drop'], ['C', 'camera'], ['1-6', 'items']].map(k => h('span', {}, h('kbd', {}, k[0]), ' ' + k[1])));
+    this.keys = h('div', { id: 'keyhint' }, ...[['LMB', 'use'], ['F', 'throw'], ['Q', 'punch'], ['E', 'pick up'], ['G', 'drop'], ['C', 'camera'], ['1-9', 'items']].map(k => h('span', {}, h('kbd', {}, k[0]), ' ' + k[1])));
     hud.append(this.el, this.keys); this.render();
   },
   render() {
     if (!this.el) return; const s = Props.slots, box = this.el.querySelector('.hb-slots'); const kids = [];
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < Math.max(6, s.length); i++) {   // 6 slots, more (up to HB_N) when you carry more kinds of items
       const id = s[i], d = id && ItemDefs[id], sel = i === Props.sel && !Props.carry;
       const n = id === 'paper' ? '∞' : id ? Inv.count(id) : '';
       const slot = h('div', { class: 'hb-slot' + (sel ? ' sel' : '') + (id ? '' : ' empty') }, h('i', {}, String(i + 1)));

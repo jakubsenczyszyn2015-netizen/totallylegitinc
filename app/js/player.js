@@ -1,7 +1,7 @@
 'use strict';
 /* PLAYER — local movement, camera, sitting, throwing, interaction (updateWorld)
    Smooth acceleration, sprint (Shift), jump, footsteps, knockback + stun, a third-person camera (C) with a
-   wall-aware boom, and the input for held items (click / F / Q / G / 1-6 / wheel, handled by props.js). */
+   wall-aware boom, and the input for held items (click / F / Q / G / 1-9 / wheel, handled by props.js). */
 Object.assign(P, { vx: 0, vz: 0, kx: 0, kz: 0, stunT: 0, third: false, boom: 0, dip: 0, fovK: 0, roll: 0, stepN: 0 });
 const PC = { walk: 3.4, run: 5.8, accel: 30, decel: 22, air: 6, jump: 4.9, grav: 13.5, boom: 3.3 };
 
@@ -73,7 +73,7 @@ function setThird(on) {
 let _wheelT = 0;
 window.addEventListener('keydown', e => {
   const tag = e.target && e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || G.phase === 'menu' || !Game.canControl()) return;
-  if (/^Digit[1-6]$/.test(e.code)) Props.select(+e.code.slice(5) - 1);
+  if (/^Digit[1-9]$/.test(e.code)) Props.select(+e.code.slice(5) - 1);
   else if (e.code === 'KeyQ') Props.punch();
   else if (e.code === 'KeyC' && !e.repeat) setThird(!P.third);
   else if (e.code === 'KeyG' && !e.repeat) Props.drop();
