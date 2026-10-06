@@ -1,8 +1,8 @@
 /* Performance probe: frame time, JS time per frame (with a breakdown of the heaviest Loop hooks), draw calls and
    triangles in the heavy scenes: the call floor with every NPC, the desktop with several windows (Camera + CCTV),
    the review fire and a self-airstrike.  PERF_Q=low|med|high sets the quality, PERF_ONLY=floor,desk,fire,strike
-   runs some scenes, PERF_MS sets the sample length.  Software WebGL in the harness is slow and the machine may be
-   shared, so compare JS ms / draw calls between runs rather than absolute fps. */
+   runs some scenes, PERF_N sets the number of benched frames.  Software WebGL in the harness is slow and the machine
+   may be shared, so compare update ms / draw calls between runs rather than absolute render times. */
 module.exports = async page => {
   const ev = page.eval, Q = process.env.PERF_Q || 'med', MS = +process.env.PERF_MS || 3000;
   const want = k => !process.env.PERF_ONLY || process.env.PERF_ONLY.split(',').includes(k);
@@ -11,16 +11,6 @@ module.exports = async page => {
     const T = window.__tli, R = T.W.renderer; R.info.autoReset = false;
     const S = window.__perf = { on: false, n: 0, js: 0, dt: 0, last: 0, calls: 0, tris: 0, uw: 0, rw: 0, hooks: new Map(), worst: 0 };
     const key = f => f.__k || (f.__k = (f.name || '') + ' ' + f.toString().slice(0, 70).replace(/\s+/g, ' '));
-    const of = window.frame;
-    window.frame = ts => {
-      R.info.reset();
-      if (!S.on) return of(ts);
-      const t0 = performance.now(); if (S.last) S.dt += ts - S.last; S.last = ts;
-      of(ts);
-      const d = performance.now() - t0; S.js += d; S.worst = Math.max(S.worst, d); S.n++; S.calls += R.info.render.calls; S.tris += R.info.render.triangles;
-    };
-    const ou = window.updateWorld; window.updateWorld = (dt, t) => { const t0 = performance.now(); ou(dt, t); if (S.on) S.uw += performance.now() - t0; };
-    const orw = window.renderWorld; window.renderWorld = () => { const t0 = performance.now(); orw(); if (S.on) S.rw += performance.now() - t0; };
     const oc = T.Loop._call;
     T.Loop._call = function (list, dt, t) {
       if (!S.on) return oc.call(this, list, dt, t);
@@ -28,15 +18,30 @@ module.exports = async page => {
     };
     T.settings.quality = q; applyQuality(); return true;
   }, Q);
+  /* synchronous bench: N simulated 60 fps frames run back to back inside one eval (the rAF loop is far too slow under
+     software GL to sample). update = Game.tick + updateWorld + Loop hooks + Net; render = main render + render hooks,
+     closed with a 1-pixel readPixels so the (software) GPU work is included. */
+  const N = +process.env.PERF_N || 8;
   const measure = async name => {
-    await ev(() => { const S = window.__perf; Object.assign(S, { on: true, n: 0, js: 0, dt: 0, last: 0, calls: 0, tris: 0, uw: 0, rw: 0, worst: 0 }); S.hooks.clear(); return true; });
-    await page.wait(MS);
-    const r = await ev(() => {
-      const S = window.__perf, n = Math.max(1, S.n), R = window.__tli.W.renderer; S.on = false;
-      const hooks = [...S.hooks].sort((a, b) => b[1] - a[1]).slice(0, 6).map(([k, v]) => (v / n).toFixed(2) + 'ms ' + k);
-      return { frames: S.n, frameMs: +(S.dt / Math.max(1, S.n - 1)).toFixed(1), jsMs: +(S.js / n).toFixed(2), worstJs: +S.worst.toFixed(1), updateWorld: +(S.uw / n).toFixed(2), render: +(S.rw / n).toFixed(2),
-        calls: Math.round(S.calls / n), tris: Math.round(S.tris / n), textures: R.info.memory.textures, geometries: R.info.memory.geometries, programs: (R.info.programs || []).length, hooks };
-    });
+    const r = await ev(n => {
+      const T = window.__tli, S = window.__perf, R = T.W.renderer, gl = R.getContext(), px = new Uint8Array(4), dt = 1 / 60;
+      let t = _t, upd = 0, ren = [], calls = 0, tris = 0, worst = 0;
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      S.hooks.clear(); S.on = true;
+      for (let i = 0; i < n; i++) {
+        t += dt; const a = performance.now();
+        T.Game.tick(dt); updateWorld(dt, t); T.Loop.run(dt, t); T.Net.tick(dt);
+        const b = performance.now(); R.info.reset();
+        if (!(T.OS.open && T.P.seated && !T.P.cam)) renderWorld();
+        T.Loop.runRender(dt, t);
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        const c = performance.now(); upd += b - a; worst = Math.max(worst, b - a); ren.push(c - b); calls += R.info.render.calls; tris += R.info.render.triangles;
+      }
+      S.on = false; ren.sort((x, y) => x - y);
+      const hooks = [...S.hooks].sort((x, y) => y[1] - x[1]).slice(0, 6).map(([k, v]) => (v / n).toFixed(2) + 'ms ' + k);
+      return { update: +(upd / n).toFixed(2), worstUpdate: +worst.toFixed(1), renderMedian: +ren[n >> 1].toFixed(1), renderMin: +ren[0].toFixed(1), calls: Math.round(calls / n), tris: Math.round(tris / n),
+        textures: R.info.memory.textures, geometries: R.info.memory.geometries, programs: (R.info.programs || []).length, particles: typeof FX !== 'undefined' && FX.count ? FX.count() : undefined, hooks };
+    }, N);
     console.log('PERF [' + Q + '] ' + name + ' ' + JSON.stringify(r, null, 1).replace(/\n\s*/g, ' '));
     if (shotDir) await page.shot('perf-' + Q + '-' + name);
     return r;
