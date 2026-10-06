@@ -761,7 +761,7 @@ const Raid = {
     if (this.seed !== (s.s | 0)) { this.clearCops(); this.seed = s.s | 0; }
     for (let i = 0; i < C.length; i++) {
       const e = C[i]; if (!Array.isArray(e)) continue; let c = this.cops[i];
-      if (!c) { if (e[3] === 5) continue; c = this.cops[i] = this.makeCop(i); c.x = +e[0]; c.z = +e[1]; }
+      if (!c) { c = this.cops[i] = this.makeCop(i); c.x = +e[0]; c.z = +e[1]; }   // (a cop that already left is made too and hidden by setSt: no holes in the list)
       c.tx = +e[0]; c.tz = +e[1]; c.tr = +e[2]; c.hp = +e[4]; if ((e[3] | 0) !== c.st) this.setSt(c, e[3] | 0);
     }
   },
