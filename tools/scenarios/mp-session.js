@@ -69,6 +69,23 @@ module.exports = async mp => {
   await mp.wait(600);
   mp.check('Cara no longer sees the dead Bob', !(await C.eval(id => W.avatars.has(id), ids.Bob2)));
 
+  // ---- someone joins while the review is running: they wait in the lobby and start with everyone on the next day
+  await A.eval(() => { G.timeLeft = 0.05; return true; });
+  await mp.waitFor(C, () => G.phase === 'review' && Review.on, 10000);
+  const D = await mp.open('Dev'); await hook(D);
+  await mp.join(D);
+  await mp.wait(1200);
+  const dv = await D.eval(() => ({ phase: G.phase, review: Review.on, hud: document.getElementById('hud-left').textContent }));
+  mp.check('joiner during the review waits in the lobby', dv.phase === 'lobby' && !dv.review, dv);
+  mp.check('joiner told a review is in progress', (await toasts(D)).some(t => /review is in progress/i.test(t)));
+  await A.eval(() => { Review.seek(Review.state.sheetAt + 0.05); return true; });
+  await mp.wait(800);
+  await A.eval(() => { const b = [...document.querySelectorAll('.rv-sheet .rv-btn')].find(b => /Try the day again|Start/.test(b.textContent)); b.click(); return true; });
+  await mp.waitFor(D, () => G.phase === 'day', 8000).catch(() => {});
+  mp.check('joiner starts the next day with everyone', await D.eval(() => G.phase === 'day') && await C.eval(() => G.phase === 'day'));
+  mp.check('joiner has their own desk-free spawn and sees the team', await D.eval(n => W.avatars.size === n && !P.seated, 2));
+  await mp.close(D);
+
   // ---- the host quits: Cara returns to the menu cleanly
   await A.eval(() => { Game.quit(); return true; });
   const th = Date.now();
