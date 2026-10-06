@@ -13,7 +13,7 @@ module.exports = async page => {
   Q.check('menu visible', await Q.visible('#menu'));
   await page.eval(() => { window.__dc = null; window.__tli.Bus.on('day:start', () => { window.__dc = document.querySelector('#daycard').classList.contains('on') && document.querySelector('#daycard').textContent; }); return true; });
   await Q.click('#menu .home-btns .btn', /Singleplayer/);
-  Q.check('solo screen', await Q.visible('#menu .screen[data-s="solo"].on'));
+  Q.check('solo screen', await Q.waitFor(() => { const e = document.querySelector('#menu .screen[data-s="solo"].on'); return !!e && +getComputedStyle(e).opacity > 0.05; }, 3000, 100));   // it fades in
   await Q.click('#solo-body .tcard .btn.primary', /Start a week/, 700);
   let g = await G();
   Q.check('week started on Monday', g.phase === 'day' && g.day === 1 && g.quota > 0, g);
