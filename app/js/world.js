@@ -518,6 +518,9 @@ function buildDoors() {
   for (const [d, lab, at] of [[main, 'the door', [19.6, 1.1, 0]], [boss, 'the door', [17, 1.1, 1.8]]]) W.interact.push({ pos: new THREE.Vector3(at[0], at[1], at[2]), label: () => (d.isOpen ? 'Close ' : 'Open ') + lab, act: () => { d.toggle(true); SFX.click(); } });
   Net.on('office:door', p => { const d = W.doors[p && p.id]; if (d) d.set(!!p.open); });
   Net.share('doors', () => ({ main: main.isOpen, boss: boss.isOpen }), s => { if (!s) return; if (main.isOpen !== !!s.main) main.set(!!s.main); if (boss.isOpen !== !!s.boss) boss.set(!!s.boss); });
+  // a new game / shift starts with the doors as built (a police raid bursts the main door open and an aborted raid never closes it)
+  Bus.on('game:begin', () => { main.close(); boss.open(); });
+  Bus.on('day:start', () => { if (Net.isAuth()) main.close(true); });
 }
 
 /* ---------- lighting ---------- */
