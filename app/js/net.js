@@ -75,6 +75,7 @@ const Net = {
         const conn = peer.connect(ROOM_PREFIX + code, { reliable: true });
         conn.on('open', () => conn.send({ t: 'hello', name: settings.name, color: settings.color, v: VERSION }));
         conn.on('data', d => {
+          conn._rx = Date.now();
           if (done && this.hostConn === conn) return this.clientRecv(d);
           if (d && d.t === 'welcome') { done = true; clearTimeout(to); this.peer = peer; this.hostConn = conn; this.myId = id; this.room = code; res(d); }
           else if (d && d.t === 'full') fail('That room is full.');
@@ -98,7 +99,7 @@ const Net = {
   /* ----- host side ----- */
   onConn(conn) {
     if (!this.isHost) { try { conn.close(); } catch (e) {} return; }
-    conn.on('data', d => this.hostRecv(conn, d));
+    conn.on('data', d => { conn._rx = Date.now(); this.hostRecv(conn, d); });
     conn.on('close', () => this.drop(conn.peer)); conn.on('error', () => this.drop(conn.peer));
   },
   hostRecv(conn, d) {
@@ -145,7 +146,14 @@ const Net = {
     else if (d.t === 'throw') spawnBall(d.o, d.v, false);
     else if (d.t === 'air') { const w = this.waiters.get(d.rid); if (w) { this.waiters.delete(d.rid); clearTimeout(w.to); d.ok ? w.res(d.text) : w.rej(new Error(d.err || 'host AI error')); } }
   },
-  applyPl(pl) { this.players = new Map(Object.entries(pl || {})); syncAvatars(this.players, this.myId); this.voiceMesh(); },
+  applyPl(pl) {
+    const old = this.players; this.players = new Map(Object.entries(pl || {}));
+    if (old.size && this.active && !this.isHost) {   // clients hear about teammates coming and going too
+      for (const [id, p] of old) if (id !== this.myId && !this.players.has(id)) toast((p.name || 'Someone') + ' left.');
+      for (const [id, p] of this.players) if (id !== this.myId && !old.has(id)) { toast((p.name || 'Someone') + ' joined.', 'good'); SFX.join(); }
+    }
+    syncAvatars(this.players, this.myId); this.voiceMesh();
+  },
   askHostAI(messages) {
     return new Promise((res, rej) => {
       if (!this.hostConn || !this.hostConn.open) return rej(new Error('not connected'));
@@ -177,13 +185,24 @@ const Net = {
     for (const mc of this.media.values()) { try { mc.peerConnection.getSenders().forEach(s => { if (s.track && s.track.kind === 'audio') s.replaceTrack(tr); }); } catch (e) {} }
   },
 
+  /* once a second (a timer, so it keeps going when the frame loop is throttled): keep-alives, and drop peers that went silent */
+  watch() {
+    if (!this.active) return; const t = Date.now(), DEAD = 12000;
+    if (this.isHost) {
+      if (t - (this._tx || 0) > 1500) this.broadcast({ t: 'ka' });
+      for (const [id, c] of [...this.conns]) if (t - (c._rx || t) > DEAD) { try { c.close(); } catch (e) {} this.drop(id); }
+    } else if (this.hostConn) {
+      if (t - (this._tx || 0) > 1500 && this.hostConn.open) { try { this.hostConn.send({ t: 'ka' }); } catch (e) {} }
+      if (t - (this.hostConn._rx || t) > DEAD) this.hostLost();
+    }
+  },
   sendThrow(o, v) { if (!this.active) return; const m = { t: 'throw', o, v }; if (this.isHost) this.broadcast(m); else if (this.hostConn && this.hostConn.open) this.hostConn.send(m); },
   sendEarn(amt) { if (this.hostConn && this.hostConn.open) this.hostConn.send({ t: 'earn', amt }); },
   tick(dt) {
     if (!this.active) return; this.sendT += dt;
     if (this.isHost) {
-      if (this.sendT >= 0.1) { this.sendT = 0; this.players.set(this.myId, this.me()); syncAvatars(this.players, this.myId); this.voiceMesh(); this.broadcast({ t: 'snap', pl: this.plObj(), g: Game.netState(), x: this.sharedState(), ai: AI.hasKey() ? 1 : 0 }); }
-    } else if (this.sendT >= 0.066) { this.sendT = 0; if (this.hostConn && this.hostConn.open) { try { this.hostConn.send(Object.assign({ t: 'pos' }, this.me())); } catch (e) {} } }
+      if (this.sendT >= 0.1) { this.sendT = 0; this._tx = Date.now(); this.players.set(this.myId, this.me()); syncAvatars(this.players, this.myId); this.voiceMesh(); this.broadcast({ t: 'snap', pl: this.plObj(), g: Game.netState(), x: this.sharedState(), ai: AI.hasKey() ? 1 : 0 }); }
+    } else if (this.sendT >= 0.066) { this.sendT = 0; this._tx = Date.now(); if (this.hostConn && this.hostConn.open) { try { this.hostConn.send(Object.assign({ t: 'pos' }, this.me())); } catch (e) {} } }
   },
   leave() {
     const was = this.active; this.active = false;
@@ -194,3 +213,4 @@ const Net = {
     if (was) syncAvatars(this.players, this.myId);
   }
 };
+setInterval(() => Net.watch(), 1000);
