@@ -1,0 +1,29 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:transparent">
+<script>
+/* App icon: a warm rounded tile with the LegitOS mascot (winking desk phone with a halo) */
+function iconSVG(simple) {
+  const s = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">'
+  + '<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffcf4a"/><stop offset=".55" stop-color="#ff9a3c"/><stop offset="1" stop-color="#f0632a"/></linearGradient>'
+  + '<radialGradient id="sh" cx=".5" cy=".28" r=".7"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>'
+  + '<rect x="40" y="40" width="944" height="944" rx="210" fill="#2a1408"/>'
+  + '<rect x="64" y="64" width="896" height="896" rx="190" fill="url(#bg)"/>'
+  + '<rect x="64" y="64" width="896" height="896" rx="190" fill="url(#sh)"/>'
+  + '<g transform="translate(512 548) scale(' + (simple ? 4.1 : 3.75) + ') translate(-100 -100)">'
+  + '<ellipse cx="100" cy="22" rx="44" ry="11" fill="none" stroke="#2a1408" stroke-width="' + (simple ? 15 : 13) + '"/>'
+  + '<ellipse cx="100" cy="22" rx="44" ry="11" fill="none" stroke="#fff27a" stroke-width="' + (simple ? 8 : 7) + '"/>'
+  + '<path d="M46 98 Q50 84 70 84 H130 Q150 84 154 98 L168 150 Q171 170 151 170 H49 Q29 170 32 150Z" fill="#fff4ea" stroke="#2a1408" stroke-width="7" stroke-linejoin="round"/>'
+  + '<path d="M26 72 Q24 44 56 42 H144 Q176 44 174 72 Q174 88 160 88 H146 Q139 88 137 80 L133 67 H67 L63 80 Q61 88 54 88 H40 Q26 88 26 72Z" fill="#e84a2a" stroke="#2a1408" stroke-width="7" stroke-linejoin="round"/>'
+  + (simple ? '' : '<path d="M44 54 Q60 49 78 50" stroke="#ff9d80" stroke-width="5" stroke-linecap="round" fill="none"/>')
+  + '<ellipse cx="78" cy="116" rx="12" ry="14" fill="#fff" stroke="#2a1408" stroke-width="6"/><circle cx="81" cy="118" r="6.5" fill="#2a1408"/>'
+  + (simple ? '' : '<circle cx="83" cy="115" r="2.2" fill="#fff"/>')
+  + '<path d="M110 119 Q121 106 132 119" fill="none" stroke="#2a1408" stroke-width="7" stroke-linecap="round"/>'
+  + '<path d="M72 137 Q100 163 130 135 Q127 153 100 156 Q78 154 72 137Z" fill="#7a1f12" stroke="#2a1408" stroke-width="6" stroke-linejoin="round"/>'
+  + (simple ? '' : '<path d="M90 151 Q100 146 110 151" fill="none" stroke="#ff6b6b" stroke-width="4" stroke-linecap="round"/><circle cx="58" cy="136" r="8" fill="#ff6a7c" opacity=".55"/><circle cx="144" cy="134" r="8" fill="#ff6a7c" opacity=".55"/>')
+  + '</g></svg>';
+  return 'data:image/svg+xml;base64,' + btoa(s);
+}
+window.render = (size, simple) => new Promise(res => {
+  const img = new Image(); img.onload = () => { const c = document.createElement('canvas'); c.width = c.height = size; const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(img, 0, 0, size, size); res(c.toDataURL('image/png')); };
+  img.src = iconSVG(simple);
+});
+</script>
