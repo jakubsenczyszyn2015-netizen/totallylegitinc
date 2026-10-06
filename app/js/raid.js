@@ -603,7 +603,7 @@ const Raid = {
   copVisual(c, t) {
     const g = c.av.group; g.position.set(c.x, 0, c.z); g.rotation.y = c.ry;
     poseAvatar(c.av, false, t, c.st === 3 ? 0 : c.sp); avTagScale(c.av, W.camera);
-    const tg = c.av.tag; if (tg.visible) tg.material.opacity *= clamp((W.camera.position.distanceTo(g.position) - 2.5) / 2.5, 0, 1);
+    const tg = c.av.tag; if (tg.visible) tg.material.opacity *= c.st === 3 ? 0 : clamp((W.camera.position.distanceTo(g.position) - 2.5) / 2.5, 0, 1);   // no floating tag over a cop lying on the floor
     c.av.head.getWorldPosition(c.head);
   },
   /* the inflatable boss (BonkMart chaos goods) standing in the lobby, or null */
@@ -639,7 +639,7 @@ const Raid = {
     P.vx = P.vz = P.kx = P.kz = P.vy = 0; P.pos.x = 23.3; P.pos.z = 0; P.pos.y = 0; P.yaw = Math.PI / 2; P.pitch = 0;
     startCam({ x: 21.0, y: 1.55, z: 0.05 }, Math.PI / 2, 0, 1e9, null);   // holds the controls; the camera itself is pinned below
     W.camOverride = { pos: [21.05, 1.52, 0.04], look: [23.3, 1.22, 0] };
-    this.booking(true); RaidUI.busted(fine);
+    this.booking(true); RaidUI.alertOff(true); RaidUI.busted(fine);
   },
   release(quiet) {
     const b = this.bust; this.bust = null; W.camOverride = null; this.booking(false); RaidUI.busted(null); P._meVis = undefined;
