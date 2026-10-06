@@ -7,6 +7,7 @@ module.exports = async page => {
   await page.eval(() => { const T = window.__tli; T.Saves.week = [null, null, null]; writeSaves(); return true; });
   await page.startSolo('week');
   await page.eval(() => { const T = window.__tli; T.G.timeLeft = 1e5; window.__bub = []; window.__toasts = []; const ot = window.toast; window.toast = function (m) { window.__toasts.push(String(m)); return ot.apply(this, arguments); }; const ob = FX.bubble; FX.bubble = function (t, txt, s) { window.__bub.push(txt); return ob.apply(this, arguments); }; window.__bins = 0; T.Bus.on('prop:bin', () => window.__bins++); return true; });
+  await Q.fast(true);   // game logic at full speed; screenshots still draw
   const P = () => page.eval(() => { const P = window.__tli.P; return { x: +P.pos.x.toFixed(2), y: +P.pos.y.toFixed(2), z: +P.pos.z.toFixed(2), yaw: +P.yaw.toFixed(2), speed: +(P.speed || 0).toFixed(2), boost: P.boost, third: P.third, stun: P.stunT }; });
   /* stand `dist` metres from a point and look at it */
   const face = (x, y, z, dist = 1.3, side = 0) => page.eval((x, y, z, dist, side) => {
@@ -177,6 +178,7 @@ module.exports = async page => {
   await Q.shot('walk-09-break-room');
 
   // ---------- frame times on the busy floor ----------
+  await Q.fast(false);
   await page.teleport(8, 0, Math.PI / 2, -0.05);
   const ft = await page.eval(() => new Promise(r => { const ts = []; let last = performance.now(); const f = () => { const t = performance.now(); ts.push(t - last); last = t; if (ts.length < 60) requestAnimationFrame(f); else { ts.sort((a, b) => a - b); r({ median: Math.round(ts[30]), p95: Math.round(ts[56]), calls: window.__tli.W.renderer.info.render.calls, tris: window.__tli.W.renderer.info.render.triangles }); } }; requestAnimationFrame(f); }));
   Q.log('frame times on the floor (software GL, shared CPU)', ft);
