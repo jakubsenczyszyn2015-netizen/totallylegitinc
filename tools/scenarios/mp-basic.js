@@ -94,6 +94,14 @@ module.exports = async mp => {
   // the wall leaderboard redraws on the host
   mp.check('leaderboard on host ranks Bob first', await A.eval(() => { W.leaderboard.update(); return Game.roster()[0].name === 'Bob'; }));
   await B.shot('03-bob-payroll');
+  // two players grab the same free desk at the same moment: exactly one keeps it
+  await B.stand(); await A.stand();
+  const race = await A.eval(() => W.desks.find(d => !d.npc && !Game.deskTaken(d.i) && d.i > 8).i);
+  await Promise.all([A.eval(i => { sitAt(i); return true; }, race), B.eval(i => { sitAt(i); return true; }, race)]);
+  await mp.wait(1500);
+  const sat = [await A.eval(() => P.seated && P.seat), await B.eval(() => P.seated && P.seat)];
+  mp.check('desk race: exactly one player keeps the desk', sat.filter(s => s === race).length === 1, { race, sat });
+  await A.stand(); await B.stand();
   await A.teleport(6.2, -5.4, -Math.PI / 2, 0.05);
   await mp.wait(300);
   await A.shot('04-host-leaderboard');
