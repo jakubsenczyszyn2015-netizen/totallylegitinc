@@ -684,8 +684,9 @@ const FX = (() => {
   return api;
 })();
 Net.on('fx', d => {
-  if (!d || typeof d.k !== 'string' || !FX.kinds[d.k] || !Array.isArray(d.p)) return;
+  if (!d || typeof d.k !== 'string' || !FX.kinds[d.k] || !Array.isArray(d.p) || d.p.length !== 3 || !d.p.every(Number.isFinite)) return;
   const o = d.o && typeof d.o === 'object' ? d.o : {};
+  for (const k in o) if (typeof o[k] === 'string') o[k] = o[k].slice(0, 40); else if (typeof o[k] === 'number' && !Number.isFinite(o[k])) o[k] = 0;
   if (o.n) o.n = clamp(+o.n || 1, 1, 160); if (o.scale) o.scale = clamp(+o.scale || 1, 0.1, 4); if (o.dur) o.dur = clamp(+o.dur || 1, 0, 60);
   FX.spawn(d.k, d.p, o);
 });
