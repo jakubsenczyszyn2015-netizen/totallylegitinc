@@ -229,7 +229,7 @@ kbd{background:var(--ink);border:2px solid var(--navy3);border-bottom-width:4px;
 .hs-t.urgent{animation:urgent 1s ease-in-out infinite}
 .hs-t.wait{color:var(--gold)}
 .hs-me b{color:#9fd0ff}
-@keyframes urgent{50%{color:#fff;filter:drop-shadow(0 0 6px rgba(255,80,60,.9))}}
+@keyframes urgent{50%{color:#fff;text-shadow:0 0 6px rgba(255,80,60,.9)}}
 #hud-left{position:absolute;left:1rem;top:1rem;display:flex;flex-direction:column;gap:.42rem;align-items:flex-start}
 .chip{display:flex;align-items:center;gap:.45rem;background:rgba(24,19,20,.9);border:2.5px solid var(--ink);border-radius:12px;padding:.3em .72em;font-weight:800;font-size:.9rem;color:#eadbc0;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 .chip.room b{font-family:var(--font-c);font-weight:400;font-size:1.15rem;letter-spacing:.15em;color:var(--gold)}
@@ -299,3 +299,7 @@ kbd{background:var(--ink);border:2px solid var(--navy3);border-bottom-width:4px;
   .stamp{right:-.5rem}
   .ticker{display:none}
 }
+
+/* ---------- low graphics quality: drop costly full-screen CSS effects (the canvas grade is in office.js) ---------- */
+body.q-low .rv-flames i{filter:none}
+body.q-low .rv-flames{mix-blend-mode:normal}
