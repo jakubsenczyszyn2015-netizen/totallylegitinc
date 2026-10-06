@@ -536,7 +536,7 @@ const Raid = {
     }
     else if (c.st === 2) { if (c.stT <= 0) this.setSt(c, this.on ? 1 : 4); }
     else if (c.st === 3) { if (c.stT <= 0) this.setSt(c, 4); }
-    else if (c.st === 4) { tx = 23.4; tz = (c.i % 3 - 1) * 0.8; sp = RAID.speed * 1.15; key = 'exit'; if (c.x > 22.7) this.setSt(c, 5); }
+    else if (c.st === 4) { tx = 23.4; tz = (c.i % 3 - 1) * 0.4; sp = RAID.speed * 1.15; key = 'exit'; if (c.x > 22.7) this.setSt(c, 5); }   // |tz| < 0.6: inside the doorway, or they stick to the frame
     else if (c.st === 6) { if (c.stT <= 0) this.setSt(c, this.on ? 1 : 4); }
     let wx = 0, wz = 0;
     if (tx !== null) {
