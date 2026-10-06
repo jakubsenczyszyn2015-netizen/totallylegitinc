@@ -120,11 +120,11 @@ module.exports = async page => {
     // F1 from us + Marcus yes -> passes -> review after a moment
     await key('F1');
     await ev(() => { window.__tli.Net._x({ k: 'co:vote', p: { n: ClockOut.view.n, yes: true } }, 'p3'); return true; });
-    const v7 = await ev(() => ({ result: ClockOut.result, phase: window.__tli.G.phase }));
-    check('majority passes', v7.result && v7.result.pass && v7.result.yes === 2 && v7.phase === 'day', v7);
-    await ev(() => { ClockOut.result.until = now() + 60; return true; });   // the harness is slow: keep the stamp up for the shot
+    // the harness is slow: keep the stamp up for the shot (set in the same eval, the 3.2 s stamp can expire between calls)
+    const v7 = await ev(() => { const r = ClockOut.result && Object.assign({}, ClockOut.result); if (ClockOut.result) ClockOut.result.until = now() + 60; return { result: r, phase: window.__tli.G.phase }; });
+    check('majority passes', v7.result && v7.result.pass && v7.result.yes === 2 && /day|review/.test(v7.phase), v7);
     await shot('co-09-vote-passed');
-    await ev(() => { ClockOut.result.until = now() + 0.5; return true; });
+    await ev(() => { if (ClockOut.result) ClockOut.result.until = now() + 0.5; return true; });
     await page.wait(1800);
     const v8 = await ev(() => ({ phase: window.__tli.G.phase, early: window.__tli.G.result && window.__tli.G.result.early }));
     check('passed vote ends the day on the host', v8.phase === 'review' && v8.early > 0, v8);
