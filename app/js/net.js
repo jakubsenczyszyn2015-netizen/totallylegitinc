@@ -138,7 +138,7 @@ const Net = {
   /* ----- client side ----- */
   clientRecv(d) {
     if (!d || typeof d !== 'object' || !this.active) return;
-    if (d.t === 'snap') { this.applyPl(d.pl); Game.applyNet(d.g); Game.syncPhase(d.g); this.applyShared(d.x); }
+    if (d.t === 'snap') { this.applyPl(d.pl); Game.applyNet(d.g); Game.syncPhase(d.g); this.applyShared(d.x); if (d.ai !== undefined) this.hostAI = !!d.ai; }
     else if (d.t === 'x' && typeof d.k === 'string') this._x(d, d.from || 'host');
     else if (d.t === 'phase') Game.onPhase(d);
     else if (d.t === 'evt') { if (d.k === 'earn' && d.id !== this.myId) toast(d.amt >= 0 ? d.name + ' closed a scam: +' + money(d.amt) : d.name + ' got baited: ' + money(d.amt), d.amt >= 0 ? 'good' : 'bad'); }
@@ -182,7 +182,7 @@ const Net = {
   tick(dt) {
     if (!this.active) return; this.sendT += dt;
     if (this.isHost) {
-      if (this.sendT >= 0.1) { this.sendT = 0; this.players.set(this.myId, this.me()); syncAvatars(this.players, this.myId); this.voiceMesh(); this.broadcast({ t: 'snap', pl: this.plObj(), g: Game.netState(), x: this.sharedState() }); }
+      if (this.sendT >= 0.1) { this.sendT = 0; this.players.set(this.myId, this.me()); syncAvatars(this.players, this.myId); this.voiceMesh(); this.broadcast({ t: 'snap', pl: this.plObj(), g: Game.netState(), x: this.sharedState(), ai: AI.hasKey() ? 1 : 0 }); }
     } else if (this.sendT >= 0.066) { this.sendT = 0; if (this.hostConn && this.hostConn.open) { try { this.hostConn.send(Object.assign({ t: 'pos' }, this.me())); } catch (e) {} } }
   },
   leave() {
