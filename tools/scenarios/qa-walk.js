@@ -97,7 +97,7 @@ module.exports = async page => {
     }
     return null;
   }, bin);
-  Q.log('real throw into the bin', hit);
+  Q.check('a real throw (aimed with the crosshair) can land in the bin', !!hit, hit);
   await Q.shot('walk-04-bin');
 
   // ---------- pick up a box, carry, throw, drop ----------
@@ -117,7 +117,11 @@ module.exports = async page => {
     const thrown = await page.eval(id => { const b = Props.byId.get(id); return { carry: !!Props.carry, b: b ? [+b.pos.x.toFixed(1), +b.pos.z.toFixed(1)] : null }; }, box.id);
     Q.check('F throws it', !thrown.carry && thrown.b, thrown);
     const b2 = await page.eval(id => { const b = Props.byId.get(id); return b && { x: b.pos.x, y: b.pos.y, z: b.pos.z }; }, box.id);
-    if (b2) { await face(b2.x, b2.y, b2.z, 1.1); await Q.gw(0.2); await Q.press('KeyE'); await Q.gw(0.2); await Q.press('KeyG'); await Q.gw(0.8); }
+    if (b2) {   // the box may have landed by a desk: E there would sit down, so only press E on a "Pick up" prompt
+      await face(b2.x, b2.y, b2.z, 1.1); await Q.gw(0.2);
+      if (/Pick up/.test((await label()) || '')) await Q.press('KeyE'); else await page.eval(id => { Props.pickup(Props.byId.get(id)); return true; }, box.id);
+      await Q.gw(0.2); Q.check('carrying it again', !!(await page.eval(() => Props.carry))); await Q.press('KeyG'); await Q.gw(0.8);
+    }
     Q.check('G drops it', !(await page.eval(() => Props.carry)));
   } else Q.check('there is a box on the floor', false);
 
