@@ -80,6 +80,7 @@ render (use for extra cameras). `Loop.remove(fn)`. Errors are logged once and sw
 Host is authoritative; clients send requests, the host decides and relays. Up to 6 players.
 - `Net.active`, `Net.isHost`, `Net.myId`, `Net.players` (Map id → `{name, color, x, y, z, ry, seat, talk, personal, ext}`)
 - `Net.isAuth()` — true for the host or in singleplayer. Use it to decide who simulates shared things.
+- `Net.fromHost(from)` — in a handler: did this message come from the host? Guard host-only decisions with it.
 - `Net.on(type, (payload, fromId) => …)` — one handler per type.
 - `Net.emit(type, payload, {host, to})` — send to everyone else (the host relays client messages).
   **The sender's handler is not called** — apply the change locally first.
@@ -89,6 +90,8 @@ Host is authoritative; clients send requests, the host decides and relays. Up to
 - `Net.addMe(key, () => value)` — extra per-player data sent with your position; other players
   see it as `Net.players.get(id).ext[key]`. Use for look, held item, pose.
 Everything new that others should see (props, effects, raids, chat) **must** sync through these.
+Payloads come from other players: clamp numbers, cap strings, ignore unknown ids. Multiplayer test rig and
+scenarios: `docs/modules/multiplayer.md` (`tools/harness-mp.js`).
 In singleplayer `Net.active` is false and `Net.emit` does nothing.
 
 ### Shop — store catalog
