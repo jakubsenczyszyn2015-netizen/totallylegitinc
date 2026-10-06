@@ -4,7 +4,7 @@ const path = require('path');
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280, height: 800, backgroundColor: '#000000', autoHideMenuBar: true,
-    title: 'Totally Legit Inc',
+    title: 'Totally Legit Inc', icon: path.join(__dirname, 'app', 'icon.png'),
     webPreferences: { contextIsolation: true, nodeIntegration: false, backgroundThrottling: false }
   });
   win.loadFile(path.join(__dirname, 'app', 'index.html'));
