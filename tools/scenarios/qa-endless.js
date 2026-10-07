@@ -19,6 +19,8 @@ module.exports = async page => {
   const rang = await Q.waitFor(() => window.__tli.Call.state === 'ringing', 15000, 300);
   Q.check('calls come in by themselves', rang);
   await Q.shot('end-02-desktop-ringing');
+  await page.eval(() => { const T = window.__tli; if (T.Call.cur && T.Call.cur.caller.baiter) { T.Call.decline(); T.Call.ring(false); } return true; });   // a random scambaiter would never pay
+  await page.wait(400);
   await Q.click('#os-modal .ringcard .rb.yes', null, 900);
   await page.eval(() => { window.__tli.OS.close('memo', true); window.__tli.Call.setScheme(window.__tli.Game.unlocked()[0].id); return true; });
   const r = await Q.play();
