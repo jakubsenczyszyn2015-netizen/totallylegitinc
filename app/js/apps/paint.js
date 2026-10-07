@@ -207,7 +207,7 @@ const DoodlePro = (() => {
       if (S.tool === 'fill') { flood(x0, y0, S.col); return; }
       down = true; try { ov.setPointerCapture(e.pointerId); } catch (_) {}
       snap(); og.clearRect(0, 0, CW, CH); ov.style.opacity = S.tool === 'marker' ? 0.5 : 1;
-      if (S.tool === 'spray') { sprayAt(x0, y0); sprayT = setInterval(() => sprayAt(lx, ly), 30); AudioSys.noise(0.2, 0.04, 0, 6000); return; }
+      if (S.tool === 'spray') { sprayAt(x0, y0); sprayT = setInterval(() => { if (!ov.isConnected) { clearInterval(sprayT); down = false; return; } sprayAt(lx, ly); }, 30); AudioSys.noise(0.2, 0.04, 0, 6000); return; }
       if (['pen', 'marker', 'eraser'].includes(S.tool)) { brush(og); og.beginPath(); og.arc(x0, y0, og.lineWidth / 2, 0, 7); og.fill(); }
     });
     ov.addEventListener('pointermove', e => {
