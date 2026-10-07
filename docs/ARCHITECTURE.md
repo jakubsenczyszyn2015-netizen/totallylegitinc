@@ -101,7 +101,7 @@ the load order, or inside `Bus.on('boot', …)`).
 | `door` | `{id, open}` | a door opened / closed |
 | `shop:buy` | `{id, price, item}` | something was bought at BonkMart |
 
-Module events (see the module docs): `prop:bin`, `fx`, `look:change`, `wallpaper`, `review:slide`,
+Module events (see the module docs): `prop:bin`, `fx`, `look:change`, `wallpaper`, `review:slide`, `review:verdict`,
 `review:fire`, `review:report`, `review:end`, `call:code`, `call:remote`, `cookie:click`, `cookie:milestone`,
 `casino:result`, `chat:prank`, `chat:pranked`, `paint:hang`, `paint:hung`, `antivirus:block`, `antivirus:clean`,
 `raid:heat`, `raid:start`, `raid:arrest`, `raid:end`.
