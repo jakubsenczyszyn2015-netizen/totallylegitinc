@@ -27,7 +27,8 @@ module.exports = async page => {
   const b = await snap();
   Q.check('Esc pauses (solo)', await page.eval(() => window.__tli.G.paused));
   Q.check('paused: the box hangs in the air, the boost, the chaos delivery and the clock wait', a.y > 0.5 && a.y === b.y && a.boost === b.boost && b.boom === 0 && a.left === b.left && a.t === b.t, { a, b });
-  Q.check('paused: the hotbar and the raid heat HUD hide behind the pause menu', await page.eval(() => HUDBar.el.classList.contains('hidden') && RaidUI.el.hud.classList.contains('hidden')));
+  // their visibility throttles count frames while paused (dt || 1/60): give a slow software-GL frame rate time
+  Q.check('paused: the hotbar and the raid heat HUD hide behind the pause menu', await Q.waitFor(() => HUDBar.el.classList.contains('hidden') && RaidUI.el.hud.classList.contains('hidden'), 10000, 200));
   await Q.shot('pause-01-frozen');
   await Q.press('Escape');
   await Q.gw(2);
