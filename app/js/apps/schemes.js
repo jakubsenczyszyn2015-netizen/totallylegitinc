@@ -59,6 +59,7 @@ function schemeApp(s) {
       if (fi >= 0 && mine) {
         const fs = s.steps[fi], open = live && next === fi, nOk = fs.form.filter(f => c.formOk[f.f]).length;
         const banner = paid ? h('div', { class: 'sx-banner ok' }, 'Scam complete — ' + money(c.paid) + ' earned (' + nOk + ' / ' + fs.form.length + ' verified).')
+          : c.result === 'baited' ? h('div', { class: 'sx-banner bad' }, 'Fake details from a scambaiter. Nothing earned (' + nOk + ' / ' + fs.form.length + ' "verified").')
           : open ? h('div', { class: 'sx-banner' }, 'Enter the information for ' + money(s.reward) + '.')
           : h('div', { class: 'sx-banner idle' }, next >= 0 && next < fi && live ? 'Finish the steps above first. Then the caller can read out their details.' : 'No details to enter right now.');
         const verify = f => {
