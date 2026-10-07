@@ -19,7 +19,7 @@ module.exports = async page => {
   const log = [];
   for (let round = 0; round < ROUNDS; round++) {
     // ---- desktop: 40 random actions ----
-    const acts = await page.eval(n => {
+    const acts = await page.eval(async n => {
       const T = window.__tli, R = window.__rnd, out = [];
       const AVOID = /Quit|Main menu|Save and quit|Stand up|Clock out|Reset|Delete|Sign out|Leave/i;
       const vis = e => { const r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2 || r.right < 0 || r.bottom < 0 || r.left > innerWidth || r.top > innerHeight) return false; const t = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2); return t && (t === e || e.contains(t)); };
@@ -30,6 +30,18 @@ module.exports = async page => {
         if (k < 0.16 && T.OS.wins.size > 6) { const ids = [...T.OS.wins.keys()].filter(i => i !== 'phone'); const id = ids[Math.floor(R() * ids.length)]; if (id) { T.OS.close(id, true); out.push('close ' + id); } continue; }
         if (k < 0.2 && T.Call.state === 'idle') { T.Call.ring(R() < 0.3); out.push('ring'); continue; }
         if (k < 0.24 && T.Call.state === 'live') { T.Call.say(['hello', 'your card is compromised', 'I need your number', 'thank you', 'what is the code on your screen'][Math.floor(R() * 5)]); out.push('say'); continue; }
+        if (k < 0.30) {   // gamble: a casino game tab, then its main button a few times
+          T.OS.launch('casino', true); const tabs = [...document.querySelectorAll('.win[data-app="casino"] .lb-tab')]; if (tabs.length) tabs[Math.floor(R() * tabs.length)].click();
+          for (let j = 0; j < 3; j++) { const b = document.querySelector('.win[data-app="casino"] .lb-act'); if (b && !b.disabled) b.click(); await new Promise(r => setTimeout(r, 250)); }
+          out.push('gamble'); continue;
+        }
+        if (k < 0.34) {   // hold to buy something random in BonkMart
+          T.OS.launch('shop', true); const tabs = [...document.querySelectorAll('.win[data-app="shop"] .bm-tab')]; if (tabs.length) tabs[Math.floor(R() * tabs.length)].click();
+          await new Promise(r => setTimeout(r, 200));
+          const bs = [...document.querySelectorAll('.win[data-app="shop"] .bm-btn')].filter(b => !b.disabled); const b = bs[Math.floor(R() * bs.length)];
+          if (b) { b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); await new Promise(r => setTimeout(r, 900)); b.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0 })); }
+          out.push('buy'); continue;
+        }
         const els = [...document.querySelectorAll('#os button, #os .icon, #os [role=button], #os input, #os select, #os textarea, #os canvas, #os-modal button')].filter(e => !e.disabled && !AVOID.test(e.textContent || '') && vis(e));
         if (!els.length) continue;
         const e = els[Math.floor(R() * els.length)], r = e.getBoundingClientRect(), x = r.left + r.width * (0.2 + 0.6 * R()), y = r.top + r.height * (0.2 + 0.6 * R());
