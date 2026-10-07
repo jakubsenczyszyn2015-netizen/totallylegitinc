@@ -24,13 +24,14 @@ window.addEventListener('pointerdown', () => AudioSys.resume(), { capture: true 
 
 let _last = 0, _t = 0, _uiT = 0;
 function frame(ts) {
-  const dt = Math.min(0.05, (ts - _last) / 1000 || 0.016); _last = ts; _t += dt;
-  Game.tick(dt); updateWorld(dt, _t); Loop.run(dt, _t); Net.tick(dt); Voice.update();
+  const dt = Math.min(0.05, (ts - _last) / 1000 || 0.016); _last = ts;
+  const wdt = G.paused && !Net.active ? 0 : dt; _t += wdt;   // a solo pause freezes the world too (particles, props, chaos goods, coffee)
+  Game.tick(dt); updateWorld(wdt, _t); Loop.run(wdt, _t); Net.tick(dt); Voice.update();
   _uiT += dt;
   if (_uiT > 0.2) { _uiT = 0; if (G.phase !== 'menu') { if (OS.open) OS.stats(); else UI.hud(); } }
   else if (G.phase !== 'menu' && !OS.open) { const pr = $('#hud-prompt'), lab = W.cur && W.cur.label(); if (!lab !== pr.classList.contains('hidden')) UI.hud(); }
   if (!(OS.open && P.seated && !P.cam)) renderWorld();
-  Loop.runRender(dt, _t);
+  Loop.runRender(wdt, _t);
   requestAnimationFrame(frame);
 }
 function boot() {
