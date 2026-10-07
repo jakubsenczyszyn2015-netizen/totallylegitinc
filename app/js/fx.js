@@ -485,7 +485,7 @@ const FX = (() => {
     if (!ready) return; let b = bubbles.find(x => x.target === target && x.t < x.dur) || bubbles.find(x => x.t >= x.dur) || (bubbles.length < 8 ? null : bubbles.reduce((a, c) => a.t > c.t ? a : c));
     if (!b) {
       const c = document.createElement('canvas'); c.width = 512; c.height = 256; const tex = new THREE.CanvasTexture(c);
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false })); sp.renderOrder = 30; sp.visible = false; W.scene.add(sp);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true, depthWrite: false })); sp.renderOrder = 30; sp.visible = false; W.scene.add(sp);   // depth-tested: walls hide what is said next door
       b = { c, g: c.getContext('2d'), tex, sp, t: 0, dur: 0 }; bubbles.push(b);
     }
     const g = b.g; g.clearRect(0, 0, 512, 256);
