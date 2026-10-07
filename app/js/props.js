@@ -804,7 +804,7 @@ Bus.on('game:begin', () => {
 });
 Bus.on('save:loaded', () => {
   G.prog.props = G.prog.props || {};
-  if (!G.prog.props.kit) { G.prog.props.kit = 1; Inv.give('soda', 2); Inv.give('beans', 1); Inv.give('whoopee', 1); Inv.give('confetti', 2); Game.saveProgress(); setTimeout(() => toast('HR left a welcome kit in your drawer: soda, beans, a whoopee cushion and party poppers. Press 1-6.', 'good'), 2500); }
+  if (!G.prog.props.kit) { G.prog.props.kit = 1; Inv.give('soda', 2); Inv.give('beans', 1); Inv.give('whoopee', 1); Inv.give('confetti', 2); Game.saveProgress(); setTimeout(() => toast('HR left a welcome kit in your drawer: soda, beans, a whoopee cushion and party poppers. Press 2-5.', 'good'), 2500); }
   Props.refreshHeld();
 });
 Bus.on('quit', () => { Props.clear(); Props.useDown = false; });
