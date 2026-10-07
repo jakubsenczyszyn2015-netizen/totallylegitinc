@@ -111,6 +111,9 @@ Add new events freely (document them here).
 ### Loop — per-frame hooks
 `Loop.add(fn)` → `fn(dt, t)` every frame after `updateWorld`. `Loop.addRender(fn)` → after the main
 render (use for extra cameras). `Loop.remove(fn)`. Errors are logged once and swallowed.
+While a **solo** game is paused, `updateWorld` and every Loop hook get `dt = 0` and `t` (and `W.t`) stops, so all
+simulation freezes by itself; a UI throttle that counts `dt` (e.g. "re-check visibility every 0.2 s") should count
+`dt || 1 / 60` so it still runs. In multiplayer the world keeps running while your pause menu is open.
 
 ### Net — multiplayer
 Host is authoritative; clients send requests, the host decides and relays. Up to 6 players.

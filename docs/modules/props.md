@@ -31,7 +31,7 @@ FX.fire(pos, scale, secs)   // cartoon flames that burn for secs (<= 0: until ha
 FX.stream({color, width, speed, rate, life, test, onHit, owner})  // liquid stream handle:
                             //   s.set(pos, dir, on) every frame, s.stop() when done (it finishes falling)
 FX.decal(pos, size, color, ttl)          // floor splat / puddle / scorch mark
-FX.bubble(avatarOrPos, text, secs)       // comic speech bubble over an avatar (one per target)
+FX.bubble(avatarOrPos, text, secs)       // comic speech bubble over an avatar (one per target; depth-tested, walls hide it)
 FX.shake(amount, secs)      // camera shake (~0.2 small hit, 0.7 big). Shakes the desktop (#os) when seated.
 FX.flash(color, secs, alpha)             // full-screen flash
 FX.tint(color, amount, secs)             // colour grade overlay; secs omitted = stays until FX.tint(null)
