@@ -28,13 +28,17 @@ checks (exit code 1). Times are with software WebGL on a shared 4-CPU box (anoth
 | `qa-pause.js` | The wall clock follows the shift; a solo pause freezes the world (a box in mid-air, a chaos delivery on its way, the coffee boost, the clock) and the hotbar / heat HUD hide, then everything carries on; speech bubbles are hidden by walls; the rival airstrike is blocked in the last seconds; a "Hold to buy" still held when the shift ends buys nothing | 9 | 3 min |
 | `qa-monkey.js` | Monkey test (seeded, `QA_SEED`, `QA_ROUNDS`): every app owned, then rounds of 40 random clicks / typing / selects / canvas drags on the desktop, LuckyBonk bets, BonkMart hold-to-buys, random rings and lines, then standing up, random movement keys, item keys, punches, throws, and sitting back; no page errors, money finite and never negative, the shift still running | 3 per round | 1.5 min (8 rounds, 320 actions) |
 | `qa-creator.js` | Character creator preview colours (sRGB like the game), light and dark skin tones | 1 | 15 s |
+| `qa-games.js` | LuckyBonk: one round of every game through the real buttons (wallet = start − bets + payouts from `casino:result`); every game closed mid-round (settled once, nothing paid twice, no error when its animation ends); a solo pause mid-crash (the rocket waits); the shift ending mid-round (the round still settles while the desktop is hidden); quitting mid-flip (the save has the settled wallet). Cosmic Cookie bakes with its window closed, not in the menu, and its units survive quit + continue | 23 | 2.5 min |
+| `qa-misc.js` | Walking into The Boss / a seated coworker (you stay 0.75 m out), a burst of 12 toasts (5 on screen), the form scheme's box after a scambaiter, the motivational posters bonus of a scam closed in the last second | 6 | 30 s |
+| `qa-soak.js` | A long endless session (`QA_SOAK` rounds of 3 calls, random schemes played like a player, stand / sit, police raids re-seat you): DOM size, scene objects, GPU geometries / textures and Loop hooks stay flat, no errors | 6 | 4 min |
 
 `qa-lib.js` holds the shared helpers (`Q.check`, `Q.shot` that waits for fresh frames and freezes the loop on a
 finished frame, `Q.gw` waits in game time, `Q.press` real key events, `Q.click`, `Q.play` plays a scheme like a
 player: Script lines, form details, NosyViewer codes, PINs; `Q.fast` skips 3D drawing while logic runs).
 
 Also re-run in this wave: `smoke.js` (call reaches "paid", no page errors) and the module scenarios
-(`ui clockout props review shop`), `qa-apps` / `qa-styles` again at 1920x1080.
+(`ui clockout props review shop games`), `qa-apps` / `qa-styles` again at 1920x1080. In the final pass every `qa-*`
+scenario was run again after the last fixes (all checks passed, no page errors).
 
 ## Bugs found and fixed
 
@@ -68,9 +72,17 @@ Also re-run in this wave: `smoke.js` (call reaches "paid", no page errors) and t
 | 26 | The CCTV "!" badge a raid left on the desktop carried over into the next game | cleared on `game:begin` |
 | 27 | The office wall clock showed the real local time while the LegitOS taskbar runs the shift from 4 PM to midnight | in a work week the wall clock shows the shift time (seconds hand stays real) |
 | 28 | The "Scam complete" banner of non-form schemes (Tech Support, ...) sat flush against the window edges | same margins as the baited banner |
+| 29 | LuckyBonk: closing the window (or the shift ending / quitting) mid **coin flip** paid the flip twice (`stop()` paid it, then the flip animation's `onfinish` paid again: Web Animations keep running on a removed element); mid **slots** spin it threw `Cannot destructure property 'b' of 'spin'` | the finish handlers ignore a round `stop()` already settled (casino.js) |
+| 30 | LuckyBonk rounds kept running under the solo pause menu: a crash rocket popped (bet lost) while you could not reach Cash out | the casino loop gets `dt = 0` while solo-paused |
+| 31 | Doodle Pro's spray-can timer (30 ms) ran forever when the window closed while the mouse was down (shift end, quit) | it stops once the canvas is gone |
+| 32 | Toasts stacked without limit: buying a batch of BonkMart goods or a burst of unlocks filled the screen and ran off the top at 720p | at most 5 on screen, the oldest fade first (core.js `toast`) |
+| 33 | After a scambaiter read out fake details, the form scheme's box said "No details to enter right now." under fields marked Verified | "Fake details from a scambaiter. Nothing earned (n / n "verified")." in red |
+| 34 | You could walk right into The Boss (camera inside his head) and into seated coworkers (they are not collider boxes) | the player is kept 0.75 m from them (`pushOut` in player.js) |
+| 35 | The motivational posters bonus (+5 %) was paid 0.6 s after a scam, so a scam closed in the last moments of a shift lost it to the review | paid at once (only the toast waits) |
 
 Scenario flakes fixed along the way: the endless scenario's first call could be a random scambaiter (never pays);
-the solo-screen fade-in needs longer under load; `qa-styles` parsed `color(srgb …)` colours wrongly.
+the solo-screen fade-in needs longer under load; `qa-styles` parsed `color(srgb …)` colours wrongly; `qa-pause` now waits
+for the paused hotbar / heat HUD to hide (their throttle counts frames while paused, and software GL under load runs at 1-2 fps).
 
 ## Known issues / not fixed
 
@@ -81,8 +93,12 @@ the solo-screen fade-in needs longer under load; `qa-styles` parsed `color(srgb 
   - `app/css/style.css` defines unscoped `.dot` (lines 62-63), `.stamp` (85, 88, 299) and `.tips li` (174-176) for the
     menus. They leak into every module that uses the same class names (fixed above by local resets in review.css,
     tools.css, phone.css). Scoping them (`#menu .stamp`, `.how .tips li`, `#menu .dot`...) would stop future clashes.
-- A BonkMart "Motivational posters" bonus (+5 %, paid 0.6 s after a scam) that falls after the shift ended is credited
-  during the review and then lost with the day's team total (harmless, tiny).
+  - `app/css/style.css` / ui.js main menu at 1280x720: the "Version 0.1 · … work of fiction" line sits flush against the
+    BONK NEWS ticker (no gap; it would be covered with a slightly taller menu). A bit more bottom padding on the menu column would fix it.
+- Design notes, not changed: a player arrested while seated is released at the front door with 9 s of immunity and is
+  re-arrested every ~10 s if they just stand there (a 75 s raid can fine an idle player ~7 times; running away works).
+  The mugshot booking officer + backdrop are built on the first arrest and kept hidden for reuse (~40 scene objects, not a leak).
+  LuckyBonk windows stay open (hidden) during the review like every other window, so a round in flight settles during the review.
 - The hotbar shows at most 9 slots; everything is reachable by scrolling, keys 1-9 only reach the visible ones.
 - While solo-paused the "POLICE RAID!" banner (if it was just showing) stays up until you resume (it times out in
   game time; it is pointer-transparent).

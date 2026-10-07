@@ -1,6 +1,6 @@
 /* QA: smaller things found in the final pass. Walking into The Boss / a seated coworker (you stay outside them),
    a burst of toasts (at most 5 on screen), the form scheme's verification box after a scambaiter (says the details
-   were fake).
+   were fake), the motivational posters bonus of a scam closed in the last second.
    Run: xvfb-run -a -s "-screen 0 1920x1080x24" ./node_modules/.bin/electron --no-sandbox --enable-unsafe-swiftshader tools/harness.js tools/scenarios/qa-misc.js 1280x720 <outdir> */
 module.exports = async page => {
   const Q = require('./qa-lib')(page);
@@ -48,6 +48,10 @@ module.exports = async page => {
   Q.check('baited form banner', !!fb && /fake/i.test(fb.t) && /bad/.test(fb.cls), { r, fb });
   await Q.shot('misc-03-baited-form');
 
+  // ---------- BonkMart's motivational posters: the bonus of a scam closed in the last second counts for the review ----------
+  const pb = await page.eval(() => { const T = window.__tli; T.Game.addWallet(2000); BonkMart.buy('perk_poster'); T.Call.shut(); const t0 = T.G.team;
+    T.Bus.emit('scam:paid', { amt: 400 }); T.Game.endDay(); return { owned: bmPerk('poster'), t0, team: T.G.result && T.G.result.team }; });
+  Q.check('posters bonus of a last-second scam is in the review total', pb.owned && pb.team === pb.t0 + 20, pb);
   Q.check('no page errors', page.errors.length === errs0, page.errors.slice(errs0));
   await Q.done();
 };
