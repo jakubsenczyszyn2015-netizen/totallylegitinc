@@ -76,7 +76,7 @@
 .win.phone select:disabled{color:#9fb0c8;opacity:1}
 .ph-chip{flex:none;display:flex;align-items:center;gap:.3rem;height:1.95rem;padding:0 .55rem;border-radius:5px;border:2px solid #2b3445;background:#141a25;color:#c3cede;font:700 .74rem 'Roboto',sans-serif}
 .ph-chip:hover{border-color:#41506a;color:#fff}
-.ph-chip .dot{width:.5rem;height:.5rem;border-radius:50%;background:#4a5568}
+.ph-chip .dot{width:.5rem;height:.5rem;border-radius:50%;background:#4a5568;margin:0;box-shadow:none}
 .ph-chip.on{border-color:#2fbf71;color:#bff5d6}
 .ph-chip.on .dot{background:#2fbf71;box-shadow:0 0 6px #2fbf71}
 .ph-chip .g svg{width:.95rem;height:.95rem;fill:#c3cede;display:block}

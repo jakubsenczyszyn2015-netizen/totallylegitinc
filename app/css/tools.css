@@ -24,7 +24,7 @@
 .cbx-av{position:relative;display:block;width:2.1rem;height:2.1rem;flex:none}
 .cbx-av svg{display:block;width:100%;height:100%;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
 .cbx-av.big{width:2.4rem;height:2.4rem}
-.cbx-av .dot{position:absolute;right:-2px;bottom:-2px;width:.66rem;height:.66rem;border-radius:50%;background:#3ddc84;border:2px solid #2d1f63}
+.cbx-av .dot{position:absolute;right:-2px;bottom:-2px;width:.66rem;height:.66rem;border-radius:50%;background:#3ddc84;border:2px solid #2d1f63;margin:0;box-shadow:none}
 .cbx-av .dot.off{background:#8a8f9c}
 .cbx-cn{flex:1;min-width:0}
 .cbx-cn b{display:block;font-size:.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -495,7 +495,7 @@
 .ht-box{margin:1rem 0;padding:.7rem 1rem;border-radius:10px}
 .ht-box h3{font:900 .78rem 'Roboto',sans-serif;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.35rem}
 .ht-box ul{margin:0;padding-left:1.2rem;font-size:.86rem;line-height:1.5}
-.ht-box.tips{background:#e6fcf5;border:1px solid #96f2d7} .ht-box.tips h3{color:#087f5b}
+.ht-box.tips{background:#e6fcf5;border:1px solid #96f2d7} .ht-box.tips h3{color:#087f5b} .ht .ht-box li{color:#343a40}
 .ht-box.warn{background:#fff5f5;border:1px solid #ffc9c9} .ht-box.warn h3{color:#c92a2a}
 .ht-box.need{background:#f8f9fa;border:1px solid #dee2e6} .ht-box.need h3{color:#495057}
 .ht-fb{display:flex;align-items:center;gap:.6rem;padding:.8rem 0;border-top:1px solid #e9ecef;font-size:.9rem}

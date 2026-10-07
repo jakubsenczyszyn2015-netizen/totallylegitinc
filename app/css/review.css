@@ -83,7 +83,7 @@ body.rv-on #hud-stats,body.rv-on #hud-prompt,body.rv-on #crosshair{display:none!
 .rv-sheet .wait{display:flex;align-items:center;gap:.5rem;font-weight:800;color:#7a4a2a}
 .rv-sheet .spin{width:16px;height:16px;border-radius:50%;border:3px solid #e6cf9a;border-top-color:var(--rv-red);animation:rvSpin .8s linear infinite}
 @keyframes rvSpin{to{transform:rotate(360deg)}}
-.rv-sheet .stamp{position:absolute;right:10.5rem;top:2.7rem;transform:rotate(-12deg) scale(2);opacity:0;font-family:var(--font-d);font-size:1.35rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(200,30,20,.78);border:4px solid rgba(200,30,20,.7);border-radius:8px;padding:.05em .45em;animation:rvStamp .3s ease-in .9s forwards;pointer-events:none;mix-blend-mode:multiply}
+.rv-sheet .stamp{position:absolute;right:10.5rem;top:2.7rem;bottom:auto;box-shadow:none;-webkit-mask-image:none;white-space:nowrap;transform:rotate(-12deg) scale(2);opacity:0;font-family:var(--font-d);font-size:1.35rem;letter-spacing:.08em;text-transform:uppercase;color:rgba(200,30,20,.78);border:4px solid rgba(200,30,20,.7);border-radius:8px;padding:.05em .45em;animation:rvStamp .3s ease-in .9s forwards;pointer-events:none;mix-blend-mode:multiply}
 @keyframes rvStamp{to{transform:rotate(-12deg) scale(1);opacity:1}}
 .rv-sheet .seal{position:absolute;right:-28px;top:-34px;width:118px;height:118px;transform:rotate(12deg);filter:drop-shadow(0 6px 8px rgba(0,0,0,.3));animation:rvSeal .5s cubic-bezier(.2,1.6,.4,1) .7s both}
 @media (min-width:901px){.rv-sheet.promo .seal{right:auto;left:min(36rem,48%);top:1rem;width:104px;height:104px}}

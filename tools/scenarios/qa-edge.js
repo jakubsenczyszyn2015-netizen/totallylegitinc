@@ -97,7 +97,7 @@ module.exports = async page => {
   const pre = await page.eval(() => ({ raid: Raid.on, call: window.__tli.Call.state, cams: Cams.list.filter(c => c.isOn()).length }));
   Q.check('mid-raid, mid-call, webcam rendering', pre.raid && pre.call === 'live' && pre.cams >= 1, pre);
   await page.eval(() => { window.__tli.Game.pause(true); return true; });
-  await page.wait(300);
+  const bot = await page.eval(() => { const b = Chat.BOTS.find(x => x.id !== 'bot:mum') || Chat.BOTS[0]; Chat.send(b.id, 'hello? anyone?'); return b.id; });   // quit while the bot is typing
   await Q.click('#pause .btn.danger', /Quit/, 900);
   const L = await page.eval(() => {
     const T = window.__tli, ft = document.querySelector('#fx-tint');
@@ -110,6 +110,11 @@ module.exports = async page => {
   await page.wait(1200);
   const E = await page.eval(() => { const T = window.__tli; return { mode: T.G.mode, phase: T.G.phase, team: T.G.team, quota: T.G.quota, raid: Raid.on, heat: Raid.heat, wallet: T.G.wallet, inv: T.Inv.all().length, wins: T.OS.wins.size, day: T.G.day, timeLeft: T.G.timeLeft, ctl: T.Game.canControl() }; });
   Q.check('endless starts clean after quitting a week', E.mode === 'endless' && E.phase === 'day' && E.team === 0 && !E.raid && E.heat === 0 && E.wallet === 0 && E.inv <= 4 && !E.wins && E.ctl, E);   // inv: only HR's welcome kit
+  await page.wait(4000);
+  const ch = await page.eval(b => ({ old: (Chat.threads.get(b) || []).filter(m => !m.me && !m.sys).length, unread: Chat.unread.get(b) || 0 }), bot);
+  Q.check('a chat reply pending when you quit does not land in the next game', !ch.old && !ch.unread, ch);
+  await page.eval(b => { Chat.send(b, 'are you there?'); return true; }, bot);
+  Q.check('the bot still answers in the new game', !!(await Q.waitFor(b => (Chat.threads.get(b) || []).some(m => !m.me && !m.sys), 9000, 250, bot)));
   await Q.fast(false);
   await Q.shot('edge-06-endless-clean');
   await Q.done();

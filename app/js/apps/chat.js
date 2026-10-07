@@ -72,6 +72,7 @@ const Chat = (() => {
   const BOT = {}; BOTS.forEach(b => { BOT[b.id] = b; });
 
   const threads = new Map(), unread = new Map(), names = new Map(), typing = new Map(), lastGold = new Map(), timers = new Map();
+  let gen = 0; const later = (fn, ms) => { const g = gen; setTimeout(() => { if (g === gen && G.phase !== 'menu') fn(); }, ms); };   // dropped after quitting to the menu
   let sel = null, seq = 0, badgeN = -1;
   const isBot = id => !!BOT[id];
   const mid = () => (Net.myId || 'me') + ':' + Date.now().toString(36) + ':' + (++seq);
@@ -147,8 +148,8 @@ const Chat = (() => {
     const who = nameOf(cid), blocked = typeof BugBuster !== 'undefined' && BugBuster.shielded();
     if (OS.open) { OS.virus(blocked ? 10 : 12); setTimeout(() => OS.cashFx('PRANKED!', true), 250); }
     SFX.bad();
-    if (isBot(cid)) setTimeout(() => push(cid, { text: cid === 'bot:bank' ? 'Thank you for claiming. Your computer now belongs to us. Have a nice day.' : 'Gotcha.' }), 1400);
-    else { Net.emit('chat', { k: 'claim', id: m.id }, { to: cid }); setTimeout(() => push(cid, { text: pick(['GOTCHA', 'lmao you clicked it', 'never click the free gift. never.', 'enjoy your premium pop-ups']), auto: true }, true), 900); }
+    if (isBot(cid)) later(() => push(cid, { text: cid === 'bot:bank' ? 'Thank you for claiming. Your computer now belongs to us. Have a nice day.' : 'Gotcha.' }), 1400);
+    else { Net.emit('chat', { k: 'claim', id: m.id }, { to: cid }); later(() => push(cid, { text: pick(['GOTCHA', 'lmao you clicked it', 'never click the free gift. never.', 'enjoy your premium pop-ups']), auto: true }, true), 900); }
     push(cid, { sys: true, text: 'Chatterbox Gold does not exist. ' + who + ' got you' + (blocked ? ' (BugBuster ate the pop-ups).' : '.') }, true);
     Bus.emit('chat:pranked', { from: cid });
   }
@@ -163,7 +164,7 @@ const Chat = (() => {
   /* ----- bots ----- */
   function botType(cid, secs, fn) {
     typing.set(cid, now() + secs + 1); const w = win(); if (w && sel === cid) drawMsgs(w);
-    setTimeout(() => { typing.delete(cid); if (G.phase === 'menu') return; fn(); const w2 = win(); if (w2 && sel === cid) drawMsgs(w2); }, secs * 1000);
+    const g = gen; setTimeout(() => { typing.delete(cid); if (G.phase === 'menu' || g !== gen) return; fn(); const w2 = win(); if (w2 && sel === cid) drawMsgs(w2); }, secs * 1000);
   }
   function botLine(b, text) {
     let pool = null;
@@ -192,11 +193,11 @@ const Chat = (() => {
     resetTimers();
     if (e && e.day === 1 && !e.late && !thread('bot:mum').length) push('bot:mum', { text: 'Good luck on your first day sweetheart! Be nice to people on the phone xx' }, true);
   });
-  Bus.on('scam:paid', () => { if (Math.random() < 0.25) setTimeout(() => push('bot:boss', { text: pick(['Good. Now do it again. Faster.', 'Adequate.', 'I saw that. I am not impressed yet.']) }), 2500); });
-  Bus.on('scam:baited', () => { if (Math.random() < 0.5) setTimeout(() => push('bot:boss', { text: pick(['You got baited. On a recorded line. Wonderful.', 'A scambaiter? Again? I\'m printing this one out.']) }), 2500); });
+  Bus.on('scam:paid', () => { if (Math.random() < 0.25) later(() => push('bot:boss', { text: pick(['Good. Now do it again. Faster.', 'Adequate.', 'I saw that. I am not impressed yet.']) }), 2500); });
+  Bus.on('scam:baited', () => { if (Math.random() < 0.5) later(() => push('bot:boss', { text: pick(['You got baited. On a recorded line. Wonderful.', 'A scambaiter? Again? I\'m printing this one out.']) }), 2500); });
   let itT = 0;
   setInterval(() => { if (OS.open && OS.popups >= 6 && now() - itT > 240) { itT = now(); push('bot:it', { text: 'We noticed ' + OS.popups + ' pop-ups on your machine. Unrelated: please stop clicking things.' }); } }, 3000);
-  Bus.on('quit', () => { threads.clear(); unread.clear(); typing.clear(); sel = null; badgeN = -1; syncBadge(); });
+  Bus.on('quit', () => { gen++; for (const x of BOTS) x._busy = false; threads.clear(); unread.clear(); typing.clear(); sel = null; badgeN = -1; syncBadge(); });
 
   Net.on('chat', (p, from) => {
     if (!p || typeof p !== 'object' || !from || isBot(from)) return;
