@@ -263,7 +263,7 @@ const BonkMart = {
   },
   /* pay and deliver. Returns true on success */
   purchase(it) {
-    if (!it || !bmAvail(it) || bmBlocked(it) || (bmOwned(it) && !it.repeatable) || G.phase === 'menu') return false;
+    if (!it || !bmAvail(it) || bmBlocked(it) || (bmOwned(it) && !it.repeatable) || G.phase === 'menu' || G.phase === 'review') return false;   // review: a hold that outlived the shift
     const p = bmPrice(it);
     if (G.wallet < p) { SFX.bad(); toast('Not enough money in your Bonk Pay wallet. Close more scams.', 'bad'); return false; }
     const tl = $('#toasts'), n0 = tl ? tl.childElementCount : 0;
