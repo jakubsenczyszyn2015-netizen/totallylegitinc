@@ -189,7 +189,7 @@ const Casino = (() => {
         if (spin) return; const b = x.bet(); if (!x.take(b)) return;
         const res = [0, 1, 2].map(() => [weighted(REEL), weighted(REEL), weighted(REEL)]), mid = res.map(r => r[1]);
         const mult = mid[0] === mid[1] && mid[1] === mid[2] ? PAY3[mid[0]] : mid[0] === mid[1] ? PAY2[mid[0]] : 0;
-        spin = { b, mult, res }; box.classList.remove('won'); $$('.lb-sym.hit', box).forEach(e => e.classList.remove('hit')); msg.textContent = 'Spinning…'; msg.className = 'lb-slotmsg';
+        const sp = spin = { b, mult, res }; box.classList.remove('won'); $$('.lb-sym.hit', box).forEach(e => e.classList.remove('hit')); msg.textContent = 'Spinning…'; msg.className = 'lb-slotmsg';
         let done = 0;
         reels.forEach((strip, i) => {
           const filler = Array.from({ length: 14 + i * 6 }, () => weighted(REEL)), list = cur[i].concat(filler, res[i]);
@@ -198,6 +198,7 @@ const Casino = (() => {
           const an = strip.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-dist - 10}px)`, offset: 0.92 }, { transform: `translateY(${-dist}px)` }], { duration: dur, easing: 'cubic-bezier(.2,.65,.3,1)', fill: 'forwards' });
           const tk = setInterval(() => snd.tick(1300 + i * 200), 90); setTimeout(() => clearInterval(tk), dur - 250);
           an.onfinish = () => {
+            if (spin !== sp) return;   // the window was closed mid-spin: stop() already paid this round
             strip.classList.remove('blur'); cur[i] = res[i]; strip.replaceChildren(...res[i].map(cell)); an.cancel(); AudioSys.tone(300 + i * 80, 0.08, 'triangle', 0.12);
             if (++done === 3) finish();
           };
@@ -404,12 +405,13 @@ const Casino = (() => {
         if (flip) return; const b = x.bet(); if (!x.take(b)) return;
         const res = Math.random() < 0.5 ? 'h' : 't', win = res === p.side, turns = 6 + randi(0, 2);
         const from = face === 'h' ? 0 : 180, to = turns * 360 + (res === 'h' ? 0 : 180);
-        flip = { b, res, win };
+        const f = flip = { b, res, win };
         const an = coin.animate([{ transform: `translateY(0) rotateX(${from}deg) scale(1)` }, { transform: `translateY(-66px) rotateX(${(from + to) / 2}deg) scale(1.12)`, offset: 0.45 }, { transform: `translateY(0) rotateX(${to}deg) scale(1)` }],
           { duration: 1300, easing: 'cubic-bezier(.3,.1,.35,1)', fill: 'forwards' });
         shadow.animate([{ transform: 'scale(1)', opacity: 0.6 }, { transform: 'scale(.55)', opacity: 0.25, offset: 0.45 }, { transform: 'scale(1)', opacity: 0.6 }], { duration: 1300, easing: 'cubic-bezier(.3,.1,.35,1)' });
         AudioSys.tone(1800, 0.05, 'square', 0.05); const tk = setInterval(() => snd.tick(2400), 110); setTimeout(() => clearInterval(tk), 1100);
         an.onfinish = () => {
+          if (flip !== f) return;   // closed mid-flip: stop() already paid it
           face = res; coin.style.transform = `rotateX(${res === 'h' ? 0 : 180}deg)`; an.cancel(); AudioSys.tone(500, 0.06, 'triangle', 0.12); flip = null;
           run = win ? run + 1 : 0; dots.prepend(h('i', { class: res + (win ? ' w' : ''), title: res === 'h' ? 'Heads' : 'Tails' }, res === 'h' ? 'H' : 'T')); while (dots.children.length > 12) dots.lastChild.remove();
           x.pay(b, win ? 1.96 : 0, (res === 'h' ? 'Heads' : 'Tails') + (win ? ' — you called it' : ' — wrong call')); x.hist(res === 'h' ? 'HEADS' : 'TAILS', win ? 'ok' : 'bad'); upd(); x.refresh();
@@ -641,7 +643,7 @@ const Casino = (() => {
     if (document.fonts && document.fonts.load) document.fonts.load('20px "Lilita One"').catch(() => {});
     select(p.tab);
     let last = performance.now();
-    const loop = t => { if (!win.el.isConnected) return; const dt = Math.min(0.05, (t - last) / 1000); last = t; if (cur && cur.frame) cur.frame(dt); win.raf = requestAnimationFrame(loop); };
+    const loop = t => { if (!win.el.isConnected) return; const dt = G.paused && !Net.active ? 0 : Math.min(0.05, (t - last) / 1000); last = t; /* a solo pause freezes the rounds too */ if (cur && cur.frame) cur.frame(dt); win.raf = requestAnimationFrame(loop); };
     win.raf = requestAnimationFrame(loop);
     win.tick = setInterval(() => { if (bal.textContent !== money(G.wallet)) refresh(); }, 500);
     win.stopGame = () => { if (cur) cur.stop(); cur = null; };
