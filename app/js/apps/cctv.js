@@ -135,4 +135,4 @@ Shop.add({
 });
 /* police raids (raid module): flash the entrance feed */
 Bus.on('raid:start', () => CCTV.alert('lobby', 'POLICE AT THE DOOR', 15));
-Bus.on('game:begin', () => { CCTV.alerts = {}; CCTV.mode = 'grid'; CCTV.auto = false; });
+Bus.on('game:begin', () => { CCTV.alerts = {}; CCTV.mode = 'grid'; CCTV.auto = false; OS.badge(CCTV.ID, false); });   // no stale raid '!' from the last game
