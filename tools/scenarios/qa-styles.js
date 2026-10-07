@@ -31,7 +31,7 @@ module.exports = async page => {
     await page.eval(id => { window.__tli.OS.launch(id, true); return true; }, id);
     await page.wait(500);
     const r = await page.eval(id => {
-      const rgb = s => { const m = s.match(/[\d.]+/g); return m ? m.map(Number) : [0, 0, 0, 0]; };
+      const rgb = s => { const m = s.match(/[\d.]+/g); if (!m) return [0, 0, 0, 0]; const v = m.map(Number); if (/^color\(srgb/.test(s)) for (let i = 0; i < 3; i++) v[i] *= 255; return v; };   // color-mix() computes to color(srgb 0..1)
       const L = c => { const f = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
       const win = document.querySelector('.win[data-app="' + id + '"] .wb'); if (!win) return [];
       const out = [];
@@ -63,8 +63,8 @@ module.exports = async page => {
   await page.eval(() => { Review.seek(60); return true; });
   await Q.waitFor(() => Review.state.sheet === 'fired', 8000, 200);
   await page.wait(1500);   // the stamp lands 0.9 s after the sheet
-  const st = await page.eval(() => { const e = document.querySelector('.rv-sheet .stamp'); if (!e) return null; const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) }; });
-  Q.check('TERMINATED is a small stamp, not a box over the table (global .stamp leaked bottom:.5rem)', st && st.h < 90 && st.w < 320, st);
+  const st = await page.eval(() => { const e = document.querySelector('.rv-sheet .stamp'); if (!e) return null; return { w: e.offsetWidth, h: e.offsetHeight }; });   // layout size (the bounding box grows with the rotation / landing scale)
+  Q.check('TERMINATED is a small stamp, not a box over the table (global .stamp leaked bottom:.5rem)', st && st.h < 70 && st.w < 300, st);
   await Q.shot('styles-03-termination-stamp');
   await Q.done();
 };
