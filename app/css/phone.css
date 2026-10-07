@@ -145,6 +145,7 @@ table.pay td:last-child,table.pay th:last-child{text-align:right;font-weight:800
 .sx-banner{background:#f1f3f5;border-left:4px solid #c92a2a;border-radius:3px;padding:.5rem .65rem;font:700 .84rem 'Roboto',sans-serif;color:#1e6b42}
 .sx-banner.ok{background:#e3f7ec;border-left-color:#1fa463;color:#157347}
 .sx-banner.bad{margin:.6rem .8rem 0;background:#fde6e4;border-left-color:#e03131;color:#9d1f18}
+.win.scheme .wb > .sx-banner.ok{margin:.6rem .8rem 0}
 .sx-banner.idle{color:#6b7385;font-weight:500;border-left-color:#adb5bd}
 .sx-field{display:flex;flex-direction:column;gap:.35rem}
 .sx-field label{font:700 .9rem 'Roboto',sans-serif;color:#1d2433}
