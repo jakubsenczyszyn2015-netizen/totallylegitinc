@@ -1094,7 +1094,7 @@ const RaidUI = {
   col(h) { const k = clamp(h / 100, 0, 1); return 'hsl(' + Math.round(52 - 50 * k) + ',' + Math.round(92 + 6 * k) + '%,' + Math.round(56 - 6 * k) + '%)'; },
   tick() {
     const E = this.el; if (!E.hud) return;
-    if (this.alertT && W.t > this.alertT) this.alertOff();
+    if (this.alertT && (W.t > this.alertT || (G.paused && !Net.active))) this.alertOff(G.paused);   // its timer counts game time: a solo pause would leave it over the pause menu
     const ht = Raid.heat, on = Raid.on, live = G.phase === 'day' || G.phase === 'lobby', pct = Math.round(ht);
     const vis = live && !P.seated && P.review < 0 && !G.paused && !Raid.bust;
     E.hud.classList.toggle('hidden', !vis); document.body.classList.toggle('raid-busted', !!Raid.bust);

@@ -1,6 +1,6 @@
 /* QA: smaller things found in the final pass. Walking into The Boss / a seated coworker (you stay outside them),
    a burst of toasts (at most 5 on screen), the form scheme's verification box after a scambaiter (says the details
-   were fake), the motivational posters bonus of a scam closed in the last second.
+   were fake), the motivational posters bonus of a scam closed in the last second, the raid banner under the pause menu.
    Run: xvfb-run -a -s "-screen 0 1920x1080x24" ./node_modules/.bin/electron --no-sandbox --enable-unsafe-swiftshader tools/harness.js tools/scenarios/qa-misc.js 1280x720 <outdir> */
 module.exports = async page => {
   const Q = require('./qa-lib')(page);
@@ -47,6 +47,15 @@ module.exports = async page => {
   const fb = await page.eval(() => { const b = document.querySelector('.win.scheme .sx-form .sx-banner'); return b ? { cls: b.className, t: b.textContent } : null; });
   Q.check('baited form banner', !!fb && /fake/i.test(fb.t) && /bad/.test(fb.cls), { r, fb });
   await Q.shot('misc-03-baited-form');
+
+  // ---------- the POLICE RAID! banner does not hang over the solo pause menu ----------
+  await page.eval(() => { Raid.start(); return true; });
+  await Q.waitFor(() => /on/.test(document.getElementById('raid-alert').className), 3000, 100);
+  await Q.press('Escape');
+  const ra = await Q.waitFor(() => window.__tli.G.paused && !document.getElementById('raid-alert').className, 5000, 100);
+  Q.check('the raid banner hides behind the solo pause menu', ra);
+  await Q.press('Escape'); await page.wait(300);
+  await page.eval(() => { Raid.abort(); return true; });
 
   // ---------- BonkMart's motivational posters: the bonus of a scam closed in the last second counts for the review ----------
   const pb = await page.eval(() => { const T = window.__tli; T.Game.addWallet(2000); BonkMart.buy('perk_poster'); T.Call.shut(); const t0 = T.G.team;
