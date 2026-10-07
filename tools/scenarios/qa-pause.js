@@ -40,7 +40,7 @@ module.exports = async page => {
   // in the hall, facing the closed boss office wall, The Boss talking behind it
   await page.teleport(bub.x, -0.6, Math.PI, 0.25);
   await page.eval(() => { FX.bubble(window.__tli.W.boss, 'Did you just...?', 30); return true; });
-  await Q.gw(0.4);
+  await Q.gw(1.0);   // the door swings shut
   const mat = await page.eval(() => { let d = null; window.__tli.W.scene.traverse(o => { if (o.isSprite && o.renderOrder === 30 && o.visible && o.material.map && o.material.map.image && o.material.map.image.width === 512) d = o.material.depthTest; }); return d; });
   Q.check('speech bubbles are depth-tested (walls hide them)', mat === true, mat);
   await Q.shot('pause-02-bubble-behind-wall');
