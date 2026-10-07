@@ -32,6 +32,10 @@ module.exports = async page => {
   Q.check('raid on: sirens, glow, lights, cops', r.on && r.siren && r.glow && r.cops === 2, r);
   Q.check('seated: "officer incoming" warning', nearOk, r);
   await Q.shot('raid-02-officer-incoming');
+  await page.eval(() => { window.__tli.Game.pause(true); return true; });
+  Q.check('solo pause hides the seated warning (its button would stand you up while paused)', await until('document.querySelector("#raid-near").classList.contains("hidden")', 3));
+  await page.eval(() => { window.__tli.Game.pause(false); return true; });
+  await until('!document.querySelector("#raid-near").classList.contains("hidden")', 10);
   await Q.click('#raid-near button', null, 400);
   Q.check('"Stand up & run" stands you up', !(await page.eval(() => window.__tli.P.seated)));
   Q.check('the warning goes away once you stand', await until('document.querySelector("#raid-near").classList.contains("hidden")', 2));
