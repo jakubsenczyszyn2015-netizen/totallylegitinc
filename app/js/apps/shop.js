@@ -394,7 +394,9 @@ function bmApplyPerks() {
 Bus.on('scam:paid', e => {
   if (!bmPerk('poster') || !e || !(e.amt > 0)) return;
   const bonus = Math.max(5, Math.round(e.amt * 0.05 / 5) * 5);
-  setTimeout(() => { if (G.phase === 'menu') return; Game.earn(bonus); Game.addWallet(Math.round(bonus * 0.5)); toast('Motivational posters: +' + money(bonus) + ' synergy bonus.', 'good'); }, 600);
+  if (G.phase !== 'day') return;
+  Game.earn(bonus); Game.addWallet(Math.round(bonus * 0.5));   // at once: a scam closed in the last second still counts its bonus for the review
+  setTimeout(() => { if (G.phase !== 'menu') toast('Motivational posters: +' + money(bonus) + ' synergy bonus.', 'good'); }, 600);
 });
 /* coffee subscription: a fresh coffee buzz (a jump of P.boost) lasts twice as long */
 Loop.add((() => { let last = 0; return () => {
