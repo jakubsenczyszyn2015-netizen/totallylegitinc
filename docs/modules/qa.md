@@ -80,6 +80,7 @@ scenario was run again after the last fixes (all checks passed, no page errors).
 | 34 | You could walk right into The Boss (camera inside his head) and into seated coworkers (they are not collider boxes) | the player is kept 0.75 m from them (`pushOut` in player.js) |
 | 35 | The motivational posters bonus (+5 %) was paid 0.6 s after a scam, so a scam closed in the last moments of a shift lost it to the review | paid at once (only the toast waits) |
 | 36 | The "POLICE RAID!" banner times out in game time, so a solo pause right after a raid started left it hanging over the pause menu | it hides while solo-paused (raid.js `RaidUI.tick`) |
+| 37 | The HR welcome-kit toast said "Press 1-6" for items that sit in hotbar slots 2-5 | "Press 2-5" |
 
 Scenario flakes fixed along the way: the endless scenario's first call could be a random scambaiter (never pays);
 the solo-screen fade-in needs longer under load; `qa-styles` parsed `color(srgb …)` colours wrongly; `qa-pause` now waits
@@ -94,6 +95,8 @@ for the paused hotbar / heat HUD to hide (their throttle counts frames while pau
   - `app/css/style.css` defines unscoped `.dot` (lines 62-63), `.stamp` (85, 88, 299) and `.tips li` (174-176) for the
     menus. They leak into every module that uses the same class names (fixed above by local resets in review.css,
     tools.css, phone.css). Scoping them (`#menu .stamp`, `.how .tips li`, `#menu .dot`...) would stop future clashes.
+  - `app/js/ui.js` line 18 (`UI_KEYS`, the walking controls panel and How to play): "1-6 / Wheel — Pick item", but the
+    hotbar has 9 slots (keys 1-9, see props.md and the hotbar key hint). Should read `'1-9'`.
   - `app/css/style.css` / ui.js main menu at 1280x720: the "Version 0.1 · … work of fiction" line sits flush against the
     BONK NEWS ticker (no gap; it would be covered with a slightly taller menu). A bit more bottom padding on the menu column would fix it.
 - Design notes, not changed: a player arrested while seated is released at the front door with 9 s of immunity and is
