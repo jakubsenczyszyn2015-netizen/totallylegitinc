@@ -771,7 +771,7 @@ const HUDBar = {
   },
   flashName() { if (!this.el) return; this.nameHTML(); const nm = this.el.querySelector('.hb-name'); nm.classList.remove('on'); void nm.offsetWidth; nm.classList.add('on'); clearTimeout(this._nt); this._nt = setTimeout(() => nm.classList.remove('on'), 2200); },
   tick(dt) {
-    if (!this.el) return; this._t = (this._t || 0) + dt; if (this._t < 0.1) return; this._t = 0;
+    if (!this.el) return; this._t = (this._t || 0) + (dt || 1 / 60); if (this._t < 0.1) return; this._t = 0;   // dt is 0 while solo-paused: still hide
     const vis = G.phase !== 'menu' && !P.seated && P.review < 0 && !G.paused && G.phase !== 'review';
     this.el.classList.toggle('hidden', !vis); this.keys.classList.toggle('hidden', !vis);
     document.body.classList.toggle('hb-on', vis);
