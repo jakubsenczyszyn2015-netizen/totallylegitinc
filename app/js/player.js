@@ -105,7 +105,7 @@ function thirdCam(cam, dt) {
   cam.position.set(hx + ox * P.boom, hy + oy * P.boom, hz + oz * P.boom);
 }
 /* The Boss and the coworkers are not collider boxes (they duck, move for the review): keep the player out of them softly */
-function pushOut(av, r = 0.5) {
+function pushOut(av, r = 0.75) {   // big cartoon heads: closer and the camera is inside one
   if (!av || !av.group.visible) return; const g = av.group.position, ox = P.pos.x - g.x, oz = P.pos.z - g.z, d = Math.hypot(ox, oz);
   if (d >= r || d < 1e-4) return; const nx = g.x + ox / d * r, nz = g.z + oz / d * r;
   if (!blocked(nx, nz)) { P.pos.x = nx; P.pos.z = nz; }
