@@ -45,8 +45,8 @@ module.exports = async page => {
         const els = [...document.querySelectorAll('#os button, #os .icon, #os [role=button], #os input, #os select, #os textarea, #os canvas, #os-modal button')].filter(e => !e.disabled && !AVOID.test(e.textContent || '') && vis(e));
         if (!els.length) continue;
         const e = els[Math.floor(R() * els.length)], r = e.getBoundingClientRect(), x = r.left + r.width * (0.2 + 0.6 * R()), y = r.top + r.height * (0.2 + 0.6 * R());
-        const tag = e.tagName;
-        if (tag === 'INPUT' && /text|search|number|password|^$/.test(e.type)) { e.focus(); e.value = ['1234', 'hello', '0000 0000', '12/27', 'ABC-123', '', '💥💥', '9'.repeat(40)][Math.floor(R() * 8)]; e.dispatchEvent(new Event('input', { bubbles: true })); if (R() < 0.5) e.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true })); e.blur(); out.push('type ' + (e.className || e.placeholder || '').toString().slice(0, 20)); continue; }
+        const tag = e.tagName;   // (a number field only gets numbers: anything else is a console warning a player cannot cause)
+        if (tag === 'INPUT' && /text|search|number|password|^$/.test(e.type)) { e.focus(); e.value = e.type === 'number' ? ['0', '5', '250', '-3', '99999999', ''][Math.floor(R() * 6)] : ['1234', 'hello', '0000 0000', '12/27', 'ABC-123', '', '💥💥', '9'.repeat(40)][Math.floor(R() * 8)]; e.dispatchEvent(new Event('input', { bubbles: true })); if (R() < 0.5) e.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true })); e.blur(); out.push('type ' + (e.className || e.placeholder || '').toString().slice(0, 20)); continue; }
         if (tag === 'SELECT') { const o = e.options; if (o.length) { e.selectedIndex = Math.floor(R() * o.length); e.dispatchEvent(new Event('change', { bubbles: true })); } out.push('select'); continue; }
         const opt = { bubbles: true, clientX: x, clientY: y, button: 0, pointerId: 1 };
         e.dispatchEvent(new PointerEvent('pointerdown', opt)); e.dispatchEvent(new MouseEvent('mousedown', opt));
