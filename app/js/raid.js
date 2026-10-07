@@ -1111,7 +1111,7 @@ const RaidUI = {
       this.set('t', E.title, 'HEAT'); this.set('w', E.word, this.word(ht) + ' ' + pct + '%'); this.set('f', E.fill, pct + '%', 'width'); this.set('c', E.cops, '', 'html');
       this.set('pt', E.ptxt, 'HEAT'); this.set('pv', E.pval, pct + '%'); this.set('pf', E.pfill, pct + '%', 'width');
     }
-    let nd = 1e9; const dk = on && P.seated && !Raid.bust && W.desks[P.seat];
+    let nd = 1e9; const dk = on && P.seated && !Raid.bust && !(G.paused && !Net.active) && W.desks[P.seat];   // not over the solo pause menu (the raid is frozen)
     if (dk) for (const c of Raid.cops) if (c.st === 1 || c.st === 6) nd = Math.min(nd, Math.hypot(c.x - dk.stand.x, c.z - dk.stand.z));
     const nv = nd < 9; if (nv !== this._nv) { this._nv = nv; E.near.classList.toggle('hidden', !nv); if (nv) RaidSnd.beep(); }
     if (nv) this.set('nd', E.nearTxt, nd < 1.8 ? 'Right behind your chair!' : Math.round(nd) + ' m from your desk and closing', '');
