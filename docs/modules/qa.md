@@ -29,7 +29,7 @@ checks (exit code 1). Times are with software WebGL on a shared 4-CPU box (anoth
 | `qa-monkey.js` | Monkey test (seeded, `QA_SEED`, `QA_ROUNDS`): every app owned, then rounds of 40 random clicks / typing / selects / canvas drags on the desktop, LuckyBonk bets, BonkMart hold-to-buys, random rings and lines, then standing up, random movement keys, item keys, punches, throws, and sitting back; no page errors, money finite and never negative, the shift still running | 3 per round | 1.5 min (8 rounds, 320 actions) |
 | `qa-creator.js` | Character creator preview colours (sRGB like the game), light and dark skin tones | 1 | 15 s |
 | `qa-games.js` | LuckyBonk: one round of every game through the real buttons (wallet = start − bets + payouts from `casino:result`); every game closed mid-round (settled once, nothing paid twice, no error when its animation ends); a solo pause mid-crash (the rocket waits); the shift ending mid-round (the round still settles while the desktop is hidden); quitting mid-flip (the save has the settled wallet). Cosmic Cookie bakes with its window closed, not in the menu, and its units survive quit + continue | 23 | 2.5 min |
-| `qa-misc.js` | Walking into The Boss / a seated coworker (you stay 0.75 m out), a burst of 12 toasts (5 on screen), the form scheme's box after a scambaiter, the motivational posters bonus of a scam closed in the last second | 6 | 30 s |
+| `qa-misc.js` | Walking into The Boss / a seated coworker (you stay 0.75 m out), a burst of 12 toasts (5 on screen), the form scheme's box after a scambaiter, the raid banner under the solo pause menu, the motivational posters bonus of a scam closed in the last second | 7 | 30 s |
 | `qa-soak.js` | A long endless session (`QA_SOAK` rounds of 3 calls, random schemes played like a player, stand / sit, police raids re-seat you): DOM size, scene objects, GPU geometries / textures and Loop hooks stay flat, no errors | 6 | 4 min |
 
 `qa-lib.js` holds the shared helpers (`Q.check`, `Q.shot` that waits for fresh frames and freezes the loop on a
@@ -79,6 +79,7 @@ scenario was run again after the last fixes (all checks passed, no page errors).
 | 33 | After a scambaiter read out fake details, the form scheme's box said "No details to enter right now." under fields marked Verified | "Fake details from a scambaiter. Nothing earned (n / n "verified")." in red |
 | 34 | You could walk right into The Boss (camera inside his head) and into seated coworkers (they are not collider boxes) | the player is kept 0.75 m from them (`pushOut` in player.js) |
 | 35 | The motivational posters bonus (+5 %) was paid 0.6 s after a scam, so a scam closed in the last moments of a shift lost it to the review | paid at once (only the toast waits) |
+| 36 | The "POLICE RAID!" banner times out in game time, so a solo pause right after a raid started left it hanging over the pause menu | it hides while solo-paused (raid.js `RaidUI.tick`) |
 
 Scenario flakes fixed along the way: the endless scenario's first call could be a random scambaiter (never pays);
 the solo-screen fade-in needs longer under load; `qa-styles` parsed `color(srgb …)` colours wrongly; `qa-pause` now waits
@@ -100,5 +101,3 @@ for the paused hotbar / heat HUD to hide (their throttle counts frames while pau
   The mugshot booking officer + backdrop are built on the first arrest and kept hidden for reuse (~40 scene objects, not a leak).
   LuckyBonk windows stay open (hidden) during the review like every other window, so a round in flight settles during the review.
 - The hotbar shows at most 9 slots; everything is reachable by scrolling, keys 1-9 only reach the visible ones.
-- While solo-paused the "POLICE RAID!" banner (if it was just showing) stays up until you resume (it times out in
-  game time; it is pointer-transparent).
