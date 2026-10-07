@@ -693,7 +693,9 @@ Loop.add((dt, t) => {
   for (const f of FANS) { f.blades.rotation.z -= dt * f.sp; f.head.rotation.y = Math.sin(t * 0.45 + f.ph) * 0.55; }
   if (CLOCK) {   // local time without a Date object per frame (the time-zone offset is refreshed once a minute)
     if (t - _tzT > 60 || _tzT < 0) { _tzT = t; _tz = new Date().getTimezoneOffset() * 60000; }
-    const ms = Date.now() - _tz, s = ms / 1000 % 60, m = ms / 60000 % 60, h = ms / 3600000 % 12;
+    let ms = Date.now() - _tz; const s = ms / 1000 % 60;
+    if (G.mode === 'week' && G.phase !== 'menu') ms = (16 + 8 * (G.phase === 'day' ? clamp(1 - G.timeLeft / Math.max(1, G.dayLen), 0, 1) : G.phase === 'lobby' ? 0 : 1)) * 3600000;   // the shift clock (4 PM to midnight) like the LegitOS taskbar
+    const m = ms / 60000 % 60, h = ms / 3600000 % 12;
     CLOCK.s.rotation.z = -s / 60 * Math.PI * 2; CLOCK.m.rotation.z = -m / 60 * Math.PI * 2; CLOCK.h.rotation.z = -h / 12 * Math.PI * 2;
   }
   if (!SCR.mesh) return;
