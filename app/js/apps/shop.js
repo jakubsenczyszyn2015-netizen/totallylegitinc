@@ -875,7 +875,7 @@ Bus.on('player:sit', i => { Chaos.lastDesk = i; });
 [
   { id: 'chaos_rival', name: 'Airstrike the Rival Call Centre', price: 2500, color: '#4dabf7', repeatable: true, sort: 400,
     desc: 'One full missile barrage on ' + RIVAL + ' across the street. Their customers start calling us. +' + money(RIVAL_BONUS) + ' for the team.',
-    blocked: () => Chaos.busy() ? 'Missiles in the air…' : '', model: () => ChaosArt.missile('RIVAL', '#e03131'), buy() { Chaos.order('rival'); } },
+    blocked: () => Chaos.busy() ? 'Missiles in the air…' : G.mode === 'week' && G.phase === 'day' && G.timeLeft < 10 ? 'Too late in the shift' : '', model: () => ChaosArt.missile('RIVAL', '#e03131'), buy() { Chaos.order('rival'); } },   // the bonus lands ~6 s later: not after the review
   { id: 'chaos_strike', name: 'Airstrike Yourselves', price: 1500, color: '#ff8c42', repeatable: true, sort: 401,
     desc: 'Orders a full missile barrage on your own office. Team morale may vary. The paperwork will not.',
     blocked: () => Chaos.busy() ? 'Missiles in the air…' : '', model: () => ChaosArt.missile('OOPS', '#f08c00'), buy() { Chaos.order('strike'); } },
