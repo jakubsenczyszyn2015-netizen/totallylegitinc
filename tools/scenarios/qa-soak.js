@@ -14,7 +14,8 @@ module.exports = async page => {
   const errs0 = page.errors.length;
   const sample = () => page.eval(() => { const T = window.__tli; let objs = 0; T.W.scene.traverse(() => objs++);
     if (T.Call.state !== 'live') for (const id of [...T.OS.wins.keys()]) if (id !== 'phone') T.OS.close(id, true);   // measure what is left behind, not open windows
-    return { dom: document.getElementsByTagName('*').length, heap: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0, objs, loop: T.Loop.fns.length,
+    const popDom = [...document.querySelectorAll('#os-wins .popup')].reduce((n, e) => n + 1 + e.getElementsByTagName('*').length, 0);   // a scambaiter's pop-up storm is live state, not a leak
+    return { dom: document.getElementsByTagName('*').length - popDom, heap: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : 0, objs, loop: T.Loop.fns.length,
       wins: T.OS.wins.size, pops: T.OS.popups, bubbles: document.querySelectorAll('.win[data-app=phone] .bub, .win[data-app=phone] [class*=bubble]').length, toasts: document.querySelectorAll('#toasts .toast').length,
       team: T.G.team, calls: T.G.stats.calls, scams: T.G.stats.scams, geo: T.W.renderer.info.memory.geometries, tex: T.W.renderer.info.memory.textures,
       raid: Raid.on ? Raid.cops.length : 0, raids: Raid.n, book: !!Raid.book,
