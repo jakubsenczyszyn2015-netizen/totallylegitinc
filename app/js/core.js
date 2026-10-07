@@ -84,8 +84,11 @@ const LANGS = {
 };
 
 function toast(msg, kind = '') {
-  const t = h('div', { class: 'toast ' + kind }, msg);
-  $('#toasts').append(t);
+  const box = $('#toasts'), t = h('div', { class: 'toast ' + kind }, msg);
+  box.append(t);
+  /* at most 5 on screen (a burst of purchases or unlocks used to stack up off the top): the oldest go first */
+  const live = [...box.children].filter(e => !e.classList.contains('out'));
+  for (let i = 0; i < live.length - 5; i++) { const o = live[i]; o.classList.add('out'); setTimeout(() => o.remove(), 400); }
   setTimeout(() => t.classList.add('out'), 3400);
   setTimeout(() => t.remove(), 3900);
 }
