@@ -104,6 +104,12 @@ function thirdCam(cam, dt) {
   P.boom = hit < P.boom ? hit : lerp(P.boom, hit, 1 - Math.exp(-dt * 4));
   cam.position.set(hx + ox * P.boom, hy + oy * P.boom, hz + oz * P.boom);
 }
+/* The Boss and the coworkers are not collider boxes (they duck, move for the review): keep the player out of them softly */
+function pushOut(av, r = 0.5) {
+  if (!av || !av.group.visible) return; const g = av.group.position, ox = P.pos.x - g.x, oz = P.pos.z - g.z, d = Math.hypot(ox, oz);
+  if (d >= r || d < 1e-4) return; const nx = g.x + ox / d * r, nz = g.z + oz / d * r;
+  if (!blocked(nx, nz)) { P.pos.x = nx; P.pos.z = nz; }
+}
 function setMeVisible(v) { if (W.me && P._meVis !== v) { P._meVis = v; W.me.group.visible = v; } }
 
 function updateWorld(dt, t) {
@@ -146,6 +152,7 @@ function updateWorld(dt, t) {
     if (stuck || !blocked(P.pos.x, P.pos.z + dz)) P.pos.z += dz; else { P.vz = 0; P.kz *= -0.3; }
     const B = W.bounds || { x0: -11.6, x1: 19.6, z0: -8.6, z1: 8.6 };
     P.pos.x = clamp(P.pos.x, B.x0, B.x1); P.pos.z = clamp(P.pos.z, B.z0, B.z1);
+    pushOut(W.boss); for (let i = 0; i < W.npcs.length; i++) pushOut(W.npcs[i]);   // you could walk right into The Boss (camera inside his head)
     P.speed = Math.hypot(P.vx, P.vz);
     if (ctl && Keys.Space && ground && !stunned) { P.vy = PC.jump; FXSnd.noise(0.1, 0.05, 0, 500, 900, 'bandpass', 1); }
     if (ctl && Keys.KeyF && Props.heldId() === 'paper') Props.throwSel();   // paper balls auto-fire while F is held
