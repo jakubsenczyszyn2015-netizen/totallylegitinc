@@ -218,7 +218,7 @@ const ClockOut = {
     // the time card in the top slot (it dips in when someone punches)
     const card = new THREE.Mesh(boxGeo(0.085, 0.15, 0.004), mat('#f0dfa8')); card.position.set(X, Y + 0.31, WZ + 0.12); card.rotation.y = ry; W.scene.add(card);
     const C = this.clock = { dc, dtex, sc, stex, card, punchT: 0, minute: -1, pos: new THREE.Vector3(X, Y, WZ + 0.25) };
-    this.drawSign(); this.drawDial(9);
+    this.drawSign(); this.drawDial(16);
     W.interact.push({ pos: new THREE.Vector3(X, Y - 0.05, WZ + 0.22), label: () => this.label(), act: () => this.request() });
     W.colliders.push({ x0: X - 0.22, x1: X + 0.55, z0: WZ, z1: WZ + 0.24, y1: 1.8 });
     return C;
@@ -255,7 +255,7 @@ const ClockOut = {
     g.fillStyle = '#16110f'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '30px ' + FONT.chunky;
     for (let i = 1; i <= 12; i++) { const a = i / 12 * Math.PI * 2; g.fillText(String(i), c + Math.sin(a) * 96, c - Math.cos(a) * 96); }
     for (let i = 0; i < 60; i++) { const a = i / 60 * Math.PI * 2, r0 = i % 5 ? 114 : 108; g.lineWidth = i % 5 ? 2 : 4; g.beginPath(); g.moveTo(c + Math.sin(a) * r0, c - Math.cos(a) * r0); g.lineTo(c + Math.sin(a) * 120, c - Math.cos(a) * 120); g.stroke(); }
-    g.font = '700 15px ' + FONT.menu; g.fillStyle = '#d6342c'; g.fillText(hour >= 17 ? 'HOME TIME' : 'ON THE CLOCK', c, c + 46);
+    g.font = '700 15px ' + FONT.menu; g.fillStyle = '#d6342c'; g.fillText(hour >= 24 ? 'HOME TIME' : 'ON THE CLOCK', c, c + 46);
     g.fillStyle = '#5a4a3a'; g.font = '700 13px ' + FONT.menu; g.fillText('LEGIT TIME', c, c - 44);
     const hand = (a, len, w, col) => { g.strokeStyle = col; g.lineWidth = w; g.lineCap = 'round'; g.beginPath(); g.moveTo(c - Math.sin(a) * 14, c + Math.cos(a) * 14); g.lineTo(c + Math.sin(a) * len, c - Math.cos(a) * len); g.stroke(); };
     hand((hour % 12) / 12 * Math.PI * 2, 58, 10, '#16110f'); hand((hour % 1) * Math.PI * 2, 88, 6, '#16110f');
@@ -268,9 +268,9 @@ const ClockOut = {
     else if (this.view && !Net.active) { this.view = null; this.render(); }
     const C = this.clock; if (!C || G.phase === 'menu') return;
     if (C.punchT > 0) { C.punchT = Math.max(0, C.punchT - dt); C.card.position.y = 1.36 + 0.31 - Math.sin(C.punchT / 0.5 * Math.PI) * 0.09; }
-    // the dial follows the shift (9:00 → 17:00) in 5-minute steps, only while the clock is close enough to read
+    // the dial follows the shift (4 PM → midnight, like the taskbar and wall clocks) in 5-minute steps, only while the clock is close enough to read
     const dx = P.pos.x - C.pos.x, dz = P.pos.z - C.pos.z; if (dx * dx + dz * dz > 100 && C.minute >= 0) return;
-    const hr = G.mode === 'week' && G.dayLen > 1 ? (G.phase === 'day' ? 9 + 8 * clamp(1 - G.timeLeft / G.dayLen, 0, 1) : G.phase === 'review' ? 17 : 9) : 17;
+    const hr = G.mode === 'week' && G.dayLen > 1 ? (G.phase === 'day' ? 16 + 8 * clamp(1 - G.timeLeft / G.dayLen, 0, 1) : G.phase === 'review' ? 24 : 16) : 24;
     const m = Math.round(hr * 12); if (m !== C.minute) { C.minute = m; this.drawDial(m / 12); }
   }
 };

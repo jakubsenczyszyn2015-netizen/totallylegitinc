@@ -15,7 +15,7 @@ const UI_IC = {
 const UI_KEYS = [
   [['W', 'A', 'S', 'D'], 'Walk'], [['Shift'], 'Sprint'], [['Space'], 'Jump'], [['E'], 'Interact / pick up'],
   [['LMB'], 'Use item (hold to spray)'], [['F'], 'Throw'], [['G'], 'Drop'], [['Q', 'RMB'], 'Punch'],
-  [['1-6', 'Wheel'], 'Pick item'], [['C'], 'Camera view'], [['V'], 'Push to talk'], [['Esc'], 'Pause']];
+  [['1-9', 'Wheel'], 'Pick item'], [['C'], 'Camera view'], [['V'], 'Push to talk'], [['Esc'], 'Pause']];
 function copyText(s) {
   try { if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(s).then(() => true, () => copyFallback(s)); } catch (e) {}
   return Promise.resolve(copyFallback(s));
